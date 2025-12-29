@@ -12,6 +12,8 @@ import {
   TrendingUp,
   Loader2,
   Link as LinkIcon,
+  Trash2,
+  Search,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -27,29 +29,18 @@ interface Todo {
   completed: boolean;
   video_id: string | null;
   video_url: string | null;
+  description: string | null;
 }
-
-const extractYouTubeId = (url: string): string | null => {
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-    /^([a-zA-Z0-9_-]{11})$/,
-  ];
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match) return match[1];
-  }
-  return null;
-};
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, profile, logout } = useAuth();
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodoTitle, setNewTodoTitle] = useState('');
-  const [newVideoUrl, setNewVideoUrl] = useState('');
   const [showInput, setShowInput] = useState(false);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const completedCount = todos.filter((t) => t.completed).length;
   const progress = todos.length > 0 ? (completedCount / todos.length) * 100 : 0;
@@ -83,21 +74,37 @@ const Dashboard = () => {
     e.preventDefault();
     if (!newTodoTitle.trim() || !user) return;
 
-    const videoId = newVideoUrl ? extractYouTubeId(newVideoUrl) : null;
-    
-    if (newVideoUrl && !videoId) {
-      toast.error('Invalid YouTube URL. Please enter a valid YouTube link.');
-      return;
-    }
-
     setAdding(true);
+    
     try {
+      // First, use AI to find the best video for this topic
+      toast.info('Finding the best video for your topic...', {
+        icon: <Search className="h-4 w-4 text-primary animate-pulse" />,
+      });
+
+      let videoId: string | null = null;
+      let videoDescription: string | null = null;
+
+      try {
+        const { data: videoData, error: videoError } = await supabase.functions.invoke('find-video', {
+          body: { topic: newTodoTitle.trim() },
+        });
+
+        if (!videoError && videoData && !videoData.error) {
+          videoId = videoData.videoId;
+          videoDescription = `${videoData.title} by ${videoData.channel} - ${videoData.reason}`;
+        }
+      } catch (aiError) {
+        console.error('AI video search failed:', aiError);
+        // Continue without video if AI fails
+      }
+
       const { data, error } = await supabase
         .from('todos')
         .insert({
           title: newTodoTitle.trim(),
-          video_url: newVideoUrl || null,
           video_id: videoId,
+          description: videoDescription,
           user_id: user.id,
         })
         .select()
@@ -107,9 +114,15 @@ const Dashboard = () => {
 
       setTodos([data, ...todos]);
       setNewTodoTitle('');
-      setNewVideoUrl('');
       setShowInput(false);
-      toast.success('Task added!');
+      
+      if (videoId) {
+        toast.success('Task added with AI-recommended video!', {
+          icon: <Sparkles className="h-4 w-4 text-primary" />,
+        });
+      } else {
+        toast.success('Task added!');
+      }
     } catch (error) {
       console.error('Error adding todo:', error);
       toast.error('Failed to add task');
@@ -147,6 +160,26 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error updating todo:', error);
       toast.error('Failed to update task');
+    }
+  };
+
+  const deleteTodo = async (id: string) => {
+    setDeletingId(id);
+    try {
+      const { error } = await supabase
+        .from('todos')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setTodos(todos.filter((t) => t.id !== id));
+      toast.success('Task deleted');
+    } catch (error) {
+      console.error('Error deleting todo:', error);
+      toast.error('Failed to delete task');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -213,7 +246,8 @@ const Dashboard = () => {
             {todos.length === 0 && !showInput && (
               <div className="glass-card rounded-xl p-8 text-center">
                 <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No study tasks yet. Add your first task!</p>
+                <p className="text-muted-foreground mb-2">No study tasks yet.</p>
+                <p className="text-sm text-muted-foreground">Add a topic and AI will find the best video for you!</p>
               </div>
             )}
 
@@ -224,10 +258,10 @@ const Dashboard = () => {
                   todo.completed ? 'opacity-70' : 'hover:neon-glow'
                 }`}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-start gap-4">
                   <button
                     onClick={() => toggleTodo(todo.id)}
-                    className="flex-shrink-0 transition-transform hover:scale-110"
+                    className="flex-shrink-0 transition-transform hover:scale-110 mt-1"
                   >
                     {todo.completed ? (
                       <CheckCircle2 className="h-6 w-6 text-success" />
@@ -237,16 +271,21 @@ const Dashboard = () => {
                   </button>
                   <div className="flex-1 min-w-0">
                     <span
-                      className={`block ${
+                      className={`block font-medium ${
                         todo.completed ? 'line-through text-muted-foreground' : ''
                       }`}
                     >
                       {todo.title}
                     </span>
+                    {todo.description && (
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                        {todo.description}
+                      </p>
+                    )}
                     {todo.video_id && (
-                      <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                        <LinkIcon className="h-3 w-3" />
-                        YouTube video attached
+                      <span className="text-xs text-primary flex items-center gap-1 mt-2">
+                        <Sparkles className="h-3 w-3" />
+                        AI-recommended video attached
                       </span>
                     )}
                   </div>
@@ -271,6 +310,19 @@ const Dashboard = () => {
                         Quiz
                       </Button>
                     )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-destructive"
+                      onClick={() => deleteTodo(todo.id)}
+                      disabled={deletingId === todo.id}
+                    >
+                      {deletingId === todo.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -278,22 +330,28 @@ const Dashboard = () => {
 
             {showInput && (
               <form onSubmit={handleAddTodo} className="glass-card rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  AI will find the best video for your topic
+                </div>
                 <Input
-                  placeholder="What do you want to learn?"
+                  placeholder="What do you want to learn? (e.g., Machine Learning basics)"
                   value={newTodoTitle}
                   onChange={(e) => setNewTodoTitle(e.target.value)}
                   autoFocus
                 />
-                <Input
-                  placeholder="YouTube video URL (optional)"
-                  value={newVideoUrl}
-                  onChange={(e) => setNewVideoUrl(e.target.value)}
-                />
                 <div className="flex gap-2">
                   <Button type="submit" variant="neon" disabled={adding || !newTodoTitle.trim()}>
-                    {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Task'}
+                    {adding ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Finding video...
+                      </>
+                    ) : (
+                      'Add Task'
+                    )}
                   </Button>
-                  <Button type="button" variant="ghost" onClick={() => setShowInput(false)}>
+                  <Button type="button" variant="ghost" onClick={() => setShowInput(false)} disabled={adding}>
                     Cancel
                   </Button>
                 </div>
