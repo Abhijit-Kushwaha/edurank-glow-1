@@ -164,8 +164,8 @@ const VideoPlayer = () => {
       const { data, error } = await supabase.functions.invoke('generate-notes', {
         body: {
           videoId: todo.video_id,
+          videoTitle: todo.title,
           todoId: todoId,
-          title: todo.title,
         },
       });
 
@@ -175,21 +175,9 @@ const VideoPlayer = () => {
         throw new Error(data.error);
       }
 
-      const generatedNotes = data.notes as string[];
-      setNotes(generatedNotes);
-
-      // Save notes to database
-      await supabase
-        .from('notes')
-        .upsert({
-          user_id: user.id,
-          todo_id: todoId,
-          video_id: todo.video_id,
-          content: generatedNotes.join('\n'),
-          is_ai_generated: true,
-        }, {
-          onConflict: 'todo_id,user_id',
-        });
+      const generatedNotes = data.notes as string;
+      const noteLines = generatedNotes.split('\n').filter((n: string) => n.trim());
+      setNotes(noteLines);
 
       toast.success('Notes generated successfully!');
     } catch (error: any) {
@@ -328,14 +316,14 @@ const VideoPlayer = () => {
                   <p className="text-muted-foreground">Generating AI notes...</p>
                 </div>
               ) : (
-                notes.map((note, index) => (
+                notes.slice(0, 15).map((note, index) => (
                   <div
                     key={index}
                     className="flex gap-3 p-3 rounded-lg bg-muted/50 animate-fade-in"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <CheckCircle className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                    <p className="text-sm">{note}</p>
+                    <p className="text-sm">{note.replace(/^[-*#]+\s*/, '').replace(/\*\*/g, '')}</p>
                   </div>
                 ))
               )}

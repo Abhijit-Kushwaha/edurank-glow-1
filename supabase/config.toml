@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.find-video]
 verify_jwt = false
+
+[functions.generate-quiz]
+verify_jwt = true

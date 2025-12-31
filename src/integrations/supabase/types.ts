@@ -126,6 +126,126 @@ export type Database = {
           },
         ]
       }
+      quizzes: {
+        Row: {
+          created_at: string
+          id: string
+          questions: Json
+          todo_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          questions?: Json
+          todo_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          questions?: Json
+          todo_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quizzes_todo_id_fkey"
+            columns: ["todo_id"]
+            isOneToOne: false
+            referencedRelation: "todos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subtask_videos: {
+        Row: {
+          channel: string
+          created_at: string
+          engagement_score: number | null
+          id: string
+          order_index: number
+          reason: string | null
+          subtask_id: string
+          title: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          engagement_score?: number | null
+          id?: string
+          order_index?: number
+          reason?: string | null
+          subtask_id: string
+          title: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          engagement_score?: number | null
+          id?: string
+          order_index?: number
+          reason?: string | null
+          subtask_id?: string
+          title?: string
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subtask_videos_subtask_id_fkey"
+            columns: ["subtask_id"]
+            isOneToOne: false
+            referencedRelation: "subtasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subtasks: {
+        Row: {
+          created_at: string
+          id: string
+          order_index: number
+          title: string
+          todo_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          title: string
+          todo_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          title?: string
+          todo_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subtasks_todo_id_fkey"
+            columns: ["todo_id"]
+            isOneToOne: false
+            referencedRelation: "todos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       todos: {
         Row: {
           completed: boolean

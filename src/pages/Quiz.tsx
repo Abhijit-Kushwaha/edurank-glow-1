@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -8,11 +8,15 @@ import {
   Sparkles,
   ArrowRight,
   RotateCcw,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import Logo from '@/components/Logo';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Question {
   id: number;
@@ -21,76 +25,90 @@ interface Question {
   correctAnswer: number;
 }
 
-// Mock quiz data
-const mockQuiz: Question[] = [
-  {
-    id: 1,
-    question: 'What is Machine Learning?',
-    options: [
-      'A programming language',
-      'A subset of AI that enables systems to learn from data',
-      'A type of computer hardware',
-      'A database management system',
-    ],
-    correctAnswer: 1,
-  },
-  {
-    id: 2,
-    question: 'Which of these is NOT a type of machine learning?',
-    options: [
-      'Supervised Learning',
-      'Unsupervised Learning',
-      'Reinforcement Learning',
-      'Manual Learning',
-    ],
-    correctAnswer: 3,
-  },
-  {
-    id: 3,
-    question: 'What is overfitting in machine learning?',
-    options: [
-      'When a model is too simple',
-      'When a model learns noise instead of patterns',
-      'When there is not enough data',
-      'When the algorithm runs too fast',
-    ],
-    correctAnswer: 1,
-  },
-  {
-    id: 4,
-    question: 'What is the purpose of cross-validation?',
-    options: [
-      'To speed up training',
-      'To reduce data size',
-      'To prevent overfitting',
-      'To increase model complexity',
-    ],
-    correctAnswer: 2,
-  },
-  {
-    id: 5,
-    question: 'Which algorithm is commonly used for classification?',
-    options: [
-      'Linear Regression',
-      'K-Means Clustering',
-      'Decision Trees',
-      'Principal Component Analysis',
-    ],
-    correctAnswer: 2,
-  },
-];
-
 const Quiz = () => {
-  const { quizId } = useParams();
+  const { quizId } = useParams(); // This is actually todoId
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [answers, setAnswers] = useState<number[]>([]);
   const [showResult, setShowResult] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [noNotes, setNoNotes] = useState(false);
 
-  const question = mockQuiz[currentQuestion];
-  const progress = ((currentQuestion + 1) / mockQuiz.length) * 100;
+  useEffect(() => {
+    if (quizId && user) {
+      fetchOrGenerateQuiz();
+    }
+  }, [quizId, user]);
+
+  const fetchOrGenerateQuiz = async () => {
+    try {
+      // First check if quiz already exists
+      const { data: existingQuiz } = await supabase
+        .from('quizzes')
+        .select('questions')
+        .eq('todo_id', quizId)
+        .maybeSingle();
+
+      if (existingQuiz?.questions) {
+        const parsedQuestions = existingQuiz.questions as unknown as Question[];
+        setQuestions(parsedQuestions);
+        setLoading(false);
+        return;
+      }
+
+      // Check if notes exist
+      const { data: notesData } = await supabase
+        .from('notes')
+        .select('content')
+        .eq('todo_id', quizId)
+        .eq('is_ai_generated', true)
+        .maybeSingle();
+
+      if (!notesData?.content) {
+        setNoNotes(true);
+        setLoading(false);
+        return;
+      }
+
+      // Generate quiz from notes
+      setGenerating(true);
+      const { data, error } = await supabase.functions.invoke('generate-quiz', {
+        body: {
+          todoId: quizId,
+          notes: notesData.content,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setQuestions(data.quiz || []);
+    } catch (error: any) {
+      console.error('Error fetching quiz:', error);
+      
+      if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
+        toast.error('Rate limit exceeded. Please try again later.');
+      } else if (error.message?.includes('402')) {
+        toast.error('Please add credits to continue using AI features.');
+      } else {
+        toast.error('Failed to generate quiz');
+      }
+    } finally {
+      setLoading(false);
+      setGenerating(false);
+    }
+  };
+
+  const question = questions[currentQuestion];
+  const progress = questions.length > 0 ? ((currentQuestion + 1) / questions.length) * 100 : 0;
 
   const handleSelectAnswer = (index: number) => {
     if (!isSubmitted) {
@@ -109,26 +127,47 @@ const Quiz = () => {
     setAnswers(newAnswers);
 
     if (selectedAnswer === question.correctAnswer) {
-      toast.success('Correct! 🎉');
+      toast.success('Correct!');
     } else {
       toast.error('Not quite right');
     }
   };
 
   const handleNextQuestion = () => {
-    if (currentQuestion < mockQuiz.length - 1) {
+    if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedAnswer(null);
       setIsSubmitted(false);
     } else {
+      saveResults();
       setShowResult(true);
+    }
+  };
+
+  const saveResults = async () => {
+    if (!user || !quizId) return;
+
+    const score = calculateScore();
+    const percentage = (score / questions.length) * 100;
+
+    try {
+      await supabase.from('quiz_results').insert({
+        user_id: user.id,
+        todo_id: quizId,
+        score: percentage,
+        correct_answers: score,
+        total_questions: questions.length,
+        answers: answers,
+      });
+    } catch (error) {
+      console.error('Error saving results:', error);
     }
   };
 
   const calculateScore = () => {
     let correct = 0;
     answers.forEach((answer, index) => {
-      if (answer === mockQuiz[index].correctAnswer) {
+      if (answer === questions[index]?.correctAnswer) {
         correct++;
       }
     });
@@ -143,8 +182,40 @@ const Quiz = () => {
     setIsSubmitted(false);
   };
 
+  if (loading || generating) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+        <p className="text-muted-foreground">
+          {generating ? 'Generating quiz questions...' : 'Loading quiz...'}
+        </p>
+      </div>
+    );
+  }
+
+  if (noNotes) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <AlertCircle className="h-12 w-12 text-muted-foreground" />
+        <p className="text-muted-foreground">No notes found for this task</p>
+        <p className="text-sm text-muted-foreground">Generate notes first by watching the video</p>
+        <Button onClick={() => navigate(`/video/${quizId}`)}>Watch Video</Button>
+      </div>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <AlertCircle className="h-12 w-12 text-muted-foreground" />
+        <p className="text-muted-foreground">Could not generate quiz questions</p>
+        <Button onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
+      </div>
+    );
+  }
+
   const score = calculateScore();
-  const percentage = (score / mockQuiz.length) * 100;
+  const percentage = (score / questions.length) * 100;
   const isPassing = percentage >= 60;
 
   if (showResult) {
@@ -152,9 +223,7 @@ const Quiz = () => {
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-lg text-center animate-slide-up">
           <div
-            className={`glass-card rounded-2xl p-8 ${
-              isPassing ? 'neon-glow' : ''
-            }`}
+            className={`glass-card rounded-2xl p-8 ${isPassing ? 'neon-glow' : ''}`}
           >
             <div
               className={`w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center ${
@@ -178,7 +247,7 @@ const Quiz = () => {
             </p>
 
             <div className="text-5xl font-bold neon-text mb-2">
-              {score}/{mockQuiz.length}
+              {score}/{questions.length}
             </div>
             <p className="text-muted-foreground mb-8">{Math.round(percentage)}% correct</p>
 
@@ -236,7 +305,7 @@ const Quiz = () => {
               <Logo size="sm" />
             </div>
             <span className="text-sm text-muted-foreground">
-              Question {currentQuestion + 1} of {mockQuiz.length}
+              Question {currentQuestion + 1} of {questions.length}
             </span>
           </div>
           <Progress value={progress} className="h-2" />
@@ -317,7 +386,7 @@ const Quiz = () => {
               </Button>
             ) : (
               <Button variant="neon" size="lg" onClick={handleNextQuestion}>
-                {currentQuestion < mockQuiz.length - 1 ? (
+                {currentQuestion < questions.length - 1 ? (
                   <>
                     Next Question
                     <ArrowRight className="h-4 w-4 ml-2" />
