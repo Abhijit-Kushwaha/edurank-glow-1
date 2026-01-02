@@ -245,9 +245,7 @@ const VideoPlayer = () => {
     } catch (error: any) {
       console.error('Error generating notes:', error);
       
-      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
-        toast.error('Session expired. Please log in again.');
-      } else if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
+      if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
         toast.error('Rate limit exceeded. Please try again later.');
       } else if (error.message?.includes('402')) {
         toast.error('Please add credits to continue using AI features.');

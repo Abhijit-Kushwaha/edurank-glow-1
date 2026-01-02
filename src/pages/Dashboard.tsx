@@ -91,25 +91,13 @@ const Dashboard = () => {
           body: { topic: newTodoTitle.trim() },
         });
 
-        if (videoError) {
-          console.error('Video search error:', videoError);
-          // Check if it's an auth error
-          if (videoError.message?.includes('401') || videoError.message?.includes('Unauthorized')) {
-            toast.error('Session expired. Please log in again.');
-            // Don't block task creation, continue without video
-          }
-        } else if (videoData && !videoData.error) {
+        if (!videoError && videoData && !videoData.error) {
           videoId = videoData.videoId;
           videoDescription = `${videoData.title} by ${videoData.channel} - ${videoData.reason}`;
           subtasksData = videoData.subtasks || [];
-        } else if (videoData?.error) {
-          console.error('Video search returned error:', videoData.error);
         }
-      } catch (aiError: any) {
+      } catch (aiError) {
         console.error('AI video search failed:', aiError);
-        if (aiError.message?.includes('401') || aiError.message?.includes('Unauthorized')) {
-          toast.error('Session expired. Please log in again.');
-        }
         // Continue without video if AI fails
       }
 

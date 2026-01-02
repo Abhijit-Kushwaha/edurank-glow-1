@@ -1,10 +1,10 @@
 project_id = "tahfemcxtbbixsvsurfq"
 
 [functions.generate-notes]
-verify_jwt = true
+verify_jwt = false
 
 [functions.find-video]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-quiz]
 verify_jwt = true
