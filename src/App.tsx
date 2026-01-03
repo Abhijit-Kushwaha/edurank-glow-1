@@ -11,6 +11,8 @@ import Dashboard from "./pages/Dashboard";
 import VideoPlayer from "./pages/VideoPlayer";
 import Notes from "./pages/Notes";
 import Quiz from "./pages/Quiz";
+import Profile from "./pages/Profile";
+import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +68,15 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/about" element={<About />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

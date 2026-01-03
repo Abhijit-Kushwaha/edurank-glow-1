@@ -119,7 +119,13 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="relative z-10 container mx-auto px-4 py-8 text-center text-muted-foreground text-sm">
-        <p>© 2024 EduRank. All rights reserved.</p>
+        <p className="mb-2">© 2024 EduRank. All rights reserved.</p>
+        <button
+          onClick={() => navigate('/about')}
+          className="text-primary hover:underline"
+        >
+          About Us
+        </button>
       </footer>
     </div>
   );

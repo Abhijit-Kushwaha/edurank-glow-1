@@ -14,6 +14,7 @@ import {
   Link as LinkIcon,
   Trash2,
   Search,
+  User,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ import { Progress } from '@/components/ui/progress';
 import Logo from '@/components/Logo';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useRateLimiter } from '@/hooks/useRateLimiter';
 
 interface Todo {
   id: string;
@@ -35,6 +37,7 @@ interface Todo {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, profile, logout } = useAuth();
+  const { canMakeRequest, isRateLimited } = useRateLimiter();
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodoTitle, setNewTodoTitle] = useState('');
   const [showInput, setShowInput] = useState(false);
@@ -73,6 +76,12 @@ const Dashboard = () => {
   const handleAddTodo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTodoTitle.trim() || !user) return;
+
+    // Check rate limit and credits before proceeding
+    const canProceed = await canMakeRequest();
+    if (!canProceed) {
+      return;
+    }
 
     setAdding(true);
     
@@ -254,6 +263,9 @@ const Dashboard = () => {
             <span className="text-sm text-muted-foreground hidden sm:block">
               Hi, {displayName}!
             </span>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/profile')}>
+              <User className="h-5 w-5" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={handleLogout}>
               <LogOut className="h-5 w-5" />
             </Button>
