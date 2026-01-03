@@ -6,6 +6,76 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Input validation and sanitization constants
+const MAX_TITLE_LENGTH = 500;
+const MAX_ID_LENGTH = 100;
+const FORBIDDEN_PATTERNS = [
+  /ignore\s+(all\s+)?previous\s+instructions/i,
+  /disregard\s+(all\s+)?previous/i,
+  /forget\s+(all\s+)?previous/i,
+  /system\s*:\s*/i,
+  /\[\s*INST\s*\]/i,
+  /\<\s*\|\s*im_start\s*\|\s*\>/i,
+  /\<\s*\|\s*im_end\s*\|\s*\>/i,
+  /\{\{\s*system/i,
+  /pretend\s+you\s+are/i,
+  /act\s+as\s+if/i,
+  /you\s+are\s+now/i,
+  /new\s+instructions/i,
+  /override\s+instructions/i,
+];
+
+/**
+ * Validates and sanitizes user input to prevent prompt injection
+ */
+function sanitizeInput(input: string, maxLength: number): { isValid: boolean; sanitized: string; error?: string } {
+  if (!input || typeof input !== 'string') {
+    return { isValid: false, sanitized: '', error: 'Input must be a non-empty string' };
+  }
+
+  let sanitized = input.trim();
+  if (sanitized.length === 0) {
+    return { isValid: false, sanitized: '', error: 'Input cannot be empty' };
+  }
+  if (sanitized.length > maxLength) {
+    return { isValid: false, sanitized: '', error: `Input exceeds maximum length of ${maxLength} characters` };
+  }
+
+  // Check for forbidden patterns (potential prompt injection)
+  for (const pattern of FORBIDDEN_PATTERNS) {
+    if (pattern.test(sanitized)) {
+      console.warn('Potential prompt injection detected:', sanitized.substring(0, 50));
+      return { isValid: false, sanitized: '', error: 'Invalid input detected' };
+    }
+  }
+
+  // Remove potentially dangerous characters
+  sanitized = sanitized
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+    .replace(/[<>]/g, '')
+    .replace(/\\/g, '')
+    .trim();
+
+  return { isValid: true, sanitized };
+}
+
+/**
+ * Validates ID format (alphanumeric with dashes/underscores)
+ */
+function validateId(id: string): { isValid: boolean; error?: string } {
+  if (!id || typeof id !== 'string') {
+    return { isValid: false, error: 'ID must be a non-empty string' };
+  }
+  if (id.length > MAX_ID_LENGTH) {
+    return { isValid: false, error: `ID exceeds maximum length of ${MAX_ID_LENGTH} characters` };
+  }
+  // Allow UUID format and YouTube video IDs
+  if (!/^[a-zA-Z0-9_-]+$/.test(id)) {
+    return { isValid: false, error: 'Invalid ID format' };
+  }
+  return { isValid: true };
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -52,7 +122,34 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Generating notes for video: ${videoTitle} (${videoId})`);
+    // Validate and sanitize inputs
+    const titleValidation = sanitizeInput(videoTitle, MAX_TITLE_LENGTH);
+    if (!titleValidation.isValid) {
+      return new Response(
+        JSON.stringify({ error: titleValidation.error || "Invalid video title" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const videoIdValidation = validateId(videoId);
+    if (!videoIdValidation.isValid) {
+      return new Response(
+        JSON.stringify({ error: videoIdValidation.error || "Invalid video ID" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const todoIdValidation = validateId(todoId);
+    if (!todoIdValidation.isValid) {
+      return new Response(
+        JSON.stringify({ error: todoIdValidation.error || "Invalid todo ID" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const sanitizedTitle = titleValidation.sanitized;
+
+    console.log(`Generating notes for video: ${sanitizedTitle} (${videoId})`);
 
     // Call Lovable AI Gateway with Gemini model
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -78,7 +175,7 @@ Format your response in clear markdown with headers and bullet points.`,
           },
           {
             role: "user",
-            content: `Generate detailed study notes for an educational video titled: "${videoTitle}"
+            content: `Generate detailed study notes for an educational video titled: "${sanitizedTitle}"
 
 The video ID is: ${videoId}
 

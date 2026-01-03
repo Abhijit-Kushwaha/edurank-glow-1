@@ -5,6 +5,59 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Input validation and sanitization constants
+const MAX_TOPIC_LENGTH = 200;
+const FORBIDDEN_PATTERNS = [
+  /ignore\s+(all\s+)?previous\s+instructions/i,
+  /disregard\s+(all\s+)?previous/i,
+  /forget\s+(all\s+)?previous/i,
+  /system\s*:\s*/i,
+  /\[\s*INST\s*\]/i,
+  /\<\s*\|\s*im_start\s*\|\s*\>/i,
+  /\<\s*\|\s*im_end\s*\|\s*\>/i,
+  /\{\{\s*system/i,
+  /pretend\s+you\s+are/i,
+  /act\s+as\s+if/i,
+  /you\s+are\s+now/i,
+  /new\s+instructions/i,
+  /override\s+instructions/i,
+];
+
+/**
+ * Validates and sanitizes user input to prevent prompt injection
+ */
+function sanitizeInput(input: string, maxLength: number = MAX_TOPIC_LENGTH): { isValid: boolean; sanitized: string; error?: string } {
+  if (!input || typeof input !== 'string') {
+    return { isValid: false, sanitized: '', error: 'Input must be a non-empty string' };
+  }
+
+  // Trim and check length
+  let sanitized = input.trim();
+  if (sanitized.length === 0) {
+    return { isValid: false, sanitized: '', error: 'Input cannot be empty' };
+  }
+  if (sanitized.length > maxLength) {
+    return { isValid: false, sanitized: '', error: `Input exceeds maximum length of ${maxLength} characters` };
+  }
+
+  // Check for forbidden patterns (potential prompt injection)
+  for (const pattern of FORBIDDEN_PATTERNS) {
+    if (pattern.test(sanitized)) {
+      console.warn('Potential prompt injection detected:', sanitized.substring(0, 50));
+      return { isValid: false, sanitized: '', error: 'Invalid input detected' };
+    }
+  }
+
+  // Remove potentially dangerous characters while keeping educational content readable
+  sanitized = sanitized
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove control characters
+    .replace(/[<>]/g, '') // Remove angle brackets
+    .replace(/\\/g, '') // Remove backslashes
+    .trim();
+
+  return { isValid: true, sanitized };
+}
+
 interface YouTubeVideo {
   videoId: string;
   title: string;
@@ -115,12 +168,15 @@ serve(async (req) => {
   try {
     const { topic } = await req.json();
     
-    if (!topic) {
+    // Validate and sanitize input
+    const validation = sanitizeInput(topic);
+    if (!validation.isValid) {
       return new Response(
-        JSON.stringify({ error: 'Topic is required' }),
+        JSON.stringify({ error: validation.error || 'Invalid topic' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    const sanitizedTopic = validation.sanitized;
 
     const YOUTUBE_API_KEY = Deno.env.get('youtube_api_key');
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -132,7 +188,7 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    console.log('Finding videos for topic:', topic);
+    console.log('Finding videos for topic:', sanitizedTopic);
 
     // Use AI to break down the topic into subtasks
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -162,7 +218,7 @@ The JSON must have this exact structure:
           },
           {
             role: 'user',
-            content: `Topic: "${topic}"
+            content: `Topic: "${sanitizedTopic}"
 
 Break this into 3-5 subtasks and provide optimized YouTube search queries for educational videos on each. Add "tutorial", "explained", or "for beginners" to make searches more educational.`
           }
@@ -207,16 +263,16 @@ Break this into 3-5 subtasks and provide optimized YouTube search queries for ed
       // Fallback: create simple subtasks
       parsedData = {
         subtasks: [
-          { title: `Introduction to ${topic}`, searchQuery: `${topic} introduction tutorial` },
-          { title: `Core concepts of ${topic}`, searchQuery: `${topic} explained for beginners` },
-          { title: `Practice ${topic}`, searchQuery: `${topic} examples practice` }
+          { title: `Introduction to ${sanitizedTopic}`, searchQuery: `${sanitizedTopic} introduction tutorial` },
+          { title: `Core concepts of ${sanitizedTopic}`, searchQuery: `${sanitizedTopic} explained for beginners` },
+          { title: `Practice ${sanitizedTopic}`, searchQuery: `${sanitizedTopic} examples practice` }
         ],
-        mainSearchQuery: `${topic} tutorial explained`
+        mainSearchQuery: `${sanitizedTopic} tutorial explained`
       };
     }
 
     // Search YouTube for the main topic
-    const mainVideos = await searchYouTube(parsedData.mainSearchQuery || `${topic} tutorial`, YOUTUBE_API_KEY, 5);
+    const mainVideos = await searchYouTube(parsedData.mainSearchQuery || `${sanitizedTopic} tutorial`, YOUTUBE_API_KEY, 5);
     const primaryVideo = mainVideos[0];
 
     if (!primaryVideo) {
@@ -227,7 +283,7 @@ Break this into 3-5 subtasks and provide optimized YouTube search queries for ed
     const subtasksWithVideos = await Promise.all(
       (parsedData.subtasks || []).slice(0, 5).map(async (subtask: any, idx: number) => {
         try {
-          const videos = await searchYouTube(subtask.searchQuery || `${topic} ${subtask.title}`, YOUTUBE_API_KEY, 5);
+          const videos = await searchYouTube(subtask.searchQuery || `${sanitizedTopic} ${subtask.title}`, YOUTUBE_API_KEY, 5);
           return {
             title: subtask.title || `Part ${idx + 1}`,
             description: subtask.searchQuery || '',
@@ -260,7 +316,7 @@ Break this into 3-5 subtasks and provide optimized YouTube search queries for ed
         videoId: primaryVideo.videoId,
         title: primaryVideo.title,
         channel: primaryVideo.channel,
-        reason: `Best educational video for "${topic}" with ${primaryVideo.viewCount} views`,
+        reason: `Best educational video for "${sanitizedTopic}" with ${primaryVideo.viewCount} views`,
         subtasks: subtasksWithVideos,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

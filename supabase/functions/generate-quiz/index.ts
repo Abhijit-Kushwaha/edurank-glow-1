@@ -6,6 +6,75 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Input validation and sanitization constants
+const MAX_NOTES_LENGTH = 50000; // Allow longer notes content
+const MAX_ID_LENGTH = 100;
+const FORBIDDEN_PATTERNS = [
+  /ignore\s+(all\s+)?previous\s+instructions/i,
+  /disregard\s+(all\s+)?previous/i,
+  /forget\s+(all\s+)?previous/i,
+  /system\s*:\s*/i,
+  /\[\s*INST\s*\]/i,
+  /\<\s*\|\s*im_start\s*\|\s*\>/i,
+  /\<\s*\|\s*im_end\s*\|\s*\>/i,
+  /\{\{\s*system/i,
+  /pretend\s+you\s+are/i,
+  /act\s+as\s+if/i,
+  /you\s+are\s+now/i,
+  /new\s+instructions/i,
+  /override\s+instructions/i,
+];
+
+/**
+ * Validates and sanitizes user input to prevent prompt injection
+ */
+function sanitizeInput(input: string, maxLength: number): { isValid: boolean; sanitized: string; error?: string } {
+  if (!input || typeof input !== 'string') {
+    return { isValid: false, sanitized: '', error: 'Input must be a non-empty string' };
+  }
+
+  let sanitized = input.trim();
+  if (sanitized.length === 0) {
+    return { isValid: false, sanitized: '', error: 'Input cannot be empty' };
+  }
+  if (sanitized.length > maxLength) {
+    return { isValid: false, sanitized: '', error: `Input exceeds maximum length of ${maxLength} characters` };
+  }
+
+  // Check for forbidden patterns (potential prompt injection)
+  for (const pattern of FORBIDDEN_PATTERNS) {
+    if (pattern.test(sanitized)) {
+      console.warn('Potential prompt injection detected:', sanitized.substring(0, 50));
+      return { isValid: false, sanitized: '', error: 'Invalid input detected' };
+    }
+  }
+
+  // Remove potentially dangerous characters
+  sanitized = sanitized
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+    .replace(/\\/g, '')
+    .trim();
+
+  return { isValid: true, sanitized };
+}
+
+/**
+ * Validates ID format (alphanumeric with dashes/underscores)
+ */
+function validateId(id: string): { isValid: boolean; error?: string } {
+  if (!id || typeof id !== 'string') {
+    return { isValid: false, error: 'ID must be a non-empty string' };
+  }
+  if (id.length > MAX_ID_LENGTH) {
+    return { isValid: false, error: `ID exceeds maximum length of ${MAX_ID_LENGTH} characters` };
+  }
+  // Allow UUID format
+  if (!/^[a-zA-Z0-9_-]+$/.test(id)) {
+    return { isValid: false, error: 'Invalid ID format' };
+  }
+  return { isValid: true };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -47,6 +116,25 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Validate and sanitize inputs
+    const todoIdValidation = validateId(todoId);
+    if (!todoIdValidation.isValid) {
+      return new Response(
+        JSON.stringify({ error: todoIdValidation.error || "Invalid todo ID" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const notesValidation = sanitizeInput(notes, MAX_NOTES_LENGTH);
+    if (!notesValidation.isValid) {
+      return new Response(
+        JSON.stringify({ error: notesValidation.error || "Invalid notes content" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const sanitizedNotes = notesValidation.sanitized;
 
     console.log(`Generating quiz for todo: ${todoId}`);
 
@@ -92,7 +180,7 @@ Include a mix of recall, understanding, and application questions.`,
           },
           {
             role: "user",
-            content: `Generate 5 MCQ questions based on these notes:\n\n${notes}`,
+            content: `Generate 5 MCQ questions based on these notes:\n\n${sanitizedNotes}`,
           },
         ],
       }),
