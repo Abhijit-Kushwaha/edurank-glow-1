@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Coins, RefreshCw, Loader2 } from 'lucide-react';
+import { ArrowLeft, User, Coins, RefreshCw, Loader2, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import Logo from '@/components/Logo';
@@ -140,6 +140,14 @@ const Profile = () => {
 
         {/* Navigation Links */}
         <section className="space-y-3">
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={() => navigate('/quiz-history')}
+          >
+            <Trophy className="h-4 w-4 mr-2" />
+            Quiz History
+          </Button>
           <Button
             variant="outline"
             className="w-full justify-start"

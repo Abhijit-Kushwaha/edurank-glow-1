@@ -12,6 +12,7 @@ import VideoPlayer from "./pages/VideoPlayer";
 import Notes from "./pages/Notes";
 import Quiz from "./pages/Quiz";
 import Profile from "./pages/Profile";
+import QuizHistory from "./pages/QuizHistory";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
@@ -73,6 +74,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/quiz-history"
+              element={
+                <ProtectedRoute>
+                  <QuizHistory />
                 </ProtectedRoute>
               }
             />
