@@ -25,9 +25,10 @@ interface SubtasksSidebarProps {
   subtasks: Subtask[];
   onVideoSelect: (videoId: string) => void;
   currentVideoId: string | null;
+  mainVideo?: SubtaskVideo | null;
 }
 
-const SubtasksSidebar = ({ subtasks, onVideoSelect, currentVideoId }: SubtasksSidebarProps) => {
+const SubtasksSidebar = ({ subtasks, onVideoSelect, currentVideoId, mainVideo }: SubtasksSidebarProps) => {
   const [isOpen, setIsOpen] = useState(true);
   const [expandedSubtasks, setExpandedSubtasks] = useState<Set<string>>(
     new Set(subtasks.slice(0, 2).map(s => s.id))
@@ -45,7 +46,7 @@ const SubtasksSidebar = ({ subtasks, onVideoSelect, currentVideoId }: SubtasksSi
     });
   };
 
-  if (subtasks.length === 0) return null;
+  if (subtasks.length === 0 && !mainVideo) return null;
 
   return (
     <>
@@ -83,6 +84,26 @@ const SubtasksSidebar = ({ subtasks, onVideoSelect, currentVideoId }: SubtasksSi
           {/* Subtasks list */}
           <ScrollArea className="flex-1">
             <div className="p-4 space-y-3">
+              {/* Main Video */}
+              {mainVideo && (
+                <div className="mb-4">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
+                    Main Video
+                  </h3>
+                  <VideoCard
+                    video={mainVideo}
+                    isActive={currentVideoId === mainVideo.video_id}
+                    onSelect={() => onVideoSelect(mainVideo.video_id)}
+                  />
+                </div>
+              )}
+
+              {/* Subtasks */}
+              {subtasks.length > 0 && (
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
+                  Related Topics
+                </h3>
+              )}
               {subtasks
                 .sort((a, b) => a.order_index - b.order_index)
                 .map((subtask, idx) => (
