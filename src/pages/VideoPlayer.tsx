@@ -285,6 +285,17 @@ const VideoPlayer = () => {
     );
   }
 
+  // Create main video entry for sidebar
+  const mainVideo = todo ? {
+    id: 'main-video',
+    video_id: todo.video_id!,
+    title: todo.title,
+    channel: 'Main Video',
+    engagement_score: null,
+    reason: null,
+    order_index: 0,
+  } : null;
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Subtasks Sidebar */}
@@ -292,6 +303,7 @@ const VideoPlayer = () => {
         subtasks={subtasks}
         onVideoSelect={handleVideoSelect}
         currentVideoId={currentVideoId}
+        mainVideo={mainVideo}
       />
 
       {/* Header */}
