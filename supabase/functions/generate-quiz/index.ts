@@ -16,15 +16,10 @@ const FORBIDDEN_PATTERNS = [
   /ignore\s+(all\s+)?previous\s+instructions/i,
   /disregard\s+(all\s+)?previous/i,
   /forget\s+(all\s+)?previous/i,
-  /system\s*:\s*/i,
   /\[\s*INST\s*\]/i,
   /\<\s*\|\s*im_start\s*\|\s*\>/i,
   /\<\s*\|\s*im_end\s*\|\s*\>/i,
   /\{\{\s*system/i,
-  /pretend\s+you\s+are/i,
-  /act\s+as\s+if/i,
-  /you\s+are\s+now/i,
-  /new\s+instructions/i,
   /override\s+instructions/i,
 ];
 
