@@ -13,11 +13,13 @@ import {
   Lightbulb,
   Brain,
   Zap,
+  User,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Logo from '@/components/Logo';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,7 +44,7 @@ interface QuestionTiming {
 const Quiz = () => {
   const { quizId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -472,6 +474,15 @@ const Quiz = () => {
               <span className="text-sm text-muted-foreground">
                 Question {currentQuestion + 1} of {questions.length}
               </span>
+              <Avatar 
+                className="h-8 w-8 cursor-pointer border border-primary/30" 
+                onClick={() => navigate('/profile')}
+              >
+                <AvatarImage src={profile?.avatar_url || undefined} />
+                <AvatarFallback className="bg-primary/20 text-primary">
+                  <User className="h-4 w-4" />
+                </AvatarFallback>
+              </Avatar>
             </div>
           </div>
           <Progress value={progress} className="h-2" />
