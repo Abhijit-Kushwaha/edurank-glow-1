@@ -1,18 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight, Sparkles } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Sparkles, AtSign, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import Logo from '@/components/Logo';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const navigate = useNavigate();
@@ -24,6 +28,39 @@ const Auth = () => {
       navigate('/dashboard');
     }
   }, [user, navigate]);
+
+  // Check username availability with debounce
+  useEffect(() => {
+    if (!username.trim() || isLogin) {
+      setIsUsernameAvailable(null);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setIsCheckingUsername(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('name', username.trim())
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error checking username:', error);
+          setIsUsernameAvailable(null);
+        } else {
+          setIsUsernameAvailable(data === null);
+        }
+      } catch (error) {
+        console.error('Error checking username:', error);
+        setIsUsernameAvailable(null);
+      } finally {
+        setIsCheckingUsername(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [username, isLogin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,9 +81,23 @@ const Auth = () => {
           setIsLoading(false);
           return;
         }
-        const { error } = await signup(email, password, name);
+        if (!username.trim()) {
+          toast.error('Please enter a username');
+          setIsLoading(false);
+          return;
+        }
+        if (isUsernameAvailable === false) {
+          toast.error('This username is already taken');
+          setIsLoading(false);
+          return;
+        }
+        const { error } = await signup(email, password, name, username.trim());
         if (error) {
-          toast.error(error);
+          if (error.includes('profiles_name_unique') || error.includes('duplicate key')) {
+            toast.error('This username is already taken. Please choose another.');
+          } else {
+            toast.error(error);
+          }
         } else {
           toast.success('Account created successfully!');
           navigate('/dashboard');
@@ -141,17 +192,44 @@ const Auth = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Full Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="pl-10"
-                  required={!isLogin}
-                />
-              </div>
+              <>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Full Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="pl-10"
+                    required={!isLogin}
+                  />
+                </div>
+                <div className="relative">
+                  <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Username (unique)"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.replace(/\s/g, ''))}
+                    className="pl-10 pr-10"
+                    required={!isLogin}
+                  />
+                  {username.trim() && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      {isCheckingUsername ? (
+                        <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      ) : isUsernameAvailable === true ? (
+                        <Check className="h-5 w-5 text-green-500" />
+                      ) : isUsernameAvailable === false ? (
+                        <X className="h-5 w-5 text-destructive" />
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+                {username.trim() && isUsernameAvailable === false && (
+                  <p className="text-xs text-destructive -mt-2">This username is already taken</p>
+                )}
+              </>
             )}
 
             <div className="relative">

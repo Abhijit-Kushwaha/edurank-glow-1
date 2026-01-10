@@ -15,7 +15,7 @@ interface AuthContextType {
   profile: Profile | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ error?: string }>;
-  signup: (email: string, password: string, name: string) => Promise<{ error?: string }>;
+  signup: (email: string, password: string, name: string, username: string) => Promise<{ error?: string }>;
   loginWithGoogle: () => Promise<{ error?: string }>;
   logout: () => Promise<void>;
 }
@@ -111,7 +111,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signup = async (email: string, password: string, name: string): Promise<{ error?: string }> => {
+  const signup = async (email: string, password: string, name: string, username: string): Promise<{ error?: string }> => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
@@ -121,7 +121,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            name: name,
+            name: username,
             full_name: name,
           },
         },
@@ -133,6 +133,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           return { error: 'This email is already registered. Please sign in instead.' };
         }
         return { error: error.message };
+      }
+
+      // Update the profile with the username after signup
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ name: username })
+          .eq('user_id', data.user.id);
+
+        if (profileError) {
+          console.error('Profile update error:', profileError);
+          // Don't fail signup if profile update fails, but log it
+        }
       }
 
       return {};
