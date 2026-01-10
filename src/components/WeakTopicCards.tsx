@@ -9,6 +9,7 @@ import {
   Clock,
   Target,
   Sparkles,
+  Play,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +36,9 @@ interface Recommendation {
   description: string;
   priority: number;
   weaknessScore: number;
+  videoId: string | null;
+  videoTitle: string | null;
+  videoChannel: string | null;
 }
 
 const WeakTopicCards = () => {
@@ -107,7 +111,10 @@ const WeakTopicCards = () => {
           title,
           description,
           priority,
-          weakness_score
+          weakness_score,
+          video_id,
+          video_title,
+          video_channel
         `)
         .eq('is_dismissed', false)
         .eq('is_completed', false)
@@ -128,6 +135,9 @@ const WeakTopicCards = () => {
           description: r.description || '',
           priority: r.priority,
           weaknessScore: Number(r.weakness_score) || 0,
+          videoId: r.video_id,
+          videoTitle: r.video_title,
+          videoChannel: r.video_channel,
         }));
         setRecommendations(recs);
       }
@@ -214,8 +224,18 @@ const WeakTopicCards = () => {
                   <p className="text-sm text-muted-foreground">{rec.description}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
+                  {rec.videoId && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(`https://www.youtube.com/watch?v=${rec.videoId}`, '_blank')}
+                    >
+                      <Play className="h-3 w-3 mr-1" />
+                      Watch
+                    </Button>
+                  )}
                   <Button
-                    variant="outline"
+                    variant="neon"
                     size="sm"
                     onClick={() => rec.todoId && navigate(`/quiz/${rec.todoId}`)}
                     disabled={!rec.todoId}

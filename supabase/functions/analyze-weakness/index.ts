@@ -26,6 +26,41 @@ interface TopicPerformance {
   repeatedMistakes: number;
 }
 
+interface YouTubeVideo {
+  videoId: string;
+  title: string;
+  channel: string;
+}
+
+// YouTube search helper function
+async function searchYouTubeForTopic(topic: string, apiKey: string): Promise<YouTubeVideo | null> {
+  try {
+    const query = `${topic} tutorial explained for beginners`;
+    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoDuration=medium&videoEmbeddable=true&maxResults=1&key=${apiKey}`;
+    
+    const response = await fetch(searchUrl);
+    if (!response.ok) {
+      console.error('YouTube search error:', response.status);
+      return null;
+    }
+    
+    const data = await response.json();
+    const item = data.items?.[0];
+    
+    if (item) {
+      return {
+        videoId: item.id.videoId,
+        title: item.snippet.title,
+        channel: item.snippet.channelTitle,
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error searching YouTube:', error);
+    return null;
+  }
+}
+
 // Compute weakness score using the algorithm from requirements
 function computeWeaknessScore(
   accuracy: number,
@@ -406,10 +441,23 @@ ${questionTexts}`
           accuracy: accuracy * 100,
         });
 
-        // Generate recommendation
+        // Find a video for this weak topic using YouTube API
+        const youtubeApiKey = Deno.env.get("youtube_api_key");
+        let videoData: YouTubeVideo | null = null;
+        
+        if (youtubeApiKey) {
+          videoData = await searchYouTubeForTopic(perf.topicName, youtubeApiKey);
+          if (videoData) {
+            console.log(`Found video for weak topic "${perf.topicName}": ${videoData.title}`);
+          }
+        }
+
+        // Generate recommendation with video if found
         const recommendationTitle = `Fix: ${perf.topicName}`;
         const minutes = Math.max(3, Math.ceil(weaknessScore / 20));
-        const description = `You're losing marks in ${perf.topicName} — fix it in ${minutes} minutes.`;
+        const description = videoData 
+          ? `Watch "${videoData.title}" to fix your weakness in ${perf.topicName} — takes ~${minutes} minutes.`
+          : `You're losing marks in ${perf.topicName} — fix it in ${minutes} minutes.`;
 
         recommendations.push({
           user_id: userId,
@@ -420,6 +468,9 @@ ${questionTexts}`
           description,
           priority: Math.round(weaknessScore),
           weakness_score: weaknessScore,
+          video_id: videoData?.videoId || null,
+          video_title: videoData?.title || null,
+          video_channel: videoData?.channel || null,
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
         });
       }

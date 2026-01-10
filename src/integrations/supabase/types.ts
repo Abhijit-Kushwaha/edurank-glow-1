@@ -355,6 +355,9 @@ export type Database = {
           todo_id: string | null
           topic_id: string
           user_id: string
+          video_channel: string | null
+          video_id: string | null
+          video_title: string | null
           weakness_score: number | null
         }
         Insert: {
@@ -370,6 +373,9 @@ export type Database = {
           todo_id?: string | null
           topic_id: string
           user_id: string
+          video_channel?: string | null
+          video_id?: string | null
+          video_title?: string | null
           weakness_score?: number | null
         }
         Update: {
@@ -385,6 +391,9 @@ export type Database = {
           todo_id?: string | null
           topic_id?: string
           user_id?: string
+          video_channel?: string | null
+          video_id?: string | null
+          video_title?: string | null
           weakness_score?: number | null
         }
         Relationships: [
