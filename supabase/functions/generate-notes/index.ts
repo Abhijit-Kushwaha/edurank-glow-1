@@ -128,53 +128,17 @@ Focus on educational content that would help a student understand this topic tho
   }
 }
 
-// Call Bytez AI API
-async function callBytezAI(messages: Array<{ role: string; content: string }>): Promise<string> {
-  const BYTEZ_API_KEY = Deno.env.get("BYTEZ_API_KEY");
-  if (!BYTEZ_API_KEY) {
-    throw new Error("BYTEZ_API_KEY is not configured");
-  }
-
-  const response = await fetch("https://api.bytez.com/models/openai/gpt-4.1/run", {
-    method: "POST",
-    headers: {
-      "Authorization": `Key ${BYTEZ_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ messages }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Bytez AI error:", response.status, errorText);
-    
-    if (response.status === 429) {
-      throw new Error("Rate limit exceeded. Please try again later.");
-    }
-    if (response.status === 402) {
-      throw new Error("AI credits exhausted. Please add funds.");
-    }
-    
-    throw new Error(`Bytez AI error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  const content = data.output?.[0]?.content || data.output || "";
-  
-  if (!content) {
-    console.error("Bytez response:", JSON.stringify(data));
-    throw new Error("No content generated from AI");
-  }
-
-  return content;
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
+    }
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -265,11 +229,19 @@ serve(async (req) => {
     // Fetch video context using Perplexity
     const videoContext = await fetchVideoContext(sanitizedTitle, videoId);
 
-    // Generate notes using Bytez AI
-    const generatedNotes = await callBytezAI([
-      {
-        role: "system",
-        content: `You are an expert educational content creator specializing in generating comprehensive, well-structured study notes. 
+    // Generate notes using Lovable AI (Gemini)
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert educational content creator specializing in generating comprehensive, well-structured study notes. 
 
 Your notes must be:
 - Accurate and based on the provided context
@@ -282,10 +254,10 @@ Format your response in clear markdown with:
 ## Important Points  
 ## Summary
 ## Study Tips`
-      },
-      {
-        role: "user",
-        content: `Generate detailed, comprehensive study notes for an educational video.
+          },
+          {
+            role: "user",
+            content: `Generate detailed, comprehensive study notes for an educational video.
 
 **Video Title:** "${sanitizedTitle}"
 **Video ID:** ${videoId}
@@ -302,10 +274,42 @@ Create professional study notes that would help a student:
 4. Prepare for exams on this topic
 
 Make the notes comprehensive and educational.`
-      },
-    ]);
+          },
+        ],
+        temperature: 0.3,
+        max_tokens: 4000,
+      }),
+    });
 
-    console.log("Notes generated successfully using Bytez AI");
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Lovable AI error:", response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "AI credits exhausted. Please add funds." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      throw new Error(`Lovable AI error: ${response.status}`);
+    }
+
+    const aiData = await response.json();
+    const generatedNotes = aiData.choices?.[0]?.message?.content;
+
+    if (!generatedNotes) {
+      console.error("AI response:", JSON.stringify(aiData));
+      throw new Error("No content generated from AI");
+    }
+
+    console.log("Notes generated successfully using Lovable AI");
 
     // Check achievements after generating notes
     await serviceClient.rpc('check_achievements', { uid: user.id });

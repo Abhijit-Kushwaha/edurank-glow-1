@@ -11,47 +11,6 @@ interface TopicInput {
   weaknessScore: number;
 }
 
-// Call Bytez AI API
-async function callBytezAI(messages: Array<{ role: string; content: string }>): Promise<string> {
-  const BYTEZ_API_KEY = Deno.env.get("BYTEZ_API_KEY");
-  if (!BYTEZ_API_KEY) {
-    throw new Error("BYTEZ_API_KEY is not configured");
-  }
-
-  const response = await fetch("https://api.bytez.com/models/openai/gpt-4.1/run", {
-    method: "POST",
-    headers: {
-      "Authorization": `Key ${BYTEZ_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ messages }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Bytez AI error:", response.status, errorText);
-    
-    if (response.status === 429) {
-      throw new Error("Rate limit exceeded. Please try again later.");
-    }
-    if (response.status === 402) {
-      throw new Error("Payment required. Please add credits.");
-    }
-    
-    throw new Error(`Bytez AI error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  const content = data.output?.[0]?.content || data.output || "";
-  
-  if (!content) {
-    console.error("Bytez response:", JSON.stringify(data));
-    throw new Error("No content generated from AI");
-  }
-
-  return content;
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -68,6 +27,14 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+
+    if (!lovableApiKey) {
+      return new Response(
+        JSON.stringify({ error: "AI service not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
@@ -151,10 +118,41 @@ Return ONLY a valid JSON object in this exact format:
   ]
 }`;
 
-    const content = await callBytezAI([
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ]);
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "Payment required. Please add credits." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const errorText = await response.text();
+      console.error("AI gateway error:", response.status, errorText);
+      throw new Error("Failed to generate questions");
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || "";
 
     // Parse JSON from response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -178,7 +176,7 @@ Return ONLY a valid JSON object in this exact format:
       };
     });
 
-    console.log(`Generated ${questionsWithIds.length} questions for weak areas using Bytez AI`);
+    console.log(`Generated ${questionsWithIds.length} questions for weak areas`);
 
     return new Response(
       JSON.stringify({ questions: questionsWithIds }),
