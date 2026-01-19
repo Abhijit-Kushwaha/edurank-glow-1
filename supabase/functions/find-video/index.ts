@@ -149,36 +149,42 @@ function formatViewCount(count: number): string {
   return count.toString();
 }
 
-// Bytez AI call function
-async function callBytezAI(messages: { role: string; content: string }[]): Promise<string> {
-  const BYTEZ_API_KEY = Deno.env.get('BYTEZ_API_KEY');
-  if (!BYTEZ_API_KEY) {
-    throw new Error('BYTEZ_API_KEY is not configured');
+// Lovable AI call function
+async function callLovableAI(messages: { role: string; content: string }[]): Promise<string> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    throw new Error('LOVABLE_API_KEY is not configured');
   }
 
-  console.log('Calling Bytez AI...');
+  console.log('Calling Lovable AI...');
   
-  const response = await fetch('https://api.bytez.com/models/v2/google/gemini-3-pro-preview/run', {
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Key ${BYTEZ_API_KEY}`,
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify({
+      model: 'google/gemini-3-flash-preview',
+      messages,
+    }),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('Bytez API error:', response.status, errorText);
+    console.error('Lovable AI error:', response.status, errorText);
     
     if (response.status === 429) {
       throw new Error('Rate limit exceeded. Please try again later.');
     }
-    throw new Error(`Bytez API error: ${response.status}`);
+    if (response.status === 402) {
+      throw new Error('AI credits exhausted. Please add funds to continue.');
+    }
+    throw new Error(`Lovable AI error: ${response.status}`);
   }
 
   const data = await response.json();
-  return data.output || data.choices?.[0]?.message?.content || '';
+  return data.choices?.[0]?.message?.content || '';
 }
 
 serve(async (req) => {
@@ -233,7 +239,7 @@ serve(async (req) => {
 
     console.log('Finding videos for topic:', sanitizedTopic);
 
-    const content = await callBytezAI([
+    const content = await callLovableAI([
       {
         role: 'user',
         content: `You are an educational content planner. Break down learning topics into 3-5 logical subtasks/subtopics that someone would need to learn to master the main topic.
