@@ -31,6 +31,7 @@ import StreakProtectionModal from '@/components/header/StreakProtectionModal';
 import { useUserStats } from '@/hooks/useUserStats';
 import { WeeklyGoalsWidget } from '@/components/dashboard/WeeklyGoalsWidget';
 import { StudyRemindersCard } from '@/components/dashboard/StudyRemindersCard';
+import { DailyChallengesCard } from '@/components/dashboard/DailyChallengesCard';
 
 interface Todo {
   id: string;
@@ -340,6 +341,9 @@ const Dashboard = () => {
           </div>
           <Progress value={progress} className="h-3" />
         </section>
+
+        {/* Daily Challenges */}
+        <DailyChallengesCard />
 
         {/* Weekly Goals Widget + Study Reminders */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">

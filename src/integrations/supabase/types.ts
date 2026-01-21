@@ -109,6 +109,45 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_challenges: {
+        Row: {
+          base_xp_reward: number
+          bonus_multiplier: number
+          challenge_type: string
+          created_at: string
+          description: string
+          difficulty: string
+          id: string
+          is_active: boolean
+          target_value: number
+          title: string
+        }
+        Insert: {
+          base_xp_reward?: number
+          bonus_multiplier?: number
+          challenge_type: string
+          created_at?: string
+          description: string
+          difficulty?: string
+          id?: string
+          is_active?: boolean
+          target_value: number
+          title: string
+        }
+        Update: {
+          base_xp_reward?: number
+          bonus_multiplier?: number
+          challenge_type?: string
+          created_at?: string
+          description?: string
+          difficulty?: string
+          id?: string
+          is_active?: boolean
+          target_value?: number
+          title?: string
+        }
+        Relationships: []
+      }
       global_topic_stats: {
         Row: {
           avg_accuracy: number
@@ -807,6 +846,59 @@ export type Database = {
         }
         Relationships: []
       }
+      user_daily_challenges: {
+        Row: {
+          challenge_date: string
+          challenge_id: string
+          completed_at: string | null
+          created_at: string
+          current_value: number
+          expires_at: string
+          id: string
+          is_completed: boolean
+          target_value: number
+          updated_at: string
+          user_id: string
+          xp_earned: number | null
+        }
+        Insert: {
+          challenge_date?: string
+          challenge_id: string
+          completed_at?: string | null
+          created_at?: string
+          current_value?: number
+          expires_at: string
+          id?: string
+          is_completed?: boolean
+          target_value: number
+          updated_at?: string
+          user_id: string
+          xp_earned?: number | null
+        }
+        Update: {
+          challenge_date?: string
+          challenge_id?: string
+          completed_at?: string | null
+          created_at?: string
+          current_value?: number
+          expires_at?: string
+          id?: string
+          is_completed?: boolean
+          target_value?: number
+          updated_at?: string
+          user_id?: string
+          xp_earned?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_daily_challenges_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_rewards: {
         Row: {
           achievement_id: string
@@ -1097,6 +1189,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_daily_challenges: {
+        Args: { p_user_id: string }
+        Returns: {
+          challenge_date: string
+          challenge_id: string
+          completed_at: string | null
+          created_at: string
+          current_value: number
+          expires_at: string
+          id: string
+          is_completed: boolean
+          target_value: number
+          updated_at: string
+          user_id: string
+          xp_earned: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "user_daily_challenges"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       check_achievements: {
         Args: { uid: string }
         Returns: {
