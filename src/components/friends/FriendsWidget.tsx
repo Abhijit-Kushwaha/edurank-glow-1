@@ -4,10 +4,28 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useFriends } from '@/hooks/useFriends';
+import { usePresence } from '@/hooks/usePresence';
+import OnlineIndicator from './OnlineIndicator';
+import { useMemo } from 'react';
 
 const FriendsWidget = () => {
   const navigate = useNavigate();
   const { friends, pendingRequests, loading } = useFriends();
+
+  // Extract friend IDs for presence tracking
+  const friendIds = useMemo(() => friends.map((f) => f.id), [friends]);
+  const { isOnline } = usePresence(friendIds);
+
+  // Sort friends: online first
+  const sortedFriends = useMemo(
+    () =>
+      [...friends].sort((a, b) => {
+        const aOnline = isOnline(a.id) ? 1 : 0;
+        const bOnline = isOnline(b.id) ? 1 : 0;
+        return bOnline - aOnline;
+      }),
+    [friends, isOnline]
+  );
 
   return (
     <div className="glass-card rounded-2xl p-5 animate-fade-in">
@@ -39,21 +57,30 @@ const FriendsWidget = () => {
         </div>
       ) : (
         <div className="space-y-2">
-          {friends.slice(0, 4).map((friend) => (
+          {sortedFriends.slice(0, 4).map((friend) => (
             <button
               key={friend.id}
               onClick={() => navigate('/friends', { state: { chatWith: friend.id } })}
               className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors text-left"
             >
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={friend.avatarUrl || undefined} />
-                <AvatarFallback className="text-xs bg-primary/20 text-primary">
-                  {friend.name[0]?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={friend.avatarUrl || undefined} />
+                  <AvatarFallback className="text-xs bg-primary/20 text-primary">
+                    {friend.name[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <OnlineIndicator isOnline={isOnline(friend.id)} size="sm" />
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{friend.name}</p>
-                <p className="text-xs text-muted-foreground">{friend.totalXp} XP</p>
+                <p className="text-xs text-muted-foreground">
+                  {isOnline(friend.id) ? (
+                    <span className="text-success">Online</span>
+                  ) : (
+                    `${friend.totalXp} XP`
+                  )}
+                </p>
               </div>
               <MessageCircle className="h-4 w-4 text-muted-foreground" />
             </button>

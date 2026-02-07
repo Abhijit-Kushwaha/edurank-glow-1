@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Users, MessageCircle, UserPlus, ArrowLeft, Phone, Video,
@@ -11,11 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Logo from '@/components/Logo';
 import { useFriends, Friend } from '@/hooks/useFriends';
 import { useVideoCall } from '@/hooks/useVideoCall';
+import { usePresence } from '@/hooks/usePresence';
 import FriendSearch from '@/components/friends/FriendSearch';
 import InviteFriend from '@/components/friends/InviteFriend';
 import ChatWindow from '@/components/friends/ChatWindow';
 import VideoCallDialog from '@/components/friends/VideoCallDialog';
 import IncomingCallDialog from '@/components/friends/IncomingCallDialog';
+import OnlineIndicator from '@/components/friends/OnlineIndicator';
 
 const Friends = () => {
   const navigate = useNavigate();
@@ -46,9 +48,24 @@ const Friends = () => {
     toggleVideo,
   } = useVideoCall();
 
+  // Presence tracking
+  const friendIds = useMemo(() => friends.map((f) => f.id), [friends]);
+  const { isOnline } = usePresence(friendIds);
+
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [activeTab, setActiveTab] = useState('friends');
   const [callDialogOpen, setCallDialogOpen] = useState(false);
+
+  // Sort friends: online first
+  const sortedFriends = useMemo(
+    () =>
+      [...friends].sort((a, b) => {
+        const aOnline = isOnline(a.id) ? 1 : 0;
+        const bOnline = isOnline(b.id) ? 1 : 0;
+        return bOnline - aOnline;
+      }),
+    [friends, isOnline]
+  );
 
   // Handle deep link from widget
   useEffect(() => {
@@ -70,7 +87,6 @@ const Friends = () => {
 
   const handleAnswerCall = () => {
     answerCall();
-    // Find the friend for the call dialog
     if (incomingCall) {
       const friend = friends.find(f => f.id === incomingCall.callerId);
       if (friend) {
@@ -133,7 +149,7 @@ const Friends = () => {
                     </Button>
                   </div>
                 ) : (
-                  friends.map((friend) => (
+                  sortedFriends.map((friend) => (
                     <div
                       key={friend.id}
                       className={`flex items-center gap-3 p-3 rounded-xl transition-colors cursor-pointer ${
@@ -141,15 +157,24 @@ const Friends = () => {
                       }`}
                       onClick={() => setSelectedFriend(friend)}
                     >
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={friend.avatarUrl || undefined} />
-                        <AvatarFallback className="bg-primary/20 text-primary">
-                          {friend.name[0]?.toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={friend.avatarUrl || undefined} />
+                          <AvatarFallback className="bg-primary/20 text-primary">
+                            {friend.name[0]?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <OnlineIndicator isOnline={isOnline(friend.id)} size="md" />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm truncate">{friend.name}</p>
-                        <p className="text-xs text-muted-foreground">{friend.totalXp} XP</p>
+                        <p className="text-xs text-muted-foreground">
+                          {isOnline(friend.id) ? (
+                            <span className="text-success">Online</span>
+                          ) : (
+                            `${friend.totalXp} XP`
+                          )}
+                        </p>
                       </div>
                       <div className="flex gap-1">
                         <Button
@@ -245,18 +270,27 @@ const Friends = () => {
           <div className="lg:col-span-2 glass-card rounded-2xl flex flex-col min-h-[500px]">
             {selectedFriend ? (
               <>
-                {/* Chat header */}
+                {/* Chat header with online status */}
                 <div className="p-4 border-b border-border flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={selectedFriend.avatarUrl || undefined} />
-                      <AvatarFallback className="bg-primary/20 text-primary">
-                        {selectedFriend.name[0]?.toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="relative">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={selectedFriend.avatarUrl || undefined} />
+                        <AvatarFallback className="bg-primary/20 text-primary">
+                          {selectedFriend.name[0]?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <OnlineIndicator isOnline={isOnline(selectedFriend.id)} size="md" />
+                    </div>
                     <div>
                       <p className="font-medium">{selectedFriend.name}</p>
-                      <p className="text-xs text-muted-foreground">{selectedFriend.totalXp} XP</p>
+                      <p className="text-xs text-muted-foreground">
+                        {isOnline(selectedFriend.id) ? (
+                          <span className="text-success">Online</span>
+                        ) : (
+                          'Offline'
+                        )}
+                      </p>
                     </div>
                   </div>
                   <div className="flex gap-2">
