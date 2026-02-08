@@ -1,8 +1,7 @@
-import { useRef, useEffect } from 'react';
-import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff } from 'lucide-react';
+import { useRef, useEffect, useState } from 'react';
+import { PhoneOff, Mic, MicOff, Video, VideoOff } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
 
 interface VideoCallDialogProps {
   open: boolean;
@@ -32,16 +31,38 @@ const VideoCallDialog = ({
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
 
+  // Attach local stream to local video element
   useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
+    const videoEl = localVideoRef.current;
+    if (videoEl && localStream) {
+      videoEl.srcObject = localStream;
+      videoEl.muted = true; // Always mute local to avoid echo
+      videoEl.play().catch((e) => console.warn('[UI] Local video play error:', e));
     }
+    return () => {
+      if (videoEl) videoEl.srcObject = null;
+    };
   }, [localStream]);
 
+  // CRITICAL: Attach remote stream to remote video element
+  // This must use event.streams[0] which is set in useVideoCall's pc.ontrack
   useEffect(() => {
-    if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream;
+    const videoEl = remoteVideoRef.current;
+    if (videoEl && remoteStream) {
+      console.log('[UI] Attaching remote stream to video element', {
+        audioTracks: remoteStream.getAudioTracks().length,
+        videoTracks: remoteStream.getVideoTracks().length,
+        active: remoteStream.active,
+      });
+      videoEl.srcObject = remoteStream;
+      videoEl.autoplay = true;
+      videoEl.playsInline = true;
+      // Force play in case autoplay is blocked
+      videoEl.play().catch((e) => console.warn('[UI] Remote video play error:', e));
     }
+    return () => {
+      if (videoEl) videoEl.srcObject = null;
+    };
   }, [remoteStream]);
 
   const handleMute = () => {
@@ -67,7 +88,7 @@ const VideoCallDialog = ({
           <div className="absolute top-3 left-3 z-10 px-3 py-1 rounded-full bg-background/80 backdrop-blur-sm text-sm">
             {callState === 'connected' ? (
               <span className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
+                <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
                 Connected with {friendName}
               </span>
             ) : callState === 'calling' ? (
@@ -77,7 +98,7 @@ const VideoCallDialog = ({
             )}
           </div>
 
-          {/* Remote video (main) */}
+          {/* Remote video (main view) */}
           <div className="relative w-full aspect-video bg-muted flex items-center justify-center">
             {remoteStream ? (
               <video
@@ -100,7 +121,7 @@ const VideoCallDialog = ({
             )}
           </div>
 
-          {/* Local video (PIP) */}
+          {/* Local video (picture-in-picture) */}
           {localStream && (
             <div className="absolute bottom-16 right-3 w-32 aspect-video rounded-lg overflow-hidden border-2 border-border shadow-lg">
               <video
@@ -108,7 +129,7 @@ const VideoCallDialog = ({
                 autoPlay
                 playsInline
                 muted
-                className="w-full h-full object-cover mirror"
+                className="w-full h-full object-cover"
                 style={{ transform: 'scaleX(-1)' }}
               />
             </div>
