@@ -3,8 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // Allowed origins for CORS
 const ALLOWED_ORIGINS = [
-  'https://edurank.app',
-  'https://www.edurank.app',
+  'https://brainbuddy.app',
+  'https://www.brainbuddy.app',
   'http://localhost:5173',
   'http://localhost:3000',
   'https://lovable.dev',

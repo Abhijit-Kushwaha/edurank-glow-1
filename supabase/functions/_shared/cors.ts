@@ -2,8 +2,8 @@
 
 const ALLOWED_ORIGINS = [
   // Production
-  'https://edurank.app',
-  'https://www.edurank.app',
+  'https://brainbuddy.app',
+  'https://www.brainbuddy.app',
   
   // Development
   'http://localhost:5173',
