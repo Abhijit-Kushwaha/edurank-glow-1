@@ -189,7 +189,7 @@ const showNotification = (message: string) => {
   }
 
   if (Notification.permission === 'granted') {
-    new Notification('EduRank Study Reminder', {
+    new Notification('BrainBuddy Study Reminder', {
       body: message,
       icon: '/favicon.ico',
     });

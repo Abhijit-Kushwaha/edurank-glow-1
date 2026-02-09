@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Play, BookOpen, Trophy, ArrowRight } from 'lucide-react';
+import { Sparkles, MessageCircle, BookOpen, Trophy, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,7 +9,6 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
 
-  // Redirect to dashboard if already logged in
   useEffect(() => {
     if (!isLoading && user) {
       navigate('/dashboard');
@@ -48,17 +47,17 @@ const Index = () => {
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-fade-in">
             <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">AI-Powered Study Platform</span>
+            <span className="text-sm font-medium">Your AI Friend for Learning & Problem Solving</span>
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-slide-up font-display">
-            Learn Smarter with{' '}
-            <span className="neon-text">EduRank</span>
+            Solve Any Problem with{' '}
+            <span className="neon-text">BrainBuddy</span>
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto animate-slide-up">
-            Transform your study sessions with AI-generated video recommendations, 
-            smart notes, and interactive quizzes tailored to your learning goals.
+            Chat, learn, and grow with your AI study partner. Get personalized
+            video recommendations, smart notes, and interactive quizzes.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-slide-up">
@@ -68,17 +67,16 @@ const Index = () => {
               className="text-lg"
               onClick={() => navigate('/auth')}
             >
-              Get Started Free
+              Start Learning Free
               <ArrowRight className="h-5 w-5 ml-2" />
             </Button>
             <Button
               variant="outline"
               size="lg"
               className="text-lg"
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate('/about')}
             >
-              <Play className="h-5 w-5 mr-2" />
-              Watch Demo
+              Learn More
             </Button>
           </div>
 
@@ -86,19 +84,19 @@ const Index = () => {
           <div className="grid md:grid-cols-3 gap-6 mt-16">
             {[
               {
-                icon: Play,
-                title: 'AI Video Recommendations',
-                description: 'Get personalized video suggestions based on your study topics',
+                icon: MessageCircle,
+                title: 'AI Chat',
+                description: 'Instant problem solving with your AI study buddy',
               },
               {
                 icon: BookOpen,
                 title: 'Smart Notes',
-                description: 'AI generates comprehensive notes as you watch videos',
+                description: 'AI-generated comprehensive study notes from videos',
               },
               {
                 icon: Trophy,
                 title: 'Interactive Quizzes',
-                description: 'Test your knowledge with adaptive quizzes and instant feedback',
+                description: 'Test your knowledge and track your progress',
               },
             ].map((feature, index) => (
               <div
@@ -119,7 +117,7 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="relative z-10 container mx-auto px-4 py-8 text-center text-muted-foreground text-sm">
-        <p className="mb-2">© 2024 EduRank. All rights reserved.</p>
+        <p className="mb-2">© 2025 BrainBuddy. All rights reserved.</p>
         <button
           onClick={() => navigate('/about')}
           className="text-primary hover:underline"

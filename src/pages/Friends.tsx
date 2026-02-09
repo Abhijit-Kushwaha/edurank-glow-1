@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Users, MessageCircle, UserPlus, ArrowLeft, Phone, Video,
+  Users, MessageCircle, UserPlus, ArrowLeft,
   Check, X, Trash2, Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,13 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Logo from '@/components/Logo';
 import { useFriends, Friend } from '@/hooks/useFriends';
-import { useVideoCall } from '@/hooks/useVideoCall';
 import { usePresence } from '@/hooks/usePresence';
 import FriendSearch from '@/components/friends/FriendSearch';
 import InviteFriend from '@/components/friends/InviteFriend';
 import ChatWindow from '@/components/friends/ChatWindow';
-import VideoCallDialog from '@/components/friends/VideoCallDialog';
-import IncomingCallDialog from '@/components/friends/IncomingCallDialog';
 import OnlineIndicator from '@/components/friends/OnlineIndicator';
 
 const Friends = () => {
@@ -35,28 +32,12 @@ const Friends = () => {
     searchUsers,
   } = useFriends();
 
-  const {
-    callState,
-    localStream,
-    remoteStream,
-    incomingCall,
-    startCall,
-    answerCall,
-    rejectCall,
-    endCall,
-    toggleMute,
-    toggleVideo,
-  } = useVideoCall();
-
-  // Presence tracking
   const friendIds = useMemo(() => friends.map((f) => f.id), [friends]);
   const { isOnline } = usePresence(friendIds);
 
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [activeTab, setActiveTab] = useState('friends');
-  const [callDialogOpen, setCallDialogOpen] = useState(false);
 
-  // Sort friends: online first
   const sortedFriends = useMemo(
     () =>
       [...friends].sort((a, b) => {
@@ -67,7 +48,6 @@ const Friends = () => {
     [friends, isOnline]
   );
 
-  // Handle deep link from widget
   useEffect(() => {
     const state = location.state as { chatWith?: string } | null;
     if (state?.chatWith && friends.length > 0) {
@@ -79,26 +59,8 @@ const Friends = () => {
     }
   }, [location.state, friends]);
 
-  const handleStartCall = (friend: Friend) => {
-    setSelectedFriend(friend);
-    setCallDialogOpen(true);
-    startCall(friend.id);
-  };
-
-  const handleAnswerCall = () => {
-    answerCall();
-    if (incomingCall) {
-      const friend = friends.find(f => f.id === incomingCall.callerId);
-      if (friend) {
-        setSelectedFriend(friend);
-        setCallDialogOpen(true);
-      }
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
       <header className="sticky top-0 z-50 glass-card border-b border-border/50">
         <div className="container mx-auto px-4 py-3 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
@@ -117,7 +79,6 @@ const Friends = () => {
 
       <main className="flex-1 container mx-auto px-4 py-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
-          {/* Left panel - Friends list */}
           <div className="lg:col-span-1 space-y-4">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="w-full grid grid-cols-3">
@@ -184,14 +145,6 @@ const Friends = () => {
                           onClick={(e) => { e.stopPropagation(); setSelectedFriend(friend); }}
                         >
                           <MessageCircle className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={(e) => { e.stopPropagation(); handleStartCall(friend); }}
-                        >
-                          <Video className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -266,11 +219,9 @@ const Friends = () => {
             </Tabs>
           </div>
 
-          {/* Right panel - Chat */}
           <div className="lg:col-span-2 glass-card rounded-2xl flex flex-col min-h-[500px]">
             {selectedFriend ? (
               <>
-                {/* Chat header with online status */}
                 <div className="p-4 border-b border-border flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="relative">
@@ -293,14 +244,6 @@ const Friends = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="icon" onClick={() => handleStartCall(selectedFriend)}>
-                      <Phone className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="icon" onClick={() => handleStartCall(selectedFriend)}>
-                      <Video className="h-4 w-4" />
-                    </Button>
-                  </div>
                 </div>
                 <div className="flex-1 min-h-0">
                   <ChatWindow friendUserId={selectedFriend.id} friendName={selectedFriend.name} />
@@ -320,34 +263,6 @@ const Friends = () => {
           </div>
         </div>
       </main>
-
-      {/* Video call dialog */}
-      {callDialogOpen && selectedFriend && (
-        <VideoCallDialog
-          open={callDialogOpen}
-          onOpenChange={(open) => {
-            if (!open) endCall();
-            setCallDialogOpen(open);
-          }}
-          localStream={localStream}
-          remoteStream={remoteStream}
-          onEndCall={endCall}
-          onToggleMute={toggleMute}
-          onToggleVideo={toggleVideo}
-          friendName={selectedFriend.name}
-          callState={callState}
-        />
-      )}
-
-      {/* Incoming call dialog */}
-      {incomingCall && callState === 'ringing' && (
-        <IncomingCallDialog
-          open={true}
-          callerName={incomingCall.callerName}
-          onAnswer={handleAnswerCall}
-          onReject={rejectCall}
-        />
-      )}
     </div>
   );
 };
