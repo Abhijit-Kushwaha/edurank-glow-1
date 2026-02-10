@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { FilterProvider } from "@/contexts/FilterContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AppLayout from "@/components/layouts/AppLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -20,8 +21,16 @@ import NotFound from "./pages/NotFound";
 import FixWeakAreas from "./pages/FixWeakAreas";
 import Analysis from "./pages/Analysis";
 import Friends from "./pages/Friends";
+import AIChat from "./pages/AIChat";
+import AINotes from "./pages/AINotes";
 
 const queryClient = new QueryClient();
+
+const ProtectedWithLayout = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute>
+    <AppLayout>{children}</AppLayout>
+  </ProtectedRoute>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -29,104 +38,36 @@ const App = () => (
       <FilterProvider>
         <TooltipProvider>
           <Toaster />
-          <Sonner 
+          <Sonner
             position="top-center"
             toastOptions={{
               classNames: {
-                toast: 'glass-card border-border',
-                title: 'text-foreground',
-                description: 'text-muted-foreground',
+                toast: "glass-card border-border",
+                title: "text-foreground",
+                description: "text-muted-foreground",
               },
             }}
           />
           <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/video/:todoId"
-              element={
-                <ProtectedRoute>
-                  <VideoPlayer />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/notes/:todoId"
-              element={
-                <ProtectedRoute>
-                  <Notes />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/quiz/:quizId"
-              element={
-                <ProtectedRoute>
-                  <Quiz />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/quiz-history"
-              element={
-                <ProtectedRoute>
-                  <QuizHistory />
-                </ProtectedRoute>
-              }
-              />
-            <Route
-              path="/leaderboard"
-              element={
-                <ProtectedRoute>
-                  <Leaderboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/fix-weak-areas"
-              element={
-                <ProtectedRoute>
-                  <FixWeakAreas />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/analysis"
-              element={
-                <ProtectedRoute>
-                  <Analysis />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/friends"
-              element={
-                <ProtectedRoute>
-                  <Friends />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/about" element={<About />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/dashboard" element={<ProtectedWithLayout><Dashboard /></ProtectedWithLayout>} />
+              <Route path="/ai-chat" element={<ProtectedWithLayout><AIChat /></ProtectedWithLayout>} />
+              <Route path="/ai-notes" element={<ProtectedWithLayout><AINotes /></ProtectedWithLayout>} />
+              <Route path="/video/:todoId" element={<ProtectedWithLayout><VideoPlayer /></ProtectedWithLayout>} />
+              <Route path="/notes/:todoId" element={<ProtectedWithLayout><Notes /></ProtectedWithLayout>} />
+              <Route path="/quiz/:quizId" element={<ProtectedWithLayout><Quiz /></ProtectedWithLayout>} />
+              <Route path="/profile" element={<ProtectedWithLayout><Profile /></ProtectedWithLayout>} />
+              <Route path="/quiz-history" element={<ProtectedWithLayout><QuizHistory /></ProtectedWithLayout>} />
+              <Route path="/leaderboard" element={<ProtectedWithLayout><Leaderboard /></ProtectedWithLayout>} />
+              <Route path="/fix-weak-areas" element={<ProtectedWithLayout><FixWeakAreas /></ProtectedWithLayout>} />
+              <Route path="/analysis" element={<ProtectedWithLayout><Analysis /></ProtectedWithLayout>} />
+              <Route path="/friends" element={<ProtectedWithLayout><Friends /></ProtectedWithLayout>} />
+              <Route path="/about" element={<About />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
         </TooltipProvider>
       </FilterProvider>
     </AuthProvider>
