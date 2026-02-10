@@ -7,29 +7,20 @@ import {
   Play,
   BookOpen,
   Trophy,
-  LogOut,
   Sparkles,
   TrendingUp,
   Loader2,
-  Link as LinkIcon,
   Trash2,
   Search,
-  User,
-  Users,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import Logo from '@/components/Logo';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useRateLimiter } from '@/hooks/useRateLimiter';
 import WeakTopicCards from '@/components/WeakTopicCards';
-import XpLevelBar from '@/components/header/XpLevelBar';
-import StreakDisplay from '@/components/header/StreakDisplay';
-import StreakProtectionModal from '@/components/header/StreakProtectionModal';
-import { useUserStats } from '@/hooks/useUserStats';
 import { WeeklyGoalsWidget } from '@/components/dashboard/WeeklyGoalsWidget';
 import { StudyRemindersCard } from '@/components/dashboard/StudyRemindersCard';
 import { DailyChallengesCard } from '@/components/dashboard/DailyChallengesCard';
@@ -47,9 +38,8 @@ interface Todo {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, profile, logout } = useAuth();
+  const { user, profile } = useAuth();
   const { canMakeRequest, isRateLimited } = useRateLimiter();
-  const { stats, useStreakProtection } = useUserStats();
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodoTitle, setNewTodoTitle] = useState('');
   const [showInput, setShowInput] = useState(false);
@@ -253,11 +243,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/auth');
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -267,68 +252,8 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen pb-24">
-      {/* Header */}
-      <header className="sticky top-0 z-50 glass-card border-b border-border/50">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Logo size="sm" />
-          
-          {/* XP Bar and Streak Display */}
-          <div className="flex items-center gap-2">
-            {stats && (
-              <>
-                <XpLevelBar
-                  level={stats.level}
-                  totalXp={stats.totalXp}
-                  xpProgress={stats.xpProgress}
-                  xpToNextLevel={stats.xpToNextLevel}
-                  xpMultiplier={stats.xpMultiplier}
-                />
-                <StreakDisplay
-                  currentStreak={stats.currentStreak}
-                  longestStreak={stats.longestStreak}
-                  streakProtections={stats.streakProtections}
-                  onStreakClick={() => setStreakModalOpen(true)}
-                />
-              </>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground hidden lg:block">
-              Hi, {displayName}!
-            </span>
-            <Button variant="ghost" size="icon" onClick={() => navigate('/analysis')} title="Your Analysis">
-              <TrendingUp className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => navigate('/friends')} title="Friends">
-              <Users className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => navigate('/leaderboard')} title="Leaderboard">
-              <Trophy className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => navigate('/profile')}>
-              <User className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={handleLogout}>
-              <LogOut className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Streak Protection Modal */}
-      {stats && (
-        <StreakProtectionModal
-          open={streakModalOpen}
-          onOpenChange={setStreakModalOpen}
-          currentStreak={stats.currentStreak}
-          streakProtections={stats.streakProtections}
-          onUseProtection={useStreakProtection}
-        />
-      )}
-
-      <main className="container mx-auto px-4 py-6 space-y-8">
+    <div className="pb-24">
+      <div className="container mx-auto px-4 py-6 space-y-8">
         {/* Progress Section */}
         <section className="glass-card rounded-2xl p-6 animate-fade-in">
           <div className="flex items-center justify-between mb-4">
@@ -488,7 +413,7 @@ const Dashboard = () => {
             )}
           </div>
         </section>
-      </main>
+      </div>
 
       {/* FAB */}
       {!showInput && (

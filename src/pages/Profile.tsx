@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Coins, RefreshCw, Loader2, Trophy, Award, TrendingUp, Camera } from 'lucide-react';
+import { User, Coins, RefreshCw, Loader2, Trophy, Award, TrendingUp, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import Logo from '@/components/Logo';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import AchievementsPanel from '@/components/achievements/AchievementsPanel';
@@ -156,18 +155,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen pb-8">
-      {/* Header */}
-      <header className="sticky top-0 z-50 glass-card border-b border-border/50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <Logo size="sm" />
-          </div>
-        </div>
-      </header>
+    <div className="pb-8">
 
       <main className="container mx-auto px-4 py-6 space-y-6 max-w-2xl">
         {/* Profile Info */}

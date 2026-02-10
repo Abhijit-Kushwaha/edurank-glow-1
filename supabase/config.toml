@@ -21,3 +21,9 @@ verify_jwt = true
 
 [functions.fix-weak-areas-quiz]
 verify_jwt = true
+
+[functions.ai-chat]
+verify_jwt = true
+
+[functions.ai-notes-gen]
+verify_jwt = true
