@@ -147,7 +147,7 @@ export const useFriends = () => {
         user_id: user.id,
         friend_id: friendUserId,
         status: 'pending',
-      } as any);
+      } as Record<string, unknown>);
 
       if (error) throw error;
       toast.success('Friend request sent!');
@@ -215,7 +215,7 @@ export const useFriends = () => {
         user_id: user.id,
         code,
         expires_at: expiresAt,
-      } as any);
+      } as Record<string, unknown>);
 
       if (error) throw error;
       return code;

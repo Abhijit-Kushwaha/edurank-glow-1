@@ -62,7 +62,7 @@ export const useDailyChallenges = () => {
       if (fetchError) throw fetchError;
 
       // Transform the data to match our interface
-      const transformedChallenges = (userChallenges || []).map((uc: any) => ({
+      const transformedChallenges = (userChallenges || []).map((uc: Record<string, unknown>) => ({
         ...uc,
         challenge: uc.challenge as DailyChallenge,
       }));
