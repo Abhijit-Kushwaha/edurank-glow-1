@@ -23,6 +23,12 @@ import Analysis from "./pages/Analysis";
 import Friends from "./pages/Friends";
 import Games from "./pages/Games";
 import GamePlayer from "./pages/GamePlayer";
+import AINotes from "./pages/AINotes";
+import AIQuiz from "./pages/AIQuiz";
+import VideoSearch from "./pages/VideoSearch";
+import CodingLab from "./pages/CodingLab";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +53,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route
               path="/dashboard"
               element={
@@ -132,6 +140,38 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <GamePlayer />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ai-notes"
+              element={
+                <ProtectedRoute>
+                  <AINotes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ai-quiz"
+              element={
+                <ProtectedRoute>
+                  <AIQuiz />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/video-search"
+              element={
+                <ProtectedRoute>
+                  <VideoSearch />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/coding-lab"
+              element={
+                <ProtectedRoute>
+                  <CodingLab />
                 </ProtectedRoute>
               }
             />

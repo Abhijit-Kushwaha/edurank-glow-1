@@ -257,6 +257,18 @@ const Auth = () => {
               />
             </div>
 
+            {isLogin && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => navigate('/forgot-password')}
+                  className="text-xs text-primary hover:underline font-medium"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            )}
+
             <Button
               type="submit"
               variant="neon"
