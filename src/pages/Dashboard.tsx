@@ -109,15 +109,15 @@ const Dashboard = () => {
 
       let videoId: string | null = null;
       let videoDescription: string | null = null;
-      let subtasksData: any[] = [];
+      let subtasksData: Array<Record<string, unknown>> = [];
 
       try {
         const { data: videoData, error: videoError } = await supabase.functions.invoke('find-video', {
           body: { topic: newTodoTitle.trim() },
         });
 
-        if (!videoError && videoData && !videoData.error) {
-          videoId = videoData.videoId;
+      if (!videoError && videoData && !(videoData as Record<string, unknown>).error) {
+        videoId = (videoData as Record<string, unknown>).videoId as string | null;
           videoDescription = `${videoData.title} by ${videoData.channel} - ${videoData.reason}`;
           subtasksData = videoData.subtasks || [];
         }

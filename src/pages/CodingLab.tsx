@@ -57,8 +57,8 @@ const CodingLab: React.FC = () => {
       };
       setMessages((prev) => [...prev, assistantMessage]);
       toast.success('Code generated successfully!');
-    } catch (err: any) {
-      const message = err.message || 'Failed to generate code';
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to generate code';
       setError(message);
       toast.error(message);
       setMessages((prev) => prev.slice(0, -1)); // Remove the user message if failed

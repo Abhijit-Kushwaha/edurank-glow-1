@@ -52,6 +52,14 @@ export async function generateNotesWithBytez(
 /**
  * Generate quiz questions using the secure generate-quiz edge function
  */
+interface QuizQuestion {
+  id?: string;
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  difficulty?: string;
+}
+
 export async function generateQuizWithBytez(
   notes: string,
   filters: {
@@ -61,7 +69,7 @@ export async function generateQuizWithBytez(
   },
   questionCount: number = 10,
   difficultyLevel: 'easy' | 'medium' | 'hard' = 'medium'
-): Promise<{ questions?: any[]; error?: string }> {
+): Promise<{ questions?: QuizQuestion[]; error?: string }> {
   try {
     const { data, error } = await supabase.functions.invoke('generate-quiz', {
       body: {
@@ -98,7 +106,7 @@ export async function findVideoWithBytez(
     videoType?: string;
     videoDuration?: string;
   }
-): Promise<{ videos?: any[]; error?: string }> {
+): Promise<{ videos?: Array<Record<string, unknown>>; error?: string }> {
   // Validate that user is not searching for YouTube shorts
   if (topic.toLowerCase().includes('shorts') || topic.includes('youtube.com/shorts')) {
     return {
@@ -122,7 +130,7 @@ export async function findVideoWithBytez(
     const videos = data?.videos || [];
     
     // Additional client-side validation to ensure no shorts
-    const validVideos = videos.filter((video: any) => {
+    const validVideos = videos.filter((video: Record<string, unknown>) => {
       return video.duration && video.duration >= 10;
     });
 

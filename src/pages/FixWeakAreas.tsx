@@ -106,7 +106,7 @@ const FixWeakAreas = () => {
 
       const todoIds = [...new Set(analysisData?.map(a => a.todo_id) || [])];
       
-      let notesMap = new Map<string, string>();
+      const notesMap = new Map<string, string>();
       if (todoIds.length > 0) {
         const { data: notesData } = await supabase
           .from('notes')
@@ -167,7 +167,7 @@ const FixWeakAreas = () => {
         if (error) throw error;
         if (data.error) throw new Error(data.error);
 
-        const quizQuestions = (data.questions || []).map((q: any, i: number) => ({
+        const quizQuestions = (data.questions || []).map((q: Record<string, unknown>, i: number) => ({
           ...q,
           id: i + 1,
         }));
@@ -189,19 +189,20 @@ const FixWeakAreas = () => {
       if (error) throw error;
       if (data.error) throw new Error(data.error);
 
-      const quizQuestions = (data.questions || []).map((q: any, i: number) => ({
+      const quizQuestions = (data.questions || []).map((q: Record<string, unknown>, i: number) => ({
         ...q,
         id: i + 1,
       }));
 
       setQuestions(quizQuestions);
       setQuestionStartTime(Date.now());
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
       console.error('Error generating questions:', error);
       
-      if (error.message?.includes('429')) {
+      if (errorMsg?.includes('429')) {
         toast.error('Rate limit exceeded. Please try again later.');
-      } else if (error.message?.includes('402')) {
+      } else if (errorMsg?.includes('402')) {
         toast.error('Please add credits to continue.');
       } else {
         toast.error('Failed to generate practice questions');

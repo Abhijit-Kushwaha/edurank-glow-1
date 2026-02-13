@@ -107,5 +107,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate") as unknown], // eslint-disable-line @typescript-eslint/no-require-imports
 } satisfies Config;

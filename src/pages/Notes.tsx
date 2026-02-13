@@ -106,10 +106,10 @@ const Notes = () => {
 
       if (error) throw error;
 
-      const formattedTopics: WeakTopic[] = (data || []).map((t: any) => ({
-        topic_id: t.topic_id,
-        topic_name: t.topics?.name || 'Unknown',
-        weakness_score: t.weakness_score,
+      const formattedTopics: WeakTopic[] = (data || []).map((t: Record<string, unknown>) => ({
+        topic_id: (t.topic_id as string),
+        topic_name: ((t.topics as Record<string, unknown>)?.name as string) || 'Unknown',
+        weakness_score: (t.weakness_score as number),
       }));
 
       setWeakTopics(formattedTopics);

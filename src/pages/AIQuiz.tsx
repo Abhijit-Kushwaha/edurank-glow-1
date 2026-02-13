@@ -50,8 +50,9 @@ const AIQuiz: React.FC = () => {
       setSubmitted(false);
       setShowResults(false);
       toast.success('Quiz generated successfully!');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to generate quiz');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to generate quiz';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
