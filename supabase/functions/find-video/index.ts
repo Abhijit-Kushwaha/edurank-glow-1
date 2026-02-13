@@ -30,8 +30,8 @@ const FORBIDDEN_PATTERNS = [
   /forget\s+(all\s+)?previous/i,
   /system\s*:\s*/i,
   /\[\s*INST\s*\]/i,
-  /\<\s*\|\s*im_start\s*\|\s*\>/i,
-  /\<\s*\|\s*im_end\s*\|\s*\>/i,
+  /\|\s*im_start\s*\|/i,
+  /\|\s*im_end\s*\|/i,
   /\{\{\s*system/i,
   /pretend\s+you\s+are/i,
   /act\s+as\s+if/i,
@@ -60,8 +60,9 @@ function sanitizeInput(input: string, maxLength: number = MAX_TOPIC_LENGTH): { i
     }
   }
 
+  // eslint-disable-next-line no-control-regex
   sanitized = sanitized
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // eslint-disable-line no-control-regex
     .replace(/[<>]/g, '')
     .replace(/\\/g, '')
     .trim();
@@ -107,7 +108,7 @@ async function searchYouTube(query: string, apiKey: string, maxResults: number =
   }
   
   const searchData = await searchResponse.json();
-  const videoIds = searchData.items?.map((item: any) => item.id.videoId).join(',');
+  const videoIds = searchData.items?.map((item: Record<string, unknown>) => ((item.id as Record<string, unknown>).videoId as string)).join(',');
   
   if (!videoIds) {
     return [];
@@ -123,9 +124,9 @@ async function searchYouTube(query: string, apiKey: string, maxResults: number =
   
   const detailsData = await detailsResponse.json();
   
-  const videos: YouTubeVideo[] = detailsData.items?.map((item: any) => {
-    const viewCount = parseInt(item.statistics?.viewCount || '0');
-    const likeCount = parseInt(item.statistics?.likeCount || '0');
+  const videos: YouTubeVideo[] = detailsData.items?.map((item: Record<string, unknown>) => {
+    const viewCount = parseInt((item.statistics as Record<string, unknown>)?.viewCount as string || '0');
+    const likeCount = parseInt((item.statistics as Record<string, unknown>)?.likeCount as string || '0');
     
     const publishDate = new Date(item.snippet.publishedAt);
     const daysSincePublish = Math.max(1, (Date.now() - publishDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -316,7 +317,7 @@ Break this into 3-5 subtasks and provide optimized YouTube search queries for ed
     }
 
     const subtasksWithVideos = await Promise.all(
-      (parsedData.subtasks || []).slice(0, 5).map(async (subtask: any, idx: number) => {
+      (parsedData.subtasks || []).slice(0, 5).map(async (subtask: Record<string, unknown>, idx: number) => {
         try {
           const videos = await searchYouTube(subtask.searchQuery || `${sanitizedTopic} ${subtask.title}`, YOUTUBE_API_KEY, 5);
           return {

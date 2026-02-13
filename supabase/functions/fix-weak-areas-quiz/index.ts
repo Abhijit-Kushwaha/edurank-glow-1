@@ -186,7 +186,7 @@ For each question:
     const parsed = JSON.parse(jsonMatch[0]);
     const questions = parsed.questions || [];
 
-    const questionsWithIds = questions.map((q: any, index: number) => {
+    const questionsWithIds = questions.map((q: Record<string, unknown>, index: number) => {
       const matchingTopic = sortedTopics.find(
         t => t.name.toLowerCase() === (q.topicName || "").toLowerCase()
       );

@@ -109,6 +109,7 @@ export const useUserStats = () => {
 
   useEffect(() => {
     fetchStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   return { stats, loading, refetch: fetchStats, useStreakProtection };

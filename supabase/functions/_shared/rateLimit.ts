@@ -130,7 +130,7 @@ export async function logRateLimitRequest(
   userId: string,
   operation: string,
   success: boolean,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): Promise<void> {
   try {
     await supabaseClient

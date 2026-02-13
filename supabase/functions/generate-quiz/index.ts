@@ -30,8 +30,8 @@ const FORBIDDEN_PATTERNS = [
   /disregard\s+(all\s+)?previous/i,
   /forget\s+(all\s+)?previous/i,
   /\[\s*INST\s*\]/i,
-  /\<\s*\|\s*im_start\s*\|\s*\>/i,
-  /\<\s*\|\s*im_end\s*\|\s*\>/i,
+  /\|\s*im_start\s*\|/i,
+  /\|\s*im_end\s*\|/i,
   /\{\{\s*system/i,
   /override\s+instructions/i,
 ];
@@ -56,8 +56,9 @@ function sanitizeInput(input: string, maxLength: number): { isValid: boolean; sa
     }
   }
 
+  // eslint-disable-next-line no-control-regex
   sanitized = sanitized
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // eslint-disable-line no-control-regex
     .replace(/\\/g, '')
     .trim();
 

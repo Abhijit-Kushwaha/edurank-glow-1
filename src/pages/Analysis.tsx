@@ -63,6 +63,7 @@ const Analysis = () => {
     if (user) {
       fetchOverallStats();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchOverallStats = async () => {

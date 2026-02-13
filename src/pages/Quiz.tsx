@@ -70,6 +70,7 @@ const Quiz = () => {
     if (quizId && user) {
       fetchOrGenerateQuiz();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quizId, user]);
 
   const fetchOrGenerateQuiz = async () => {

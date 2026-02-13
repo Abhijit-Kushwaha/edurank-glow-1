@@ -163,7 +163,7 @@ const Dashboard = () => {
 
           // Insert videos for this subtask
           if (subtaskRow && subtask.videos?.length > 0) {
-            const videosToInsert = subtask.videos.map((video: any, idx: number) => ({
+            const videosToInsert = subtask.videos.map((video: Record<string, unknown>, idx: number) => ({
               subtask_id: subtaskRow.id,
               user_id: user.id,
               video_id: video.videoId,

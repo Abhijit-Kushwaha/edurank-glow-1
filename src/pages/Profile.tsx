@@ -39,6 +39,7 @@ const Profile = () => {
     if (user) {
       fetchCredits();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   useEffect(() => {

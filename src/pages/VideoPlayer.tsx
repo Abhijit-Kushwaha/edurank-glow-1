@@ -62,6 +62,7 @@ const VideoPlayer = () => {
     if (todoId && user) {
       fetchTodoAndProgress();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todoId, user]);
 
   const fetchTodoAndProgress = async () => {
@@ -105,7 +106,7 @@ const VideoPlayer = () => {
       if (subtasksError) {
         console.error('Error fetching subtasks:', subtasksError);
       } else if (subtasksData) {
-        const formattedSubtasks: Subtask[] = subtasksData.map((s: any) => ({
+        const formattedSubtasks: Subtask[] = subtasksData.map((s: Record<string, unknown>) => ({
           id: s.id,
           title: s.title,
           order_index: s.order_index,
@@ -196,7 +197,7 @@ const VideoPlayer = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [player, showNotesButton, todo, lastSavedProgress]);
+  }, [player, showNotesButton, todo, lastSavedProgress, saveProgress]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onReady = (event: YouTubeEvent) => {
     setPlayer(event.target);

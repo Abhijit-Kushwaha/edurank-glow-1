@@ -62,6 +62,7 @@ const FixWeakAreas = () => {
     if (user) {
       fetchWeakTopicsAndGenerateQuiz();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchWeakTopicsAndGenerateQuiz = async () => {

@@ -53,6 +53,7 @@ const Notes = () => {
       fetchNotes();
       fetchWeakTopics();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todoId, user]);
 
   const fetchNotes = async () => {
