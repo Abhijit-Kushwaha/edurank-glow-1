@@ -243,12 +243,13 @@ const VideoPlayer = () => {
       setNotes(noteLines);
 
       toast.success('Notes generated successfully!');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
       console.error('Error generating notes:', error);
       
-      if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
+      if (errorMsg?.includes('429') || errorMsg?.includes('Rate limit')) {
         toast.error('Rate limit exceeded. Please try again later.');
-      } else if (error.message?.includes('402')) {
+      } else if (errorMsg?.includes('402')) {
         toast.error('Please add credits to continue using AI features.');
       } else {
         toast.error('Failed to generate notes. Please try again.');

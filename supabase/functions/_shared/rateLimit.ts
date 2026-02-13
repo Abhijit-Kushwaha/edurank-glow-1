@@ -6,7 +6,7 @@
  */
 
 // Type definition for Supabase client
-type SupabaseClient = any;
+type SupabaseClient = Record<string, unknown>;
 
 export interface RateLimitConfig {
   operation: string;

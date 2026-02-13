@@ -43,11 +43,11 @@ export const youtubeService = {
         throw new Error(`YouTube API error: ${data.error.message}`);
       }
 
-      return data.items.map((item: any) => ({
-        videoId: item.id.videoId,
-        title: item.snippet.title,
-        description: item.snippet.description,
-        thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
+      return data.items.map((item: Record<string, unknown>) => ({
+        videoId: ((item.id as Record<string, unknown>).videoId as string),
+        title: ((item.snippet as Record<string, unknown>).title as string),
+        description: ((item.snippet as Record<string, unknown>).description as string),
+        thumbnail: (((item.snippet as Record<string, unknown>).thumbnails as Record<string, Record<string, unknown> | undefined>).medium?.url || (((item.snippet as Record<string, unknown>).thumbnails as Record<string, unknown>) as Record<string, unknown>).default?.url) as string,
         channel: item.snippet.channelTitle,
         publishedAt: item.snippet.publishedAt,
       }));

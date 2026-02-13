@@ -133,13 +133,14 @@ const Quiz = () => {
         setSavedQuizId(data.quizId);
       }
       setQuestionStartTime(Date.now());
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
       console.error('Error fetching quiz:', error);
       logError(error, 'fetch_quiz');
       
-      if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
+      if (errorMsg?.includes('429') || errorMsg?.includes('Rate limit')) {
         toast.error('Rate limit exceeded. Please try again later.');
-      } else if (error.message?.includes('402')) {
+      } else if (errorMsg?.includes('402')) {
         toast.error('Please add credits to continue using AI features.');
       } else {
         toast.error('Failed to generate quiz');

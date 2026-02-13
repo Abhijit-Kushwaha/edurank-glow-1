@@ -90,7 +90,7 @@ const Profile = () => {
 
       setAvatarUrl(publicUrl);
       toast.success('Profile picture updated!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading avatar:', error);
       toast.error('Failed to upload profile picture');
     } finally {
