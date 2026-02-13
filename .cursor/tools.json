@@ -1,0 +1,13 @@
+{
+  "tools": {
+    "supabase": {
+      "type": "mcp_server",
+      "url": "https://mcp.supabase.com/mcp?project_ref=irlbqoxqgztgjezzwknm",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybGJxb3hxZ3R0Z2plenp3a25tIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODY2NTU5OCwiZXhwIjoyMDg0MjQxNTk4fQ.5qfpB_ExlDOP09yoXc4XzJs74c70WxJKPdzuD-VVV0s"
+      },
+      "description": "Supabase database operations and administration",
+      "disabled": false
+    }
+  }
+}

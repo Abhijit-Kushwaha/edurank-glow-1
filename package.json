@@ -8,7 +8,11 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:backend": "npx tsx server/index.ts",
+    "setup:database": "node setup-database.js",
+    "setup:backend": "echo 'Backend files ready. Run: npm run dev:backend'",
+    "mcp:start": "node mcp-servers/supabase-mcp.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
