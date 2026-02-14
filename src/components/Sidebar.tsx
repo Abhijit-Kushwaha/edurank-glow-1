@@ -40,8 +40,6 @@ const Sidebar: React.FC = () => {
       title: '🎮 Games',
       items: [
         { icon: <Gamepad2 className="h-4 w-4" />, label: 'All Games', path: '/games' },
-        { icon: <Trophy className="h-4 w-4" />, label: 'Epic Era Battles (100 🪙)', path: '/games/epic-era-battles' },
-        { icon: <Trophy className="h-4 w-4" />, label: 'Rushlane X (300 🪙)', path: '/games/rushlane-x' },
       ],
     },
     {

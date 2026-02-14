@@ -219,8 +219,8 @@ export default SubtasksSidebar;
 const GamesQuickAccess = () => {
   const { coins, isUnlocked, unlockGame } = useCoins();
   const games = [
-    { id: 'epic-era-battles', title: 'Epic Era Battles', price: 100 },
-    { id: 'rushlane-x', title: 'Rushlane X', price: 300 },
+    { id: 'epic-era-battles', title: 'Epic Era Battles', credits: 2, isExternal: true, url: 'https://lovable.dev/projects/0ce46a56-c8b0-475d-89b3-d36218b94708?magic_link=mc_55f346b3-ab97-4970-8ffa-34776cdbb89b' },
+    { id: 'rushlane-x', title: 'Rushlane X', credits: 5, isExternal: false, url: null },
   ];
 
   return (
@@ -229,21 +229,28 @@ const GamesQuickAccess = () => {
         <div key={g.id} className="flex items-center justify-between">
           <div>
             <div className="text-sm font-medium">{g.title}</div>
-            <div className="text-xs text-muted-foreground">{g.price} coins</div>
+            <div className="text-xs text-muted-foreground">{g.credits} credits</div>
           </div>
           <div>
-            {isUnlocked(g.id) ? (
+            {g.isExternal ? (
+              <button
+                className="text-sm text-primary"
+                onClick={() => window.open(g.url, '_blank')}
+              >
+                Play
+              </button>
+            ) : isUnlocked(g.id) ? (
               <div className="text-success text-sm">Unlocked</div>
             ) : (
               <button
                 className="text-sm text-primary"
                 onClick={async () => {
-                  if (coins < g.price) {
-                    alert(`You need ${g.price - coins} more coins to unlock ${g.title}`);
+                  if (coins < g.credits) {
+                    alert(`You need ${g.credits - coins} more credits to unlock ${g.title}`);
                     return;
                   }
-                  if (confirm(`Spend ${g.price} coins to unlock ${g.title}?`)) {
-                    await unlockGame(g.id, g.price);
+                  if (confirm(`Spend ${g.credits} credits to unlock ${g.title}?`)) {
+                    await unlockGame(g.id, g.credits);
                   }
                 }}
               >

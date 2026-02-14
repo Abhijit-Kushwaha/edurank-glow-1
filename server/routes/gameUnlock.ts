@@ -216,3 +216,150 @@ export async function getGameUnlockStatus(req: Request, res: Response) {
     });
   }
 }
+
+/**
+ * Consume credits (new credit-based system)
+ * POST /api/consume-credits
+ * 
+ * Atomically consumes credits with 7-day reset cycle
+ * - Validates user session
+ * - Calls consume_credits RPC function
+ * - Handles weekly reset automatically
+ * - Returns remaining credits
+ */
+export async function consumeCredits(req: Request, res: Response) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized: User not authenticated',
+      });
+    }
+
+    // Default to 2 credits per game use
+    const amount = req.body?.amount || 2;
+
+    if (typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid amount: must be a positive number',
+      });
+    }
+
+    // Call the consume_credits RPC function (handles 7-day reset automatically)
+    const { data, error } = await (supabaseAdmin.rpc('consume_credits', {
+      uid: userId,
+      amount: amount,
+    }) as any);
+
+    if (error) {
+      console.error('Error consuming credits:', error);
+      return res.status(402).json({
+        success: false,
+        error: 'Insufficient credits or credit consumption failed',
+      });
+    }
+
+    if (!data) {
+      return res.status(402).json({
+        success: false,
+        error: 'Insufficient credits',
+      });
+    }
+
+    // Get updated credit balance
+    const { data: creditData, error: creditError } = await (supabaseAdmin
+      .from('user_credits')
+      .select('credits_remaining, credits_used, last_reset_at')
+      .eq('user_id', userId)
+      .single() as any);
+
+    if (creditError) {
+      console.error('Error fetching updated credits:', creditError);
+      return res.status(500).json({
+        success: false,
+        error: 'Credits consumed but failed to retrieve balance',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `${amount} credits consumed successfully`,
+      creditsRemaining: creditData?.credits_remaining || 0,
+      creditsUsed: creditData?.credits_used || 0,
+      lastResetAt: creditData?.last_reset_at,
+    });
+
+  } catch (error) {
+    console.error('Unexpected error in consumeCredits:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    });
+  }
+}
+
+/**
+ * Get user credits
+ * GET /api/user/credits
+ */
+export async function getUserCredits(req: Request, res: Response) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+      });
+    }
+
+    // Call check_and_reset_credits to handle weekly reset
+    const { data: resetData, error: resetError } = await (supabaseAdmin.rpc(
+      'check_and_reset_credits',
+      { uid: userId }
+    ) as any);
+
+    if (resetError) {
+      console.error('Error checking credits reset:', resetError);
+      // Fallback to direct query
+      const { data: creditData, error: creditError } = await (supabaseAdmin
+        .from('user_credits')
+        .select('credits_remaining, credits_used, last_reset_at')
+        .eq('user_id', userId)
+        .single() as any);
+
+      if (creditError) {
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to fetch credits',
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        creditsRemaining: creditData?.credits_remaining || 0,
+        creditsUsed: creditData?.credits_used || 0,
+        lastResetAt: creditData?.last_reset_at,
+        wasReset: false,
+      });
+    }
+
+    const creditInfo = (resetData && resetData.length > 0) ? resetData[0] : null;
+
+    return res.status(200).json({
+      success: true,
+      creditsRemaining: creditInfo?.credits_remaining || 0,
+      creditsUsed: creditInfo?.credits_used || 0,
+      lastResetAt: creditInfo?.last_reset_at,
+      wasReset: creditInfo?.was_reset || false,
+    });
+
+  } catch (error) {
+    console.error('Unexpected error in getUserCredits:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    });
+  }
+}

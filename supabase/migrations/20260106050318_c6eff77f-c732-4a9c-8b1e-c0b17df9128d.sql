@@ -1,5 +1,5 @@
--- Update consume_credits to auto-initialize credits if missing and check for monthly reset
-CREATE OR REPLACE FUNCTION public.consume_credits(uid uuid, amount integer DEFAULT 1)
+-- Update consume_credits to auto-initialize credits if missing and check for 7-day reset
+CREATE OR REPLACE FUNCTION public.consume_credits(uid uuid, amount integer DEFAULT 2)
 RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -19,8 +19,8 @@ BEGIN
   FROM public.user_credits
   WHERE user_id = uid;
   
-  -- Check if a month has passed since last reset - if so, reset credits
-  IF last_reset IS NULL OR (now() - last_reset) >= interval '30 days' THEN
+  -- Check if 7 days have passed since last reset - if so, reset credits
+  IF last_reset IS NULL OR (now() - last_reset) >= interval '7 days' THEN
     UPDATE public.user_credits
     SET 
       credits_remaining = 50,

@@ -18,7 +18,7 @@ interface UserCredits {
   last_reset_at: string;
 }
 
-const TOTAL_MONTHLY_CREDITS = 50;
+const TOTAL_WEEKLY_CREDITS = 50;
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -136,20 +136,37 @@ const Profile = () => {
     }
   };
 
-  const usedPercent = TOTAL_MONTHLY_CREDITS > 0 
-    ? ((credits?.credits_used || 0) / TOTAL_MONTHLY_CREDITS) * 100 
+  const usedPercent = TOTAL_WEEKLY_CREDITS > 0 
+    ? ((credits?.credits_used || 0) / TOTAL_WEEKLY_CREDITS) * 100 
     : 0;
 
-  // Calculate next reset date (1 month from last reset)
+  // Calculate next reset date (7 days from last reset)
   const getNextResetDate = () => {
     if (!credits?.last_reset_at) return null;
     const lastReset = new Date(credits.last_reset_at);
     const nextReset = new Date(lastReset);
-    nextReset.setMonth(nextReset.getMonth() + 1);
+    nextReset.setDate(nextReset.getDate() + 7);
     return nextReset;
   };
 
-  const nextResetDate = getNextResetDate();
+  const getTimeUntilReset = () => {
+    const nextReset = getNextResetDate();
+    if (!nextReset) return null;
+    
+    const now = new Date();
+    const diff = nextReset.getTime() - now.getTime();
+    
+    if (diff <= 0) return 'Resetting soon...';
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    
+    if (days > 0) {
+      return `${days} day${days !== 1 ? 's' : ''} ${hours}h`;
+    } else {
+      return `${hours}h remaining`;
+    }
+  };
 
   if (loading) {
     return (
@@ -237,15 +254,15 @@ const Profile = () => {
               <Coins className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h2 className="font-semibold">Monthly Credits</h2>
-              <p className="text-sm text-muted-foreground">Resets every month</p>
+              <h2 className="font-semibold">Weekly Credits</h2>
+              <p className="text-sm text-muted-foreground">Resets every 7 days</p>
             </div>
           </div>
 
           {wasReset && (
             <div className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20">
               <p className="text-sm text-primary font-medium">
-                🎉 Your credits have been reset for this month!
+                🎉 Your credits have been reset!
               </p>
             </div>
           )}
@@ -258,14 +275,18 @@ const Profile = () => {
 
             <Progress value={100 - usedPercent} className="h-3" />
 
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
               <div className="text-center">
                 <p className="text-2xl font-bold">{credits?.credits_used || 0}</p>
-                <p className="text-sm text-muted-foreground">Credits Used</p>
+                <p className="text-sm text-muted-foreground">Used</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold">{TOTAL_MONTHLY_CREDITS}</p>
-                <p className="text-sm text-muted-foreground">Monthly Limit</p>
+                <p className="text-2xl font-bold">{TOTAL_WEEKLY_CREDITS}</p>
+                <p className="text-sm text-muted-foreground">Weekly</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-primary">{getTimeUntilReset()}</p>
+                <p className="text-sm text-muted-foreground">Till Reset</p>
               </div>
             </div>
 
@@ -274,9 +295,8 @@ const Profile = () => {
                 <strong>Credit Costs:</strong>
               </p>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Find Video: 1 credit</li>
-                <li>• AI Notes: 4 credits</li>
-                <li>• Quiz: 4 credits</li>
+                <li>• Games: 2 credits per use</li>
+                <li>• AI Features: 4 credits per use</li>
               </ul>
             </div>
 

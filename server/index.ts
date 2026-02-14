@@ -13,7 +13,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { supabaseAdmin } from './lib/supabaseAdmin';
-import { unlockGame, getUserCoins, getGameUnlockStatus } from './routes/gameUnlock';
+import { unlockGame, getUserCoins, getGameUnlockStatus, consumeCredits, getUserCredits } from './routes/gameUnlock';
 
 // Extend Express Request to include user info
 declare global {
@@ -131,10 +131,14 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Game unlock routes
+// Game unlock routes (old coin system)
 app.post('/api/unlock-game', apiLimiter, strictLimiter, authMiddleware, unlockGame);
 app.get('/api/user/coins', apiLimiter, authMiddleware, getUserCoins);
 app.get('/api/game/:gameId/status', apiLimiter, authMiddleware, getGameUnlockStatus);
+
+// Credit-based system routes (new)
+app.post('/api/consume-credits', apiLimiter, strictLimiter, authMiddleware, consumeCredits);
+app.get('/api/user/credits', apiLimiter, authMiddleware, getUserCredits);
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

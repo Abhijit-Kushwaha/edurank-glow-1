@@ -37,6 +37,12 @@ import { DailyChallengesCard } from '@/components/dashboard/DailyChallengesCard'
 import { StreakFreezeCard } from '@/components/dashboard/StreakFreezeCard';
 import FriendsWidget from '@/components/friends/FriendsWidget';
 
+interface UserCredits {
+  credits_remaining: number;
+  credits_used: number;
+  last_reset_at: string;
+}
+
 interface Todo {
   id: string;
   title: string;
@@ -58,19 +64,38 @@ const Dashboard = () => {
   const [adding, setAdding] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [streakModalOpen, setStreakModalOpen] = useState(false);
+  const [credits, setCredits] = useState<UserCredits | null>(null);
 
   const completedCount = todos.filter((t) => t.completed).length;
   const progress = todos.length > 0 ? (completedCount / todos.length) * 100 : 0;
 
   const displayName = profile?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Student';
+  const email = user?.email || '';
 
   const { coins } = useCoins();
 
   useEffect(() => {
     if (user) {
       fetchTodos();
+      fetchCredits();
     }
   }, [user]);
+
+  const fetchCredits = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_credits')
+        .select('credits_remaining, credits_used, last_reset_at')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (!error && data) {
+        setCredits(data);
+      }
+    } catch (error) {
+      console.error('Error fetching credits:', error);
+    }
+  };
 
   const fetchTodos = async () => {
     try {
