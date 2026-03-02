@@ -62,6 +62,7 @@ const Quiz = () => {
   const [savedQuizId, setSavedQuizId] = useState<string | null>(null);
   const [questionTimings, setQuestionTimings] = useState<QuestionTiming[]>([]);
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
+  const [coinsEarned, setCoinsEarned] = useState(0);
 
   useEffect(() => {
     if (quizId && user) {
@@ -238,20 +239,44 @@ const Quiz = () => {
     }
   };
 
+  const calculateCoinsEarned = () => {
+    let coins = 0;
+    answers.forEach((answer, index) => {
+      if (answer === questions[index]?.correctAnswer) {
+        const diff = questions[index]?.difficulty || 'medium';
+        if (diff === 'easy') coins += 2;
+        else if (diff === 'hard') coins += 10;
+        else coins += 5;
+      }
+    });
+    return coins;
+  };
+
   const saveResults = async () => {
     if (!user || !quizId) return;
 
     const score = calculateScore();
     const percentage = (score / questions.length) * 100;
+    const earned = calculateCoinsEarned();
+    setCoinsEarned(earned);
 
     try {
+      // Include difficulty metadata in answers for the coin trigger
+      const answersWithMeta = answers.map((answer, index) => ({
+        selected: answer,
+        correct: questions[index]?.correctAnswer,
+        difficulty: questions[index]?.difficulty || 'medium',
+        isCorrect: answer === questions[index]?.correctAnswer,
+      }));
+
       await supabase.from('quiz_results').insert({
         user_id: user.id,
         todo_id: quizId,
         score: percentage,
         correct_answers: score,
         total_questions: questions.length,
-        answers: answers,
+        answers: answersWithMeta,
+        difficulty: questions[0]?.difficulty || 'medium',
       });
 
       // Analyze weakness after saving results
@@ -407,7 +432,13 @@ const Quiz = () => {
             <div className="text-5xl font-bold neon-text mb-2">
               {score}/{questions.length}
             </div>
-            <p className="text-muted-foreground mb-8">{Math.round(percentage)}% correct</p>
+            <p className="text-muted-foreground mb-2">{Math.round(percentage)}% correct</p>
+            {coinsEarned > 0 && (
+              <div className="flex items-center justify-center gap-2 mb-6 p-3 rounded-lg bg-primary/10 border border-primary/20">
+                <span className="text-2xl">🪙</span>
+                <span className="font-bold text-primary text-lg">+{coinsEarned} coins earned!</span>
+              </div>
+            )}
 
             <div className="space-y-3 mb-8 text-left">
               {isPassing ? (

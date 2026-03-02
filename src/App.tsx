@@ -23,6 +23,8 @@ import Analysis from "./pages/Analysis";
 import Friends from "./pages/Friends";
 import AIChat from "./pages/AIChat";
 import AINotes from "./pages/AINotes";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +54,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/dashboard" element={<ProtectedWithLayout><Dashboard /></ProtectedWithLayout>} />
               <Route path="/ai-chat" element={<ProtectedWithLayout><AIChat /></ProtectedWithLayout>} />
               <Route path="/ai-notes" element={<ProtectedWithLayout><AINotes /></ProtectedWithLayout>} />
