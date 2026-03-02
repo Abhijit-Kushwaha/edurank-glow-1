@@ -27,3 +27,6 @@ verify_jwt = false
 
 [functions.ai-notes-gen]
 verify_jwt = false
+
+[functions.validate-invite-code]
+verify_jwt = false

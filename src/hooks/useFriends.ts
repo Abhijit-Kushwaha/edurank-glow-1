@@ -229,37 +229,19 @@ export const useFriends = () => {
   const redeemInviteCode = async (code: string) => {
     if (!user) return;
     try {
-      const { data: invite, error: fetchError } = await supabase
-        .from('friend_invite_codes')
-        .select('*')
-        .eq('code', code.toUpperCase())
-        .eq('is_used', false)
-        .maybeSingle();
+      const { data, error } = await supabase.functions.invoke('validate-invite-code', {
+        body: { code: code.toUpperCase().trim() },
+      });
 
-      if (fetchError) throw fetchError;
-      if (!invite) {
-        toast.error('Invalid or expired invite code.');
+      if (error) throw error;
+
+      if (!data?.valid) {
+        toast.error(data?.error || 'Invalid or expired invite code.');
         return;
       }
 
-      if (new Date(invite.expires_at) < new Date()) {
-        toast.error('This invite code has expired.');
-        return;
-      }
-
-      if (invite.user_id === user.id) {
-        toast.error("You can't use your own invite code!");
-        return;
-      }
-
-      // Send friend request
-      await sendFriendRequest(invite.user_id);
-
-      // Mark code as used
-      await supabase
-        .from('friend_invite_codes')
-        .update({ is_used: true, used_by: user.id })
-        .eq('id', invite.id);
+      // Send friend request to the inviter
+      await sendFriendRequest(data.inviterUserId);
 
     } catch (error) {
       console.error('Error redeeming invite code:', error);

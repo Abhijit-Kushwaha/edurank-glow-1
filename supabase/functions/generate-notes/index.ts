@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, logRateLimitRequest } from "../_shared/rateLimit.ts";
 
 // Allowed origins for CORS - prevents CSRF attacks
 const ALLOWED_ORIGINS = [
@@ -221,6 +222,20 @@ serve(async (req) => {
 
     console.log(`Processing notes request for user ${user.id}`);
 
+    // Rate limit check
+    const rateLimitResult = await checkRateLimit(supabaseClient, {
+      operation: "generate-notes",
+      userId: user.id,
+      limitsPerHour: 3,
+      limitsPerDay: 10,
+    });
+    if (!rateLimitResult.allowed) {
+      return new Response(
+        JSON.stringify({ error: rateLimitResult.message }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { videoTitle, videoId, todoId } = await req.json();
 
     if (!videoTitle || !videoId || !todoId) {
@@ -305,6 +320,7 @@ Make the notes comprehensive and educational.`
 
     console.log("Notes generated successfully using Lovable AI");
 
+    await logRateLimitRequest(supabaseClient, user.id, "generate-notes", true);
     await serviceClient.rpc('check_achievements', { uid: user.id });
 
     const { data: savedNote, error: saveError } = await supabaseClient

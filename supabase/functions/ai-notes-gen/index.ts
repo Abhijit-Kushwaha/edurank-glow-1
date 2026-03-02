@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, logRateLimitRequest } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,7 +10,6 @@ const corsHeaders = {
 
 const LOVABLE_AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
-// Detect subject type for prompt tuning
 function detectSubjectType(subject?: string, topic?: string): string {
   const combined = `${subject || ""} ${topic || ""}`.toLowerCase();
   if (/math|algebra|geometry|calculus|trigonometry|equation/.test(combined)) return "numerical";
@@ -46,10 +46,31 @@ serve(async (req) => {
       });
     }
 
+    // Rate limit check
+    const rateLimitResult = await checkRateLimit(supabaseClient, {
+      operation: "ai-notes-gen",
+      userId: user.id,
+      limitsPerHour: 5,
+      limitsPerDay: 20,
+    });
+    if (!rateLimitResult.allowed) {
+      return new Response(
+        JSON.stringify({ error: rateLimitResult.message }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { topic, subject, classLevel } = await req.json();
 
     if (!topic || typeof topic !== "string" || topic.trim().length === 0) {
       return new Response(JSON.stringify({ error: "Topic is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (topic.length > 500) {
+      return new Response(JSON.stringify({ error: "Topic too long" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -142,13 +163,16 @@ Topic: "${topic.trim()}"${subject ? `\nSubject: ${subject}` : ""}${classLevel ? 
 
     if (!notes) throw new Error("No notes generated");
 
+    // Log successful request
+    await logRateLimitRequest(supabaseClient, user.id, "ai-notes-gen", true);
+
     return new Response(JSON.stringify({ notes }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("ai-notes-gen error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "An error occurred generating notes" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

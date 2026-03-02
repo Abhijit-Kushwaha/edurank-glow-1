@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, logRateLimitRequest } from "../_shared/rateLimit.ts";
 
 // Allowed origins for CORS
 const ALLOWED_ORIGINS = [
@@ -241,6 +242,20 @@ serve(async (req) => {
 
     console.log(`Processing request for user ${user.id}`);
 
+    // Rate limit check
+    const rateLimitResult = await checkRateLimit(supabaseClient, {
+      operation: "find-video",
+      userId: user.id,
+      limitsPerHour: 10,
+      limitsPerDay: 50,
+    });
+    if (!rateLimitResult.allowed) {
+      return new Response(
+        JSON.stringify({ error: rateLimitResult.message }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { topic } = await req.json();
     
     const validation = sanitizeInput(topic);
@@ -345,6 +360,7 @@ Break this into 3-5 subtasks and provide optimized YouTube search queries for ed
     );
 
     console.log(`Found ${mainVideos.length} main videos and ${subtasksWithVideos.length} subtasks`);
+    await logRateLimitRequest(supabaseClient, user.id, "find-video", true);
 
     return new Response(
       JSON.stringify({

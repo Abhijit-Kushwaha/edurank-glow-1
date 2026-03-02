@@ -592,6 +592,36 @@ export type Database = {
           },
         ]
       }
+      rate_limit_logs: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          operation: string
+          success: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          operation: string
+          success?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          operation?: string
+          success?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       recommendation_queue: {
         Row: {
           created_at: string
