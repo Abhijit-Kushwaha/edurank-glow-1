@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, logRateLimitRequest } from "../_shared/rateLimit.ts";
 
 // Allowed origins for CORS
 const ALLOWED_ORIGINS = [
@@ -138,6 +139,20 @@ serve(async (req) => {
       );
     }
 
+    // Rate limit check
+    const rateLimitResult = await checkRateLimit(supabaseClient, {
+      operation: "adaptive-question",
+      userId: user.id,
+      limitsPerHour: 20,
+      limitsPerDay: 100,
+    });
+    if (!rateLimitResult.allowed) {
+      return new Response(
+        JSON.stringify({ error: rateLimitResult.message }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { notes, previousQuestion, wasCorrect, difficulty } = await req.json();
 
     if (!notes || !previousQuestion) {
@@ -239,6 +254,8 @@ Generate an appropriate follow-up question.`
       console.error("Failed to parse question:", parseError);
       throw new Error("Failed to generate adaptive question");
     }
+
+    await logRateLimitRequest(supabaseClient, user.id, "adaptive-question", true);
 
     return new Response(
       JSON.stringify({ question, difficulty: newDifficulty }),

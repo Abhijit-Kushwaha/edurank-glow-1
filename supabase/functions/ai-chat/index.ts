@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, logRateLimitRequest } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,13 +10,51 @@ const corsHeaders = {
 
 const LOVABLE_AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
+const MAX_MESSAGE_LENGTH = 2000;
+const MAX_MESSAGES = 50;
+const FORBIDDEN_PATTERNS = [
+  /ignore\s+(all\s+)?previous\s+instructions/i,
+  /disregard\s+(all\s+)?previous/i,
+  /forget\s+(all\s+)?previous/i,
+  /\[\s*INST\s*\]/i,
+  /\<\s*\|\s*im_start\s*\|\s*\>/i,
+  /\<\s*\|\s*im_end\s*\|\s*\>/i,
+  /\{\{\s*system/i,
+  /override\s+instructions/i,
+];
+
+function validateMessages(messages: any[]): { isValid: boolean; error?: string } {
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return { isValid: false, error: "Messages must be a non-empty array" };
+  }
+  if (messages.length > MAX_MESSAGES) {
+    return { isValid: false, error: "Too many messages" };
+  }
+  for (const msg of messages) {
+    if (!msg.role || typeof msg.role !== "string") {
+      return { isValid: false, error: "Invalid message structure" };
+    }
+    if (!msg.content || typeof msg.content !== "string") {
+      return { isValid: false, error: "Invalid message structure" };
+    }
+    if (msg.content.length > MAX_MESSAGE_LENGTH) {
+      return { isValid: false, error: "Message too long" };
+    }
+    for (const pattern of FORBIDDEN_PATTERNS) {
+      if (pattern.test(msg.content)) {
+        return { isValid: false, error: "Invalid message content" };
+      }
+    }
+  }
+  return { isValid: true };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Auth check
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -41,11 +80,27 @@ serve(async (req) => {
       });
     }
 
+    // Rate limit check
+    const rateLimitResult = await checkRateLimit(supabaseClient, {
+      operation: "ai-chat",
+      userId: user.id,
+      limitsPerHour: 30,
+      limitsPerDay: 100,
+    });
+    if (!rateLimitResult.allowed) {
+      return new Response(
+        JSON.stringify({ error: rateLimitResult.message }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { messages, userContext } = await req.json();
 
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    // Input validation
+    const validation = validateMessages(messages);
+    if (!validation.isValid) {
       return new Response(
-        JSON.stringify({ error: "Messages array required" }),
+        JSON.stringify({ error: validation.error }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -86,7 +141,7 @@ ${userContext?.subject ? `Current subject: ${userContext.subject}` : ""}`;
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages.slice(-20), // Keep last 20 messages for context
+          ...messages.slice(-20),
         ],
         temperature: 0.7,
         max_tokens: 2000,
@@ -112,13 +167,16 @@ ${userContext?.subject ? `Current subject: ${userContext.subject}` : ""}`;
     const data = await response.json();
     const reply = data.choices?.[0]?.message?.content || "Sorry, I couldn't generate a response.";
 
+    // Log successful request
+    await logRateLimitRequest(supabaseClient, user.id, "ai-chat", true);
+
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("ai-chat error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "An error occurred processing your request" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

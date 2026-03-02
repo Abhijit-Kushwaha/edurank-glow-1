@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, logRateLimitRequest } from "../_shared/rateLimit.ts";
 
 // Allowed origins for CORS
 const ALLOWED_ORIGINS = [
@@ -106,8 +107,21 @@ serve(async (req) => {
       );
     }
 
-    const { topics, notes, questionsPerTopic = 2 } = await req.json();
+    // Rate limit check
+    const rateLimitResult = await checkRateLimit(supabaseClient, {
+      operation: "fix-weak-areas-quiz",
+      userId: claimsData.claims.sub as string,
+      limitsPerHour: 3,
+      limitsPerDay: 10,
+    });
+    if (!rateLimitResult.allowed) {
+      return new Response(
+        JSON.stringify({ error: rateLimitResult.message }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
+    const { topics, notes, questionsPerTopic = 2 } = await req.json();
     if (!topics || !Array.isArray(topics) || topics.length === 0) {
       return new Response(
         JSON.stringify({ error: "No topics provided" }),
