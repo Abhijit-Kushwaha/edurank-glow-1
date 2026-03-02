@@ -1,7 +1,11 @@
-import { Flame, Shield, ShieldCheck } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { Flame, Shield, ShieldCheck } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface StreakDisplayProps {
   currentStreak: number;
@@ -10,11 +14,11 @@ interface StreakDisplayProps {
   onStreakClick?: () => void;
 }
 
-const StreakDisplay = ({ 
-  currentStreak, 
-  longestStreak, 
+const StreakDisplay = ({
+  currentStreak,
+  longestStreak,
   streakProtections,
-  onStreakClick 
+  onStreakClick,
 }: StreakDisplayProps) => {
   const hasStreak = currentStreak > 0;
   const hasProtection = streakProtections > 0;
@@ -22,37 +26,45 @@ const StreakDisplay = ({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <motion.div 
+        <motion.div
           className={cn(
             "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full cursor-pointer transition-all",
-            hasStreak 
-              ? "bg-orange-500/20 border border-orange-500/30 hover:bg-orange-500/30" 
-              : "bg-muted/50 border border-border/50 hover:bg-muted/70"
+            hasStreak
+              ? "bg-orange-500/20 border border-orange-500/30 hover:bg-orange-500/30"
+              : "bg-muted/50 border border-border/50 hover:bg-muted/70",
           )}
           onClick={onStreakClick}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
           <motion.div
-            animate={hasStreak ? { 
-              scale: [1, 1.2, 1],
-            } : {}}
-            transition={{ 
-              duration: 1.5, 
-              repeat: Infinity, 
-              repeatType: 'reverse' 
+            animate={
+              hasStreak
+                ? {
+                    scale: [1, 1.2, 1],
+                  }
+                : {}
+            }
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              repeatType: "reverse",
             }}
           >
-            <Flame className={cn(
-              "w-4 h-4",
-              hasStreak ? "text-orange-500" : "text-muted-foreground"
-            )} />
+            <Flame
+              className={cn(
+                "w-4 h-4",
+                hasStreak ? "text-orange-500" : "text-muted-foreground",
+              )}
+            />
           </motion.div>
-          
-          <span className={cn(
-            "text-sm font-bold",
-            hasStreak ? "text-orange-500" : "text-muted-foreground"
-          )}>
+
+          <span
+            className={cn(
+              "text-sm font-bold",
+              hasStreak ? "text-orange-500" : "text-muted-foreground",
+            )}
+          >
             {currentStreak}
           </span>
 
@@ -80,7 +92,9 @@ const StreakDisplay = ({
               <Flame className="w-4 h-4 text-orange-500" />
               Current Streak
             </span>
-            <span className="font-bold text-orange-500">{currentStreak} days</span>
+            <span className="font-bold text-orange-500">
+              {currentStreak} days
+            </span>
           </div>
           <div className="flex items-center justify-between gap-4">
             <span className="text-muted-foreground">Best Streak</span>
@@ -91,10 +105,12 @@ const StreakDisplay = ({
               <Shield className="w-4 h-4 text-primary" />
               Streak Shields
             </span>
-            <span className={cn(
-              "font-bold",
-              hasProtection ? "text-primary" : "text-muted-foreground"
-            )}>
+            <span
+              className={cn(
+                "font-bold",
+                hasProtection ? "text-primary" : "text-muted-foreground",
+              )}
+            >
               {streakProtections}
             </span>
           </div>

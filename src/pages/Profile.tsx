@@ -1,14 +1,23 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { User, Coins, RefreshCw, Loader2, Trophy, Award, TrendingUp, Camera } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import AchievementsPanel from '@/components/achievements/AchievementsPanel';
-import ImprovementChart from '@/components/ImprovementChart';
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  User,
+  Coins,
+  RefreshCw,
+  Loader2,
+  Trophy,
+  Award,
+  TrendingUp,
+  Camera,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import AchievementsPanel from "@/components/achievements/AchievementsPanel";
+import ImprovementChart from "@/components/ImprovementChart";
 
 interface UserCredits {
   credits_remaining: number;
@@ -25,11 +34,17 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [wasReset, setWasReset] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(
+    profile?.avatar_url || null,
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const displayName = profile?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Student';
-  const email = user?.email || '';
+  const displayName =
+    profile?.name ||
+    user?.user_metadata?.name ||
+    user?.email?.split("@")[0] ||
+    "Student";
+  const email = user?.email || "";
 
   useEffect(() => {
     if (user) {
@@ -43,52 +58,54 @@ const Profile = () => {
     }
   }, [profile]);
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file');
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
       return;
     }
 
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image must be less than 2MB');
+      toast.error("Image must be less than 2MB");
       return;
     }
 
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split(".").pop();
       const filePath = `${user.id}/avatar.${fileExt}`;
 
       // Upload file to storage
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
+        .from("avatars")
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
       // Update profile with new avatar URL
       const { error: updateError } = await supabase
-        .from('profiles')
+        .from("profiles")
         .update({ avatar_url: publicUrl })
-        .eq('user_id', user.id);
+        .eq("user_id", user.id);
 
       if (updateError) throw updateError;
 
       setAvatarUrl(publicUrl);
-      toast.success('Profile picture updated!');
+      toast.success("Profile picture updated!");
     } catch (error: any) {
-      console.error('Error uploading avatar:', error);
-      toast.error('Failed to upload profile picture');
+      console.error("Error uploading avatar:", error);
+      toast.error("Failed to upload profile picture");
     } finally {
       setUploading(false);
     }
@@ -97,19 +114,19 @@ const Profile = () => {
   const fetchCredits = async () => {
     try {
       // Use the check_and_reset_credits function which handles monthly reset
-      const { data, error } = await supabase.rpc('check_and_reset_credits', { 
-        uid: user?.id 
+      const { data, error } = await supabase.rpc("check_and_reset_credits", {
+        uid: user?.id,
       });
 
       if (error) {
-        console.error('Error checking credits:', error);
+        console.error("Error checking credits:", error);
         // Fallback to direct query
         const { data: directData, error: directError } = await supabase
-          .from('user_credits')
-          .select('credits_remaining, credits_used, last_reset_at')
-          .eq('user_id', user?.id)
+          .from("user_credits")
+          .select("credits_remaining, credits_used, last_reset_at")
+          .eq("user_id", user?.id)
           .single();
-        
+
         if (!directError && directData) {
           setCredits(directData);
         }
@@ -118,22 +135,23 @@ const Profile = () => {
         setCredits({
           credits_remaining: creditData.credits_remaining,
           credits_used: creditData.credits_used,
-          last_reset_at: new Date().toISOString()
+          last_reset_at: new Date().toISOString(),
         });
         if (creditData.was_reset) {
           setWasReset(true);
         }
       }
     } catch (error) {
-      console.error('Error fetching credits:', error);
+      console.error("Error fetching credits:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const usedPercent = TOTAL_MONTHLY_CREDITS > 0 
-    ? ((credits?.credits_used || 0) / TOTAL_MONTHLY_CREDITS) * 100 
-    : 0;
+  const usedPercent =
+    TOTAL_MONTHLY_CREDITS > 0
+      ? ((credits?.credits_used || 0) / TOTAL_MONTHLY_CREDITS) * 100
+      : 0;
 
   // Calculate next reset date (1 month from last reset)
   const getNextResetDate = () => {
@@ -156,7 +174,6 @@ const Profile = () => {
 
   return (
     <div className="pb-8">
-
       <main className="container mx-auto px-4 py-6 space-y-6 max-w-2xl">
         {/* Profile Info */}
         <section className="glass-card rounded-2xl p-6 animate-fade-in">
@@ -202,7 +219,9 @@ const Profile = () => {
             </div>
             <div>
               <h2 className="font-semibold">Improvement Tracking</h2>
-              <p className="text-sm text-muted-foreground">Your weakness scores over time</p>
+              <p className="text-sm text-muted-foreground">
+                Your weakness scores over time
+              </p>
             </div>
           </div>
           <ImprovementChart />
@@ -216,7 +235,9 @@ const Profile = () => {
             </div>
             <div>
               <h2 className="font-semibold">Monthly Credits</h2>
-              <p className="text-sm text-muted-foreground">Resets every month</p>
+              <p className="text-sm text-muted-foreground">
+                Resets every month
+              </p>
             </div>
           </div>
 
@@ -231,14 +252,18 @@ const Profile = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Credits Remaining</span>
-              <span className="text-2xl font-bold neon-text">{credits?.credits_remaining || 0}</span>
+              <span className="text-2xl font-bold neon-text">
+                {credits?.credits_remaining || 0}
+              </span>
             </div>
 
             <Progress value={100 - usedPercent} className="h-3" />
 
             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
               <div className="text-center">
-                <p className="text-2xl font-bold">{credits?.credits_used || 0}</p>
+                <p className="text-2xl font-bold">
+                  {credits?.credits_used || 0}
+                </p>
                 <p className="text-sm text-muted-foreground">Credits Used</p>
               </div>
               <div className="text-center">
@@ -275,7 +300,9 @@ const Profile = () => {
             </div>
             <div>
               <h2 className="font-semibold">Achievements</h2>
-              <p className="text-sm text-muted-foreground">Unlock badges as you learn</p>
+              <p className="text-sm text-muted-foreground">
+                Unlock badges as you learn
+              </p>
             </div>
           </div>
           <AchievementsPanel />
@@ -286,7 +313,7 @@ const Profile = () => {
           <Button
             variant="outline"
             className="w-full justify-start"
-            onClick={() => navigate('/quiz-history')}
+            onClick={() => navigate("/quiz-history")}
           >
             <Trophy className="h-4 w-4 mr-2" />
             Quiz History
@@ -294,7 +321,7 @@ const Profile = () => {
           <Button
             variant="outline"
             className="w-full justify-start"
-            onClick={() => navigate('/leaderboard')}
+            onClick={() => navigate("/leaderboard")}
           >
             <Award className="h-4 w-4 mr-2" />
             Leaderboard
@@ -302,7 +329,7 @@ const Profile = () => {
           <Button
             variant="outline"
             className="w-full justify-start"
-            onClick={() => navigate('/about')}
+            onClick={() => navigate("/about")}
           >
             About BrainBuddy
           </Button>

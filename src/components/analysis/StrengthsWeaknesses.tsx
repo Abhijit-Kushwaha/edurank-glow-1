@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import {
   Trophy,
   AlertTriangle,
@@ -15,16 +15,16 @@ import {
   XCircle,
   Clock,
   Loader2,
-} from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface TopicPerformance {
   id: string;
   topicId: string;
   topicName: string;
   weaknessScore: number;
-  strengthStatus: 'strong' | 'moderate' | 'weak';
+  strengthStatus: "strong" | "moderate" | "weak";
   correctAnswers: number;
   totalQuestions: number;
   avgTime: number;
@@ -48,8 +48,9 @@ const StrengthsWeaknesses = () => {
   const fetchTopicPerformance = async () => {
     try {
       const { data, error } = await supabase
-        .from('user_topic_performance')
-        .select(`
+        .from("user_topic_performance")
+        .select(
+          `
           id,
           topic_id,
           weakness_score,
@@ -61,29 +62,32 @@ const StrengthsWeaknesses = () => {
           wrong_on_medium,
           wrong_on_hard,
           topics (name)
-        `)
-        .eq('user_id', user?.id)
-        .order('weakness_score', { ascending: false });
+        `,
+        )
+        .eq("user_id", user?.id)
+        .order("weakness_score", { ascending: false });
 
       if (error) throw error;
 
-      const formattedTopics: TopicPerformance[] = (data || []).map((t: any) => ({
-        id: t.id,
-        topicId: t.topic_id,
-        topicName: t.topics?.name || 'Unknown Topic',
-        weaknessScore: t.weakness_score,
-        strengthStatus: t.strength_status as 'strong' | 'moderate' | 'weak',
-        correctAnswers: t.correct_answers,
-        totalQuestions: t.total_questions,
-        avgTime: t.avg_time_seconds,
-        wrongOnEasy: t.wrong_on_easy,
-        wrongOnMedium: t.wrong_on_medium,
-        wrongOnHard: t.wrong_on_hard,
-      }));
+      const formattedTopics: TopicPerformance[] = (data || []).map(
+        (t: any) => ({
+          id: t.id,
+          topicId: t.topic_id,
+          topicName: t.topics?.name || "Unknown Topic",
+          weaknessScore: t.weakness_score,
+          strengthStatus: t.strength_status as "strong" | "moderate" | "weak",
+          correctAnswers: t.correct_answers,
+          totalQuestions: t.total_questions,
+          avgTime: t.avg_time_seconds,
+          wrongOnEasy: t.wrong_on_easy,
+          wrongOnMedium: t.wrong_on_medium,
+          wrongOnHard: t.wrong_on_hard,
+        }),
+      );
 
       setTopics(formattedTopics);
     } catch (error) {
-      console.error('Error fetching topic performance:', error);
+      console.error("Error fetching topic performance:", error);
     } finally {
       setLoading(false);
     }
@@ -93,9 +97,9 @@ const StrengthsWeaknesses = () => {
     return total > 0 ? Math.round((correct / total) * 100) : 0;
   };
 
-  const strongTopics = topics.filter(t => t.strengthStatus === 'strong');
-  const moderateTopics = topics.filter(t => t.strengthStatus === 'moderate');
-  const weakTopics = topics.filter(t => t.strengthStatus === 'weak');
+  const strongTopics = topics.filter((t) => t.strengthStatus === "strong");
+  const moderateTopics = topics.filter((t) => t.strengthStatus === "moderate");
+  const weakTopics = topics.filter((t) => t.strengthStatus === "weak");
 
   if (loading) {
     return (
@@ -114,7 +118,11 @@ const StrengthsWeaknesses = () => {
           <p className="text-muted-foreground text-sm">
             Complete some quizzes to see your strengths and weaknesses analysis
           </p>
-          <Button variant="neon" className="mt-4" onClick={() => navigate('/dashboard')}>
+          <Button
+            variant="neon"
+            className="mt-4"
+            onClick={() => navigate("/dashboard")}
+          >
             Start Learning
           </Button>
         </CardContent>
@@ -132,7 +140,9 @@ const StrengthsWeaknesses = () => {
               <Trophy className="h-5 w-5 text-success" />
               <span className="font-medium">Strong</span>
             </div>
-            <p className="text-3xl font-bold text-success">{strongTopics.length}</p>
+            <p className="text-3xl font-bold text-success">
+              {strongTopics.length}
+            </p>
             <p className="text-xs text-muted-foreground">topics mastered</p>
           </CardContent>
         </Card>
@@ -143,7 +153,9 @@ const StrengthsWeaknesses = () => {
               <TrendingUp className="h-5 w-5 text-warning" />
               <span className="font-medium">Moderate</span>
             </div>
-            <p className="text-3xl font-bold text-warning">{moderateTopics.length}</p>
+            <p className="text-3xl font-bold text-warning">
+              {moderateTopics.length}
+            </p>
             <p className="text-xs text-muted-foreground">topics improving</p>
           </CardContent>
         </Card>
@@ -154,7 +166,9 @@ const StrengthsWeaknesses = () => {
               <AlertTriangle className="h-5 w-5 text-destructive" />
               <span className="font-medium">Weak</span>
             </div>
-            <p className="text-3xl font-bold text-destructive">{weakTopics.length}</p>
+            <p className="text-3xl font-bold text-destructive">
+              {weakTopics.length}
+            </p>
             <p className="text-xs text-muted-foreground">need attention</p>
           </CardContent>
         </Card>
@@ -168,7 +182,11 @@ const StrengthsWeaknesses = () => {
               <AlertTriangle className="h-5 w-5 text-destructive" />
               Areas Needing Improvement
             </CardTitle>
-            <Button variant="neon" size="sm" onClick={() => navigate('/fix-weak-areas')}>
+            <Button
+              variant="neon"
+              size="sm"
+              onClick={() => navigate("/fix-weak-areas")}
+            >
               <Zap className="h-4 w-4 mr-1" />
               Fix All
             </Button>
@@ -220,24 +238,25 @@ const StrengthsWeaknesses = () => {
 
 interface TopicCardProps {
   topic: TopicPerformance;
-  type: 'strong' | 'moderate' | 'weak';
+  type: "strong" | "moderate" | "weak";
 }
 
 const TopicCard = ({ topic, type }: TopicCardProps) => {
-  const accuracy = topic.totalQuestions > 0
-    ? Math.round((topic.correctAnswers / topic.totalQuestions) * 100)
-    : 0;
+  const accuracy =
+    topic.totalQuestions > 0
+      ? Math.round((topic.correctAnswers / topic.totalQuestions) * 100)
+      : 0;
 
   const statusColors = {
-    strong: 'bg-success/10 border-success/20',
-    moderate: 'bg-warning/10 border-warning/20',
-    weak: 'bg-destructive/10 border-destructive/20',
+    strong: "bg-success/10 border-success/20",
+    moderate: "bg-warning/10 border-warning/20",
+    weak: "bg-destructive/10 border-destructive/20",
   };
 
   const progressColors = {
-    strong: 'bg-success',
-    moderate: 'bg-warning',
-    weak: 'bg-destructive',
+    strong: "bg-success",
+    moderate: "bg-warning",
+    weak: "bg-destructive",
   };
 
   return (
@@ -249,7 +268,15 @@ const TopicCard = ({ topic, type }: TopicCardProps) => {
             {topic.correctAnswers}/{topic.totalQuestions} correct answers
           </p>
         </div>
-        <Badge variant={type === 'strong' ? 'success' : type === 'moderate' ? 'warning' : 'destructive'}>
+        <Badge
+          variant={
+            type === "strong"
+              ? "success"
+              : type === "moderate"
+                ? "warning"
+                : "destructive"
+          }
+        >
           {accuracy}% accuracy
         </Badge>
       </div>

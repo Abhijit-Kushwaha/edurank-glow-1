@@ -1,9 +1,9 @@
 /**
  * Bytez API Integration
- * 
+ *
  * SECURITY: All Bytez API calls go through Edge Functions - no client-side API keys.
  * This module provides helper functions for calling the secure edge functions.
- * 
+ *
  * Edge functions that handle Bytez AI calls:
  * - generate-notes: For AI-powered notes generation
  * - generate-quiz: For quiz question generation
@@ -13,7 +13,7 @@
  * - fix-weak-areas-quiz: For targeted practice quizzes
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Generate study notes using the secure generate-notes edge function
@@ -26,26 +26,28 @@ export async function generateNotesWithBytez(
     subject?: string;
     language?: string;
     board?: string;
-  }
+  },
 ): Promise<{ notes?: string; error?: string }> {
   try {
-    const { data, error } = await supabase.functions.invoke('generate-notes', {
+    const { data, error } = await supabase.functions.invoke("generate-notes", {
       body: {
         videoTitle,
         videoContent,
-        filters
-      }
+        filters,
+      },
     });
 
     if (error) {
-      console.error('Edge function error:', error);
-      return { error: error.message || 'Failed to generate notes' };
+      console.error("Edge function error:", error);
+      return { error: error.message || "Failed to generate notes" };
     }
 
     return { notes: data?.notes };
   } catch (err) {
-    console.error('Notes generation error:', err);
-    return { error: err instanceof Error ? err.message : 'Unknown error occurred' };
+    console.error("Notes generation error:", err);
+    return {
+      error: err instanceof Error ? err.message : "Unknown error occurred",
+    };
   }
 }
 
@@ -60,27 +62,29 @@ export async function generateQuizWithBytez(
     board?: string;
   },
   questionCount: number = 10,
-  difficultyLevel: 'easy' | 'medium' | 'hard' = 'medium'
+  difficultyLevel: "easy" | "medium" | "hard" = "medium",
 ): Promise<{ questions?: any[]; error?: string }> {
   try {
-    const { data, error } = await supabase.functions.invoke('generate-quiz', {
+    const { data, error } = await supabase.functions.invoke("generate-quiz", {
       body: {
         notes,
         filters,
         questionCount,
-        difficultyLevel
-      }
+        difficultyLevel,
+      },
     });
 
     if (error) {
-      console.error('Edge function error:', error);
-      return { error: error.message || 'Failed to generate quiz' };
+      console.error("Edge function error:", error);
+      return { error: error.message || "Failed to generate quiz" };
     }
 
     return { questions: data?.questions || [] };
   } catch (err) {
-    console.error('Quiz generation error:', err);
-    return { error: err instanceof Error ? err.message : 'Unknown error occurred' };
+    console.error("Quiz generation error:", err);
+    return {
+      error: err instanceof Error ? err.message : "Unknown error occurred",
+    };
   }
 }
 
@@ -97,30 +101,34 @@ export async function findVideoWithBytez(
     language?: string;
     videoType?: string;
     videoDuration?: string;
-  }
+  },
 ): Promise<{ videos?: any[]; error?: string }> {
   // Validate that user is not searching for YouTube shorts
-  if (topic.toLowerCase().includes('shorts') || topic.includes('youtube.com/shorts')) {
+  if (
+    topic.toLowerCase().includes("shorts") ||
+    topic.includes("youtube.com/shorts")
+  ) {
     return {
-      error: 'YouTube Shorts are not supported for learning. Please search for full-length educational videos instead.',
+      error:
+        "YouTube Shorts are not supported for learning. Please search for full-length educational videos instead.",
     };
   }
 
   try {
-    const { data, error } = await supabase.functions.invoke('find-video', {
+    const { data, error } = await supabase.functions.invoke("find-video", {
       body: {
         topic,
-        filters
-      }
+        filters,
+      },
     });
 
     if (error) {
-      console.error('Edge function error:', error);
-      return { error: error.message || 'Failed to find videos' };
+      console.error("Edge function error:", error);
+      return { error: error.message || "Failed to find videos" };
     }
 
     const videos = data?.videos || [];
-    
+
     // Additional client-side validation to ensure no shorts
     const validVideos = videos.filter((video: any) => {
       return video.duration && video.duration >= 10;
@@ -128,25 +136,32 @@ export async function findVideoWithBytez(
 
     if (validVideos.length === 0 && videos.length > 0) {
       return {
-        error: 'No suitable educational videos found matching your criteria. Please try a different search.',
+        error:
+          "No suitable educational videos found matching your criteria. Please try a different search.",
       };
     }
 
     return { videos: validVideos };
   } catch (err) {
-    console.error('Video search error:', err);
-    return { error: err instanceof Error ? err.message : 'Unknown error occurred' };
+    console.error("Video search error:", err);
+    return {
+      error: err instanceof Error ? err.message : "Unknown error occurred",
+    };
   }
 }
 
 /**
  * Validate that a video is not a YouTube short
  */
-export function validateVideoNotShort(url: string): { valid: boolean; message?: string } {
-  if (url.includes('youtube.com/shorts') || url.includes('youtu.be/shorts')) {
+export function validateVideoNotShort(url: string): {
+  valid: boolean;
+  message?: string;
+} {
+  if (url.includes("youtube.com/shorts") || url.includes("youtu.be/shorts")) {
     return {
       valid: false,
-      message: 'YouTube Shorts are not supported. Please use full-length educational videos (minimum 10 minutes).',
+      message:
+        "YouTube Shorts are not supported. Please use full-length educational videos (minimum 10 minutes).",
     };
   }
 

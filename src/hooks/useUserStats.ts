@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UserStats {
   totalXp: number;
@@ -18,15 +18,17 @@ const getXpForLevel = (level: number): number => {
   return Math.floor(100 * Math.pow(1.5, level - 1));
 };
 
-const getLevelFromXp = (totalXp: number): { level: number; xpInCurrentLevel: number; xpToNextLevel: number } => {
+const getLevelFromXp = (
+  totalXp: number,
+): { level: number; xpInCurrentLevel: number; xpToNextLevel: number } => {
   let level = 1;
   let xpRemaining = totalXp;
-  
+
   while (xpRemaining >= getXpForLevel(level)) {
     xpRemaining -= getXpForLevel(level);
     level++;
   }
-  
+
   return {
     level,
     xpInCurrentLevel: xpRemaining,
@@ -48,26 +50,27 @@ export const useUserStats = () => {
     try {
       // Fetch profile data
       const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('total_xp, xp_multiplier, streak_protections')
-        .eq('user_id', user.id)
+        .from("profiles")
+        .select("total_xp, xp_multiplier, streak_protections")
+        .eq("user_id", user.id)
         .maybeSingle();
 
       if (profileError) throw profileError;
 
       // Fetch leaderboard stats for streak info
       const { data: leaderboardData, error: leaderboardError } = await supabase
-        .from('leaderboard_stats')
-        .select('current_streak, longest_streak')
-        .eq('user_id', user.id)
+        .from("leaderboard_stats")
+        .select("current_streak, longest_streak")
+        .eq("user_id", user.id)
         .maybeSingle();
 
-      if (leaderboardError && leaderboardError.code !== 'PGRST116') {
+      if (leaderboardError && leaderboardError.code !== "PGRST116") {
         throw leaderboardError;
       }
 
       const totalXp = profileData?.total_xp || 0;
-      const { level, xpInCurrentLevel, xpToNextLevel } = getLevelFromXp(totalXp);
+      const { level, xpInCurrentLevel, xpToNextLevel } =
+        getLevelFromXp(totalXp);
 
       setStats({
         totalXp,
@@ -80,7 +83,7 @@ export const useUserStats = () => {
         xpProgress: (xpInCurrentLevel / xpToNextLevel) * 100,
       });
     } catch (error) {
-      console.error('Error fetching user stats:', error);
+      console.error("Error fetching user stats:", error);
     } finally {
       setLoading(false);
     }
@@ -93,16 +96,20 @@ export const useUserStats = () => {
 
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from("profiles")
         .update({ streak_protections: stats.streakProtections - 1 })
-        .eq('user_id', user.id);
+        .eq("user_id", user.id);
 
       if (error) throw error;
 
-      setStats(prev => prev ? { ...prev, streakProtections: prev.streakProtections - 1 } : null);
+      setStats((prev) =>
+        prev
+          ? { ...prev, streakProtections: prev.streakProtections - 1 }
+          : null,
+      );
       return true;
     } catch (error) {
-      console.error('Error using streak protection:', error);
+      console.error("Error using streak protection:", error);
       return false;
     }
   };

@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { Copy, Check, Link as LinkIcon, Ticket, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Copy, Check, Link as LinkIcon, Ticket, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 interface InviteFriendProps {
   onGenerateCode: () => Promise<string | null>;
@@ -11,7 +11,7 @@ interface InviteFriendProps {
 
 const InviteFriend = ({ onGenerateCode, onRedeemCode }: InviteFriendProps) => {
   const [inviteCode, setInviteCode] = useState<string | null>(null);
-  const [redeemCode, setRedeemCode] = useState('');
+  const [redeemCode, setRedeemCode] = useState("");
   const [generating, setGenerating] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -30,7 +30,7 @@ const InviteFriend = ({ onGenerateCode, onRedeemCode }: InviteFriendProps) => {
     if (!inviteCode) return;
     navigator.clipboard.writeText(inviteCode);
     setCopied(true);
-    toast.success('Invite code copied!');
+    toast.success("Invite code copied!");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -39,7 +39,7 @@ const InviteFriend = ({ onGenerateCode, onRedeemCode }: InviteFriendProps) => {
     setRedeeming(true);
     try {
       await onRedeemCode(redeemCode.trim());
-      setRedeemCode('');
+      setRedeemCode("");
     } finally {
       setRedeeming(false);
     }
@@ -55,14 +55,31 @@ const InviteFriend = ({ onGenerateCode, onRedeemCode }: InviteFriendProps) => {
         </h4>
         {inviteCode ? (
           <div className="flex gap-2">
-            <Input value={inviteCode} readOnly className="font-mono text-center tracking-widest" />
+            <Input
+              value={inviteCode}
+              readOnly
+              className="font-mono text-center tracking-widest"
+            />
             <Button size="icon" variant="outline" onClick={handleCopy}>
-              {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+              {copied ? (
+                <Check className="h-4 w-4 text-success" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
             </Button>
           </div>
         ) : (
-          <Button onClick={handleGenerate} disabled={generating} variant="outline" className="w-full">
-            {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <LinkIcon className="h-4 w-4 mr-2" />}
+          <Button
+            onClick={handleGenerate}
+            disabled={generating}
+            variant="outline"
+            className="w-full"
+          >
+            {generating ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <LinkIcon className="h-4 w-4 mr-2" />
+            )}
             Generate Invite Code
           </Button>
         )}
@@ -80,10 +97,14 @@ const InviteFriend = ({ onGenerateCode, onRedeemCode }: InviteFriendProps) => {
             value={redeemCode}
             onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
             className="font-mono text-center tracking-widest"
-            onKeyDown={(e) => e.key === 'Enter' && handleRedeem()}
+            onKeyDown={(e) => e.key === "Enter" && handleRedeem()}
           />
-          <Button onClick={handleRedeem} disabled={redeeming || !redeemCode.trim()} size="sm">
-            {redeeming ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Join'}
+          <Button
+            onClick={handleRedeem}
+            disabled={redeeming || !redeemCode.trim()}
+            size="sm"
+          >
+            {redeeming ? <Loader2 className="h-4 w-4 animate-spin" /> : "Join"}
           </Button>
         </div>
       </div>

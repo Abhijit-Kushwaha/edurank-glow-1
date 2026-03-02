@@ -1,12 +1,36 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, TrendingUp, TrendingDown, Minus, Users, Clock, Target } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Loader2,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Users,
+  Clock,
+  Target,
+} from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  Cell,
+} from "recharts";
 
 interface TopicStats {
   topicId: string;
@@ -20,15 +44,15 @@ interface TopicStats {
   strengthStatus: string;
 }
 
-type SortOption = 'name' | 'accuracy_gap' | 'time_gap';
-type FilterOption = 'all' | 'above' | 'below';
+type SortOption = "name" | "accuracy_gap" | "time_gap";
+type FilterOption = "all" | "above" | "below";
 
 export const TopicComparison = () => {
   const { user } = useAuth();
   const [topics, setTopics] = useState<TopicStats[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<SortOption>('accuracy_gap');
-  const [filter, setFilter] = useState<FilterOption>('all');
+  const [sortBy, setSortBy] = useState<SortOption>("accuracy_gap");
+  const [filter, setFilter] = useState<FilterOption>("all");
 
   useEffect(() => {
     const fetchComparison = async () => {
@@ -37,67 +61,72 @@ export const TopicComparison = () => {
       try {
         // Fetch user's topic performance
         const { data: userPerformance, error: userError } = await supabase
-          .from('user_topic_performance')
-          .select(`
+          .from("user_topic_performance")
+          .select(
+            `
             topic_id,
             correct_answers,
             total_questions,
             avg_time_seconds,
             strength_status
-          `)
-          .eq('user_id', user.id);
+          `,
+          )
+          .eq("user_id", user.id);
 
         if (userError) throw userError;
 
         // Fetch topic names
-        const topicIds = userPerformance?.map(up => up.topic_id) || [];
+        const topicIds = userPerformance?.map((up) => up.topic_id) || [];
         const { data: topicsData } = await supabase
-          .from('topics')
-          .select('id, name')
-          .in('id', topicIds);
+          .from("topics")
+          .select("id, name")
+          .in("id", topicIds);
 
         const topicNameMap = new Map(
-          topicsData?.map(t => [t.id, t.name]) || []
+          topicsData?.map((t) => [t.id, t.name]) || [],
         );
 
         // Fetch global stats
         const { data: globalStats, error: globalError } = await supabase
-          .from('global_topic_stats')
-          .select('*');
+          .from("global_topic_stats")
+          .select("*");
 
         if (globalError) throw globalError;
 
         // Create a map of global stats by topic_id
         const globalMap = new Map(
-          globalStats?.map(g => [g.topic_id, g]) || []
+          globalStats?.map((g) => [g.topic_id, g]) || [],
         );
 
         // Combine user and global data
-        const combinedStats: TopicStats[] = (userPerformance || []).map(up => {
-          const global = globalMap.get(up.topic_id);
-          const userAccuracy = up.total_questions > 0 
-            ? (up.correct_answers / up.total_questions) * 100 
-            : 0;
-          const globalAccuracy = global?.avg_accuracy || 50;
-          const userAvgTime = up.avg_time_seconds || 0;
-          const globalAvgTime = global?.avg_time_seconds || 30;
+        const combinedStats: TopicStats[] = (userPerformance || []).map(
+          (up) => {
+            const global = globalMap.get(up.topic_id);
+            const userAccuracy =
+              up.total_questions > 0
+                ? (up.correct_answers / up.total_questions) * 100
+                : 0;
+            const globalAccuracy = global?.avg_accuracy || 50;
+            const userAvgTime = up.avg_time_seconds || 0;
+            const globalAvgTime = global?.avg_time_seconds || 30;
 
-          return {
-            topicId: up.topic_id,
-            topicName: topicNameMap.get(up.topic_id) || 'Unknown Topic',
-            userAccuracy,
-            globalAccuracy,
-            userAvgTime,
-            globalAvgTime,
-            accuracyDelta: userAccuracy - globalAccuracy,
-            timeDelta: globalAvgTime - userAvgTime, // Positive means faster than average
-            strengthStatus: up.strength_status || 'unknown',
-          };
-        });
+            return {
+              topicId: up.topic_id,
+              topicName: topicNameMap.get(up.topic_id) || "Unknown Topic",
+              userAccuracy,
+              globalAccuracy,
+              userAvgTime,
+              globalAvgTime,
+              accuracyDelta: userAccuracy - globalAccuracy,
+              timeDelta: globalAvgTime - userAvgTime, // Positive means faster than average
+              strengthStatus: up.strength_status || "unknown",
+            };
+          },
+        );
 
         setTopics(combinedStats);
       } catch (error) {
-        console.error('Error fetching comparison data:', error);
+        console.error("Error fetching comparison data:", error);
       } finally {
         setLoading(false);
       }
@@ -107,23 +136,28 @@ export const TopicComparison = () => {
   }, [user]);
 
   const filteredAndSortedTopics = topics
-    .filter(t => {
-      if (filter === 'above') return t.accuracyDelta > 0;
-      if (filter === 'below') return t.accuracyDelta < 0;
+    .filter((t) => {
+      if (filter === "above") return t.accuracyDelta > 0;
+      if (filter === "below") return t.accuracyDelta < 0;
       return true;
     })
     .sort((a, b) => {
-      if (sortBy === 'name') return a.topicName.localeCompare(b.topicName);
-      if (sortBy === 'accuracy_gap') return Math.abs(b.accuracyDelta) - Math.abs(a.accuracyDelta);
-      if (sortBy === 'time_gap') return Math.abs(b.timeDelta) - Math.abs(a.timeDelta);
+      if (sortBy === "name") return a.topicName.localeCompare(b.topicName);
+      if (sortBy === "accuracy_gap")
+        return Math.abs(b.accuracyDelta) - Math.abs(a.accuracyDelta);
+      if (sortBy === "time_gap")
+        return Math.abs(b.timeDelta) - Math.abs(a.timeDelta);
       return 0;
     });
 
   // Prepare chart data
-  const chartData = filteredAndSortedTopics.slice(0, 8).map(t => ({
-    name: t.topicName.length > 15 ? t.topicName.substring(0, 15) + '...' : t.topicName,
-    'Your Accuracy': Math.round(t.userAccuracy),
-    'Global Average': Math.round(t.globalAccuracy),
+  const chartData = filteredAndSortedTopics.slice(0, 8).map((t) => ({
+    name:
+      t.topicName.length > 15
+        ? t.topicName.substring(0, 15) + "..."
+        : t.topicName,
+    "Your Accuracy": Math.round(t.userAccuracy),
+    "Global Average": Math.round(t.globalAccuracy),
     delta: t.accuracyDelta,
   }));
 
@@ -148,8 +182,8 @@ export const TopicComparison = () => {
     );
   }
 
-  const aboveAverageCount = topics.filter(t => t.accuracyDelta > 0).length;
-  const belowAverageCount = topics.filter(t => t.accuracyDelta < 0).length;
+  const aboveAverageCount = topics.filter((t) => t.accuracyDelta > 0).length;
+  const belowAverageCount = topics.filter((t) => t.accuracyDelta < 0).length;
 
   return (
     <div className="space-y-6">
@@ -162,13 +196,15 @@ export const TopicComparison = () => {
                 <TrendingUp className="h-5 w-5 text-green-500" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{aboveAverageCount}</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {aboveAverageCount}
+                </p>
                 <p className="text-sm text-muted-foreground">Above Average</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-card/50 border-border/50">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -176,13 +212,15 @@ export const TopicComparison = () => {
                 <TrendingDown className="h-5 w-5 text-red-500" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{belowAverageCount}</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {belowAverageCount}
+                </p>
                 <p className="text-sm text-muted-foreground">Below Average</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-card/50 border-border/50">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -190,7 +228,9 @@ export const TopicComparison = () => {
                 <Target className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{topics.length}</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {topics.length}
+                </p>
                 <p className="text-sm text-muted-foreground">Topics Compared</p>
               </div>
             </div>
@@ -209,20 +249,45 @@ export const TopicComparison = () => {
         <CardContent>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} layout="vertical" margin={{ left: 20, right: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
-                <YAxis dataKey="name" type="category" width={100} stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))', 
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
+              <BarChart
+                data={chartData}
+                layout="vertical"
+                margin={{ left: 20, right: 20 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="hsl(var(--border))"
+                />
+                <XAxis
+                  type="number"
+                  domain={[0, 100]}
+                  stroke="hsl(var(--muted-foreground))"
+                />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  width={100}
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
                   }}
                 />
                 <Legend />
-                <Bar dataKey="Your Accuracy" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="Global Average" fill="hsl(var(--muted-foreground))" radius={[0, 4, 4, 0]} />
+                <Bar
+                  dataKey="Your Accuracy"
+                  fill="hsl(var(--primary))"
+                  radius={[0, 4, 4, 0]}
+                />
+                <Bar
+                  dataKey="Global Average"
+                  fill="hsl(var(--muted-foreground))"
+                  radius={[0, 4, 4, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -231,7 +296,10 @@ export const TopicComparison = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4">
-        <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+        <Select
+          value={sortBy}
+          onValueChange={(v) => setSortBy(v as SortOption)}
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
@@ -242,7 +310,10 @@ export const TopicComparison = () => {
           </SelectContent>
         </Select>
 
-        <Select value={filter} onValueChange={(v) => setFilter(v as FilterOption)}>
+        <Select
+          value={filter}
+          onValueChange={(v) => setFilter(v as FilterOption)}
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter" />
           </SelectTrigger>
@@ -256,7 +327,7 @@ export const TopicComparison = () => {
 
       {/* Topic Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredAndSortedTopics.map(topic => (
+        {filteredAndSortedTopics.map((topic) => (
           <TopicComparisonCard key={topic.topicId} topic={topic} />
         ))}
       </div>
@@ -272,17 +343,21 @@ const TopicComparisonCard = ({ topic }: { topic: TopicStats }) => {
   };
 
   const getDeltaColor = (delta: number) => {
-    if (delta > 5) return 'text-green-500';
-    if (delta < -5) return 'text-red-500';
-    return 'text-muted-foreground';
+    if (delta > 5) return "text-green-500";
+    if (delta < -5) return "text-red-500";
+    return "text-muted-foreground";
   };
 
   const getStrengthBadge = (status: string) => {
     switch (status) {
-      case 'strong': return <Badge variant="success">Strong</Badge>;
-      case 'moderate': return <Badge variant="warning">Moderate</Badge>;
-      case 'weak': return <Badge variant="destructive">Weak</Badge>;
-      default: return null;
+      case "strong":
+        return <Badge variant="success">Strong</Badge>;
+      case "moderate":
+        return <Badge variant="warning">Moderate</Badge>;
+      case "weak":
+        return <Badge variant="destructive">Weak</Badge>;
+      default:
+        return null;
     }
   };
 
@@ -294,10 +369,13 @@ const TopicComparisonCard = ({ topic }: { topic: TopicStats }) => {
             <h4 className="font-semibold text-foreground">{topic.topicName}</h4>
             {getStrengthBadge(topic.strengthStatus)}
           </div>
-          <div className={`flex items-center gap-1 ${getDeltaColor(topic.accuracyDelta)}`}>
+          <div
+            className={`flex items-center gap-1 ${getDeltaColor(topic.accuracyDelta)}`}
+          >
             {getDeltaIcon(topic.accuracyDelta)}
             <span className="font-medium">
-              {topic.accuracyDelta > 0 ? '+' : ''}{Math.round(topic.accuracyDelta)}%
+              {topic.accuracyDelta > 0 ? "+" : ""}
+              {Math.round(topic.accuracyDelta)}%
             </span>
           </div>
         </div>
@@ -306,16 +384,20 @@ const TopicComparisonCard = ({ topic }: { topic: TopicStats }) => {
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Your Accuracy</span>
-            <span className="text-foreground font-medium">{Math.round(topic.userAccuracy)}%</span>
+            <span className="text-foreground font-medium">
+              {Math.round(topic.userAccuracy)}%
+            </span>
           </div>
           <Progress value={topic.userAccuracy} className="h-2" />
-          
+
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Global Average</span>
-            <span className="text-muted-foreground">{Math.round(topic.globalAccuracy)}%</span>
+            <span className="text-muted-foreground">
+              {Math.round(topic.globalAccuracy)}%
+            </span>
           </div>
           <div className="relative h-2 bg-muted rounded-full overflow-hidden">
-            <div 
+            <div
               className="absolute h-full bg-muted-foreground/50 rounded-full"
               style={{ width: `${topic.globalAccuracy}%` }}
             />
@@ -329,14 +411,22 @@ const TopicComparisonCard = ({ topic }: { topic: TopicStats }) => {
             <span>Avg. Time</span>
           </div>
           <div className="text-right">
-            <span className="text-foreground">{Math.round(topic.userAvgTime)}s</span>
+            <span className="text-foreground">
+              {Math.round(topic.userAvgTime)}s
+            </span>
             <span className="text-muted-foreground"> vs </span>
-            <span className="text-muted-foreground">{Math.round(topic.globalAvgTime)}s</span>
+            <span className="text-muted-foreground">
+              {Math.round(topic.globalAvgTime)}s
+            </span>
             {topic.timeDelta > 0 && (
-              <span className="text-green-500 ml-1">({Math.round(topic.timeDelta)}s faster)</span>
+              <span className="text-green-500 ml-1">
+                ({Math.round(topic.timeDelta)}s faster)
+              </span>
             )}
             {topic.timeDelta < 0 && (
-              <span className="text-red-500 ml-1">({Math.abs(Math.round(topic.timeDelta))}s slower)</span>
+              <span className="text-red-500 ml-1">
+                ({Math.abs(Math.round(topic.timeDelta))}s slower)
+              </span>
             )}
           </div>
         </div>

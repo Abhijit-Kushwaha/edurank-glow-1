@@ -4,23 +4,25 @@ import { checkRateLimit, logRateLimitRequest } from "../_shared/rateLimit.ts";
 
 // Allowed origins for CORS
 const ALLOWED_ORIGINS = [
-  'https://edurank.app',
-  'https://www.edurank.app',
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://lovable.dev',
+  "https://edurank.app",
+  "https://www.edurank.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://lovable.dev",
 ];
 
 function getCORSHeaders(originHeader: string | null): Record<string, string> {
-  const allowedOrigin = (originHeader && ALLOWED_ORIGINS.includes(originHeader))
-    ? originHeader
-    : ALLOWED_ORIGINS[0];
+  const allowedOrigin =
+    originHeader && ALLOWED_ORIGINS.includes(originHeader)
+      ? originHeader
+      : ALLOWED_ORIGINS[0];
 
   return {
-    'Access-Control-Allow-Origin': allowedOrigin,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Max-Age': '3600',
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Max-Age": "3600",
   };
 }
 
@@ -51,20 +53,23 @@ interface YouTubeVideo {
 }
 
 // YouTube search helper function
-async function searchYouTubeForTopic(topic: string, apiKey: string): Promise<YouTubeVideo | null> {
+async function searchYouTubeForTopic(
+  topic: string,
+  apiKey: string,
+): Promise<YouTubeVideo | null> {
   try {
     const query = `${topic} tutorial explained for beginners`;
     const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoDuration=medium&videoEmbeddable=true&maxResults=1&key=${apiKey}`;
-    
+
     const response = await fetch(searchUrl);
     if (!response.ok) {
-      console.error('YouTube search error:', response.status);
+      console.error("YouTube search error:", response.status);
       return null;
     }
-    
+
     const data = await response.json();
     const item = data.items?.[0];
-    
+
     if (item) {
       return {
         videoId: item.id.videoId,
@@ -74,7 +79,7 @@ async function searchYouTubeForTopic(topic: string, apiKey: string): Promise<You
     }
     return null;
   } catch (error) {
-    console.error('Error searching YouTube:', error);
+    console.error("Error searching YouTube:", error);
     return null;
   }
 }
@@ -87,17 +92,20 @@ function computeWeaknessScore(
   repeatedMistakes: number,
   wrongOnEasy: number,
   wrongOnMedium: number,
-  wrongOnHard: number
+  wrongOnHard: number,
 ): number {
   const accuracyPenalty = (1 - accuracy) * 50;
-  
+
   let timePenalty = 0;
   if (avgTimeGlobal > 0 && avgTimeUser > avgTimeGlobal) {
-    timePenalty = Math.min(20, ((avgTimeUser - avgTimeGlobal) / avgTimeGlobal) * 20);
+    timePenalty = Math.min(
+      20,
+      ((avgTimeUser - avgTimeGlobal) / avgTimeGlobal) * 20,
+    );
   }
-  
+
   const consistencyPenalty = repeatedMistakes >= 2 ? 15 : 0;
-  
+
   let difficultyPenalty = 0;
   if (wrongOnHard > 0) {
     difficultyPenalty = 15;
@@ -106,11 +114,17 @@ function computeWeaknessScore(
   } else if (wrongOnEasy > 0) {
     difficultyPenalty = 5;
   }
-  
-  return Math.min(100, accuracyPenalty + timePenalty + consistencyPenalty + difficultyPenalty);
+
+  return Math.min(
+    100,
+    accuracyPenalty + timePenalty + consistencyPenalty + difficultyPenalty,
+  );
 }
 
-function classifyStrength(weaknessScore: number, totalQuestions: number): string {
+function classifyStrength(
+  weaknessScore: number,
+  totalQuestions: number,
+): string {
   if (totalQuestions < 3) return "insufficient_data";
   if (weaknessScore <= 25) return "strong";
   if (weaknessScore <= 50) return "moderate";
@@ -120,18 +134,22 @@ function classifyStrength(weaknessScore: number, totalQuestions: number): string
 // Lovable AI Gateway call
 const LOVABLE_AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
-async function callLovableAI(messages: { role: string; content: string }[]): Promise<string> {
+async function callLovableAI(
+  messages: { role: string; content: string }[],
+): Promise<string> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) {
     throw new Error("LOVABLE_API_KEY is not configured");
   }
 
-  console.log("Calling Lovable AI (gemini-3-flash-preview) for weakness analysis...");
-  
+  console.log(
+    "Calling Lovable AI (gemini-3-flash-preview) for weakness analysis...",
+  );
+
   const response = await fetch(LOVABLE_AI_GATEWAY, {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -144,12 +162,14 @@ async function callLovableAI(messages: { role: string; content: string }[]): Pro
 
   if (!response.ok) {
     console.error("Lovable AI error:", response.status);
-    
+
     if (response.status === 429) {
       throw new Error("Rate limit exceeded. Please try again later.");
     }
     if (response.status === 402) {
-      throw new Error("Payment required. Please add funds to your Lovable AI workspace.");
+      throw new Error(
+        "Payment required. Please add funds to your Lovable AI workspace.",
+      );
     }
     if (response.status === 401) {
       throw new Error("Invalid API key or authentication failed.");
@@ -163,17 +183,20 @@ async function callLovableAI(messages: { role: string; content: string }[]): Pro
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    const corsHeaders = getCORSHeaders(req.headers.get('origin'));
+    const corsHeaders = getCORSHeaders(req.headers.get("origin"));
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const corsHeaders = getCORSHeaders(req.headers.get('origin'));
+    const corsHeaders = getCORSHeaders(req.headers.get("origin"));
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
         JSON.stringify({ error: "No authorization header" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -188,14 +211,15 @@ serve(async (req) => {
     const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
-    
+    const { data: claimsData, error: claimsError } =
+      await supabaseClient.auth.getClaims(token);
+
     if (claimsError || !claimsData?.claims) {
       console.error("Auth error:", claimsError);
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const userId = claimsData.claims.sub as string;
@@ -208,29 +232,38 @@ serve(async (req) => {
       limitsPerDay: 15,
     });
     if (!rateLimitResult.allowed) {
-      return new Response(
-        JSON.stringify({ error: rateLimitResult.message }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: rateLimitResult.message }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const { todoId, videoId, quizId, questions } = await req.json();
 
     if (!todoId || !videoId || !questions || !Array.isArray(questions)) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: todoId, videoId, questions" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          error: "Missing required fields: todoId, videoId, questions",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
-    console.log(`Analyzing ${questions.length} questions for user ${userId}, video ${videoId}`);
+    console.log(
+      `Analyzing ${questions.length} questions for user ${userId}, video ${videoId}`,
+    );
 
     // Step 1: Use AI to extract topics from each question
     const questionsWithTopics: QuestionAttempt[] = [];
-    
+
     try {
-      const questionTexts = questions.map((q: any) => q.questionText).join("\n---\n");
-      
+      const questionTexts = questions
+        .map((q: any) => q.questionText)
+        .join("\n---\n");
+
       const topicsText = await callLovableAI([
         {
           role: "system",
@@ -239,14 +272,14 @@ Return a JSON array of topic names, one for each question.
 Topics should be concise (2-4 words), educational, and specific.
 Examples: "Neural Networks", "Backpropagation", "Activation Functions"
 
-IMPORTANT: Return ONLY a valid JSON array of strings, nothing else.`
+IMPORTANT: Return ONLY a valid JSON array of strings, nothing else.`,
         },
         {
           role: "user",
           content: `Extract the main topic for each of these ${questions.length} questions (separated by ---):
 
-${questionTexts}`
-        }
+${questionTexts}`,
+        },
       ]);
 
       const jsonMatch = topicsText.match(/\[[\s\S]*\]/);
@@ -255,7 +288,7 @@ ${questionTexts}`
         questions.forEach((q: any, i: number) => {
           questionsWithTopics.push({
             ...q,
-            topicName: topics[i] || "General Knowledge"
+            topicName: topics[i] || "General Knowledge",
           });
         });
       }
@@ -267,13 +300,17 @@ ${questionTexts}`
       questions.forEach((q: any) => {
         questionsWithTopics.push({
           ...q,
-          topicName: "General Knowledge"
+          topicName: "General Knowledge",
         });
       });
     }
 
     // Step 2: Create or get topics
-    const uniqueTopics = [...new Set(questionsWithTopics.map(q => q.topicName || "General Knowledge"))];
+    const uniqueTopics = [
+      ...new Set(
+        questionsWithTopics.map((q) => q.topicName || "General Knowledge"),
+      ),
+    ];
     const topicIdMap: Record<string, string> = {};
 
     for (const topicName of uniqueTopics) {
@@ -289,14 +326,14 @@ ${questionTexts}`
           .insert({ name: topicName })
           .select("id")
           .single();
-        
+
         if (error) {
           console.error("Error creating topic:", error);
           continue;
         }
         topic = newTopic;
       }
-      
+
       if (topic) {
         topicIdMap[topicName] = topic.id;
       }
@@ -308,10 +345,11 @@ ${questionTexts}`
       .select("*", { count: "exact", head: true })
       .eq("todo_id", todoId);
 
-    const attemptNumber = Math.floor((existingAttempts || 0) / questions.length) + 1;
+    const attemptNumber =
+      Math.floor((existingAttempts || 0) / questions.length) + 1;
 
     // Step 4: Save question attempts
-    const attemptsToInsert = questionsWithTopics.map(q => ({
+    const attemptsToInsert = questionsWithTopics.map((q) => ({
       user_id: userId,
       quiz_id: quizId,
       todo_id: todoId,
@@ -335,10 +373,10 @@ ${questionTexts}`
     // Step 5: Aggregate performance by topic
     const topicPerformance: Record<string, TopicPerformance> = {};
 
-    questionsWithTopics.forEach(q => {
+    questionsWithTopics.forEach((q) => {
       const topicName = q.topicName || "General Knowledge";
       const topicId = topicIdMap[topicName];
-      
+
       if (!topicId) return;
 
       if (!topicPerformance[topicId]) {
@@ -386,19 +424,29 @@ ${questionTexts}`
 
       const globalAvgTime = globalStats?.avg_time_seconds || 30;
 
-      const newTotalQuestions = (existingPerf?.total_questions || 0) + perf.totalQuestions;
-      const newCorrectAnswers = (existingPerf?.correct_answers || 0) + perf.correctAnswers;
-      const newTotalTime = (existingPerf?.total_time_seconds || 0) + perf.totalTimeSeconds;
+      const newTotalQuestions =
+        (existingPerf?.total_questions || 0) + perf.totalQuestions;
+      const newCorrectAnswers =
+        (existingPerf?.correct_answers || 0) + perf.correctAnswers;
+      const newTotalTime =
+        (existingPerf?.total_time_seconds || 0) + perf.totalTimeSeconds;
       const newAvgTime = newTotalTime / newTotalQuestions;
-      
+
       let repeatedMistakes = existingPerf?.repeated_mistakes || 0;
-      if (!perf.correctAnswers && existingPerf && !existingPerf.correct_answers) {
+      if (
+        !perf.correctAnswers &&
+        existingPerf &&
+        !existingPerf.correct_answers
+      ) {
         repeatedMistakes++;
       }
 
-      const newWrongEasy = (existingPerf?.wrong_on_easy || 0) + perf.wrongOnEasy;
-      const newWrongMedium = (existingPerf?.wrong_on_medium || 0) + perf.wrongOnMedium;
-      const newWrongHard = (existingPerf?.wrong_on_hard || 0) + perf.wrongOnHard;
+      const newWrongEasy =
+        (existingPerf?.wrong_on_easy || 0) + perf.wrongOnEasy;
+      const newWrongMedium =
+        (existingPerf?.wrong_on_medium || 0) + perf.wrongOnMedium;
+      const newWrongHard =
+        (existingPerf?.wrong_on_hard || 0) + perf.wrongOnHard;
 
       const accuracy = newCorrectAnswers / newTotalQuestions;
 
@@ -409,15 +457,14 @@ ${questionTexts}`
         repeatedMistakes,
         newWrongEasy,
         newWrongMedium,
-        newWrongHard
+        newWrongHard,
       );
 
       const previousScore = existingPerf?.weakness_score || 0;
       const strengthStatus = classifyStrength(weaknessScore, newTotalQuestions);
 
-      await supabaseClient
-        .from("user_topic_performance")
-        .upsert({
+      await supabaseClient.from("user_topic_performance").upsert(
+        {
           user_id: userId,
           topic_id: topicId,
           total_questions: newTotalQuestions,
@@ -431,16 +478,17 @@ ${questionTexts}`
           weakness_score: weaknessScore,
           strength_status: strengthStatus,
           last_updated: new Date().toISOString(),
-        }, {
-          onConflict: "user_id,topic_id"
-        });
+        },
+        {
+          onConflict: "user_id,topic_id",
+        },
+      );
 
       const videoAccuracy = perf.correctAnswers / perf.totalQuestions;
       const isWeakInVideo = (1 - videoAccuracy) * 100 > 50;
 
-      await supabaseClient
-        .from("video_topic_analysis")
-        .upsert({
+      await supabaseClient.from("video_topic_analysis").upsert(
+        {
           user_id: userId,
           video_id: videoId,
           todo_id: todoId,
@@ -450,24 +498,34 @@ ${questionTexts}`
           mastery_score: videoAccuracy * 100,
           is_weak_topic: isWeakInVideo,
           updated_at: new Date().toISOString(),
-        }, {
-          onConflict: "user_id,video_id,topic_id"
-        });
+        },
+        {
+          onConflict: "user_id,video_id,topic_id",
+        },
+      );
 
-      await serviceClient
-        .from("global_topic_stats")
-        .upsert({
+      await serviceClient.from("global_topic_stats").upsert(
+        {
           topic_id: topicId,
-          total_attempts: (globalStats?.total_attempts || 0) + perf.totalQuestions,
-          total_correct: (globalStats?.total_correct || 0) + perf.correctAnswers,
-          avg_accuracy: ((globalStats?.total_correct || 0) + perf.correctAnswers) / 
-                       ((globalStats?.total_attempts || 0) + perf.totalQuestions) * 100,
-          avg_time_seconds: ((globalStats?.avg_time_seconds || 30) * (globalStats?.total_attempts || 1) + perf.totalTimeSeconds) /
-                           ((globalStats?.total_attempts || 0) + perf.totalQuestions),
+          total_attempts:
+            (globalStats?.total_attempts || 0) + perf.totalQuestions,
+          total_correct:
+            (globalStats?.total_correct || 0) + perf.correctAnswers,
+          avg_accuracy:
+            (((globalStats?.total_correct || 0) + perf.correctAnswers) /
+              ((globalStats?.total_attempts || 0) + perf.totalQuestions)) *
+            100,
+          avg_time_seconds:
+            ((globalStats?.avg_time_seconds || 30) *
+              (globalStats?.total_attempts || 1) +
+              perf.totalTimeSeconds) /
+            ((globalStats?.total_attempts || 0) + perf.totalQuestions),
           updated_at: new Date().toISOString(),
-        }, {
-          onConflict: "topic_id"
-        });
+        },
+        {
+          onConflict: "topic_id",
+        },
+      );
 
       if (strengthStatus === "weak") {
         weakTopics.push({
@@ -479,17 +537,22 @@ ${questionTexts}`
 
         const youtubeApiKey = Deno.env.get("youtube_api_key");
         let videoData: YouTubeVideo | null = null;
-        
+
         if (youtubeApiKey) {
-          videoData = await searchYouTubeForTopic(perf.topicName, youtubeApiKey);
+          videoData = await searchYouTubeForTopic(
+            perf.topicName,
+            youtubeApiKey,
+          );
           if (videoData) {
-            console.log(`Found video for weak topic "${perf.topicName}": ${videoData.title}`);
+            console.log(
+              `Found video for weak topic "${perf.topicName}": ${videoData.title}`,
+            );
           }
         }
 
         const recommendationTitle = `Fix: ${perf.topicName}`;
         const minutes = Math.max(3, Math.ceil(weaknessScore / 20));
-        const description = videoData 
+        const description = videoData
           ? `Watch "${videoData.title}" to fix your weakness in ${perf.topicName} — takes ~${minutes} minutes.`
           : `You're losing marks in ${perf.topicName} — fix it in ${minutes} minutes.`;
 
@@ -505,30 +568,33 @@ ${questionTexts}`
           video_id: videoData?.videoId || null,
           video_title: videoData?.title || null,
           video_channel: videoData?.channel || null,
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          expires_at: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
         });
       }
 
       if (previousScore > 0 && weaknessScore > 0) {
-        const improvement = ((previousScore - weaknessScore) / previousScore) * 100;
+        const improvement =
+          ((previousScore - weaknessScore) / previousScore) * 100;
         if (improvement >= 30) {
-          console.log(`User ${userId} achieved Comeback King! Improvement: ${improvement}%`);
+          console.log(
+            `User ${userId} achieved Comeback King! Improvement: ${improvement}%`,
+          );
           await serviceClient.rpc("check_achievements", { uid: userId });
         }
       }
     }
 
     if (recommendations.length > 0) {
-      const topicIds = recommendations.map(r => r.topic_id);
+      const topicIds = recommendations.map((r) => r.topic_id);
       await supabaseClient
         .from("recommendation_queue")
         .delete()
         .eq("user_id", userId)
         .in("topic_id", topicIds);
 
-      await supabaseClient
-        .from("recommendation_queue")
-        .insert(recommendations);
+      await supabaseClient.from("recommendation_queue").insert(recommendations);
     }
 
     const { data: allResults } = await supabaseClient
@@ -538,28 +604,38 @@ ${questionTexts}`
 
     if (allResults && allResults.length > 0) {
       const totalQuizzes = allResults.length;
-      const totalCorrect = allResults.reduce((sum, r) => sum + r.correct_answers, 0);
-      const totalQuestions = allResults.reduce((sum, r) => sum + r.total_questions, 0);
-      const averageScore = allResults.reduce((sum, r) => sum + r.score, 0) / totalQuizzes;
-      const bestScore = Math.max(...allResults.map(r => r.score));
+      const totalCorrect = allResults.reduce(
+        (sum, r) => sum + r.correct_answers,
+        0,
+      );
+      const totalQuestions = allResults.reduce(
+        (sum, r) => sum + r.total_questions,
+        0,
+      );
+      const averageScore =
+        allResults.reduce((sum, r) => sum + r.score, 0) / totalQuizzes;
+      const bestScore = Math.max(...allResults.map((r) => r.score));
 
-      await supabaseClient
-        .from("leaderboard_stats")
-        .upsert({
+      await supabaseClient.from("leaderboard_stats").upsert(
+        {
           user_id: userId,
           total_quizzes: totalQuizzes,
           total_correct: totalCorrect,
           total_questions: totalQuestions,
           average_score: Math.round(averageScore),
           best_score: bestScore,
-          last_activity_date: new Date().toISOString().split('T')[0],
+          last_activity_date: new Date().toISOString().split("T")[0],
           updated_at: new Date().toISOString(),
-        }, {
-          onConflict: "user_id"
-        });
+        },
+        {
+          onConflict: "user_id",
+        },
+      );
     }
 
-    console.log(`Analysis complete: ${weakTopics.length} weak topics, ${recommendations.length} recommendations`);
+    console.log(
+      `Analysis complete: ${weakTopics.length} weak topics, ${recommendations.length} recommendations`,
+    );
 
     return new Response(
       JSON.stringify({
@@ -567,15 +643,19 @@ ${questionTexts}`
         weakTopics,
         recommendationsAdded: recommendations.length,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
-
   } catch (error) {
     console.error("Error in analyze-weakness function:", error);
     const errorCorsHeaders = getCORSHeaders(null);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...errorCorsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
+      {
+        status: 500,
+        headers: { ...errorCorsHeaders, "Content-Type": "application/json" },
+      },
     );
   }
 });

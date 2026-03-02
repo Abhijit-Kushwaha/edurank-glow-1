@@ -4,23 +4,25 @@ import { checkRateLimit, logRateLimitRequest } from "../_shared/rateLimit.ts";
 
 // Allowed origins for CORS
 const ALLOWED_ORIGINS = [
-  'https://edurank.app',
-  'https://www.edurank.app',
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://lovable.dev',
+  "https://edurank.app",
+  "https://www.edurank.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://lovable.dev",
 ];
 
 function getCORSHeaders(originHeader: string | null): Record<string, string> {
-  const allowedOrigin = (originHeader && ALLOWED_ORIGINS.includes(originHeader))
-    ? originHeader
-    : ALLOWED_ORIGINS[0];
+  const allowedOrigin =
+    originHeader && ALLOWED_ORIGINS.includes(originHeader)
+      ? originHeader
+      : ALLOWED_ORIGINS[0];
 
   return {
-    'Access-Control-Allow-Origin': allowedOrigin,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Max-Age': '3600',
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Max-Age": "3600",
   };
 }
 
@@ -41,30 +43,41 @@ const FORBIDDEN_PATTERNS = [
   /override\s+instructions/i,
 ];
 
-function sanitizeInput(input: string, maxLength: number = MAX_TOPIC_LENGTH): { isValid: boolean; sanitized: string; error?: string } {
-  if (!input || typeof input !== 'string') {
-    return { isValid: false, sanitized: '', error: 'Input must be a non-empty string' };
+function sanitizeInput(
+  input: string,
+  maxLength: number = MAX_TOPIC_LENGTH,
+): { isValid: boolean; sanitized: string; error?: string } {
+  if (!input || typeof input !== "string") {
+    return {
+      isValid: false,
+      sanitized: "",
+      error: "Input must be a non-empty string",
+    };
   }
 
   let sanitized = input.trim();
   if (sanitized.length === 0) {
-    return { isValid: false, sanitized: '', error: 'Input cannot be empty' };
+    return { isValid: false, sanitized: "", error: "Input cannot be empty" };
   }
   if (sanitized.length > maxLength) {
-    return { isValid: false, sanitized: '', error: `Input exceeds maximum length of ${maxLength} characters` };
+    return {
+      isValid: false,
+      sanitized: "",
+      error: `Input exceeds maximum length of ${maxLength} characters`,
+    };
   }
 
   for (const pattern of FORBIDDEN_PATTERNS) {
     if (pattern.test(sanitized)) {
-      console.warn('Potential prompt injection detected');
-      return { isValid: false, sanitized: '', error: 'Invalid input detected' };
+      console.warn("Potential prompt injection detected");
+      return { isValid: false, sanitized: "", error: "Invalid input detected" };
     }
   }
 
   sanitized = sanitized
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-    .replace(/[<>]/g, '')
-    .replace(/\\/g, '')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+    .replace(/[<>]/g, "")
+    .replace(/\\/g, "")
     .trim();
 
   return { isValid: true, sanitized };
@@ -84,74 +97,85 @@ interface YouTubeVideo {
 
 function formatDuration(isoDuration: string): string {
   const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-  if (!match) return '0:00';
-  
-  const hours = parseInt(match[1] || '0');
-  const minutes = parseInt(match[2] || '0');
-  const seconds = parseInt(match[3] || '0');
-  
+  if (!match) return "0:00";
+
+  const hours = parseInt(match[1] || "0");
+  const minutes = parseInt(match[2] || "0");
+  const seconds = parseInt(match[3] || "0");
+
   if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   }
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
-async function searchYouTube(query: string, apiKey: string, maxResults: number = 10): Promise<YouTubeVideo[]> {
+async function searchYouTube(
+  query: string,
+  apiKey: string,
+  maxResults: number = 10,
+): Promise<YouTubeVideo[]> {
   console.log(`Searching YouTube for: "${query}"`);
-  
+
   const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoDuration=medium&videoEmbeddable=true&maxResults=${maxResults}&key=${apiKey}`;
-  
+
   const searchResponse = await fetch(searchUrl);
   if (!searchResponse.ok) {
-    console.error('YouTube search error:', searchResponse.status);
+    console.error("YouTube search error:", searchResponse.status);
     throw new Error(`YouTube API error: ${searchResponse.status}`);
   }
-  
+
   const searchData = await searchResponse.json();
-  const videoIds = searchData.items?.map((item: any) => item.id.videoId).join(',');
-  
+  const videoIds = searchData.items
+    ?.map((item: any) => item.id.videoId)
+    .join(",");
+
   if (!videoIds) {
     return [];
   }
-  
+
   const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=statistics,contentDetails,snippet&id=${videoIds}&key=${apiKey}`;
-  
+
   const detailsResponse = await fetch(detailsUrl);
   if (!detailsResponse.ok) {
-    console.error('YouTube details error:', detailsResponse.status);
-    throw new Error('Failed to get video details');
+    console.error("YouTube details error:", detailsResponse.status);
+    throw new Error("Failed to get video details");
   }
-  
+
   const detailsData = await detailsResponse.json();
-  
-  const videos: YouTubeVideo[] = detailsData.items?.map((item: any) => {
-    const viewCount = parseInt(item.statistics?.viewCount || '0');
-    const likeCount = parseInt(item.statistics?.likeCount || '0');
-    
-    const publishDate = new Date(item.snippet.publishedAt);
-    const daysSincePublish = Math.max(1, (Date.now() - publishDate.getTime()) / (1000 * 60 * 60 * 24));
-    const engagementScore = Math.round(
-      (viewCount / daysSincePublish * 0.5) + 
-      (likeCount * 10) + 
-      (viewCount > 100000 ? 50 : 0)
-    );
-    
-    const thumbnails = item.snippet.thumbnails;
-    const thumbnail = thumbnails?.medium?.url || thumbnails?.default?.url || '';
-    
-    return {
-      videoId: item.id,
-      title: item.snippet.title,
-      channel: item.snippet.channelTitle,
-      viewCount: formatViewCount(viewCount),
-      publishedAt: item.snippet.publishedAt,
-      duration: item.contentDetails.duration,
-      durationFormatted: formatDuration(item.contentDetails.duration),
-      thumbnail,
-      engagementScore: Math.min(100, Math.max(1, engagementScore / 1000)),
-    };
-  }) || [];
-  
+
+  const videos: YouTubeVideo[] =
+    detailsData.items?.map((item: any) => {
+      const viewCount = parseInt(item.statistics?.viewCount || "0");
+      const likeCount = parseInt(item.statistics?.likeCount || "0");
+
+      const publishDate = new Date(item.snippet.publishedAt);
+      const daysSincePublish = Math.max(
+        1,
+        (Date.now() - publishDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      const engagementScore = Math.round(
+        (viewCount / daysSincePublish) * 0.5 +
+          likeCount * 10 +
+          (viewCount > 100000 ? 50 : 0),
+      );
+
+      const thumbnails = item.snippet.thumbnails;
+      const thumbnail =
+        thumbnails?.medium?.url || thumbnails?.default?.url || "";
+
+      return {
+        videoId: item.id,
+        title: item.snippet.title,
+        channel: item.snippet.channelTitle,
+        viewCount: formatViewCount(viewCount),
+        publishedAt: item.snippet.publishedAt,
+        duration: item.contentDetails.duration,
+        durationFormatted: formatDuration(item.contentDetails.duration),
+        thumbnail,
+        engagementScore: Math.min(100, Math.max(1, engagementScore / 1000)),
+      };
+    }) || [];
+
   return videos.sort((a, b) => b.engagementScore - a.engagementScore);
 }
 
@@ -168,18 +192,22 @@ function formatViewCount(count: number): string {
 // Lovable AI Gateway call
 const LOVABLE_AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
-async function callLovableAI(messages: { role: string; content: string }[]): Promise<string> {
+async function callLovableAI(
+  messages: { role: string; content: string }[],
+): Promise<string> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) {
     throw new Error("LOVABLE_API_KEY is not configured");
   }
 
-  console.log("Calling Lovable AI (gemini-3-flash-preview) for video discovery...");
-  
+  console.log(
+    "Calling Lovable AI (gemini-3-flash-preview) for video discovery...",
+  );
+
   const response = await fetch(LOVABLE_AI_GATEWAY, {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -192,12 +220,14 @@ async function callLovableAI(messages: { role: string; content: string }[]): Pro
 
   if (!response.ok) {
     console.error("Lovable AI error:", response.status);
-    
+
     if (response.status === 429) {
       throw new Error("Rate limit exceeded. Please try again later.");
     }
     if (response.status === 402) {
-      throw new Error("Payment required. Please add funds to your Lovable AI workspace.");
+      throw new Error(
+        "Payment required. Please add funds to your Lovable AI workspace.",
+      );
     }
     if (response.status === 401) {
       throw new Error("Invalid API key or authentication failed.");
@@ -210,34 +240,40 @@ async function callLovableAI(messages: { role: string; content: string }[]): Pro
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    const corsHeaders = getCORSHeaders(req.headers.get('origin'));
+  if (req.method === "OPTIONS") {
+    const corsHeaders = getCORSHeaders(req.headers.get("origin"));
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const corsHeaders = getCORSHeaders(req.headers.get('origin'));
-    
+    const corsHeaders = getCORSHeaders(req.headers.get("origin"));
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: "No authorization header" }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
+      { global: { headers: { Authorization: authHeader } } },
     );
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser();
     if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     console.log(`Processing request for user ${user.id}`);
@@ -250,30 +286,33 @@ serve(async (req) => {
       limitsPerDay: 50,
     });
     if (!rateLimitResult.allowed) {
-      return new Response(
-        JSON.stringify({ error: rateLimitResult.message }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: rateLimitResult.message }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const { topic } = await req.json();
-    
+
     const validation = sanitizeInput(topic);
     if (!validation.isValid) {
       return new Response(
-        JSON.stringify({ error: validation.error || 'Invalid topic' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: validation.error || "Invalid topic" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
     const sanitizedTopic = validation.sanitized;
 
-    const YOUTUBE_API_KEY = Deno.env.get('youtube_api_key');
-    
+    const YOUTUBE_API_KEY = Deno.env.get("youtube_api_key");
+
     if (!YOUTUBE_API_KEY) {
-      throw new Error('YouTube API key is not configured');
+      throw new Error("YouTube API key is not configured");
     }
 
-    console.log('Finding videos for topic:', sanitizedTopic);
+    console.log("Finding videos for topic:", sanitizedTopic);
 
     const content = await callLovableAI([
       {
@@ -292,74 +331,100 @@ The JSON must have this exact structure:
   "mainSearchQuery": "best YouTube search query for the main topic"
 }
 
-Add "tutorial", "explained", or "for beginners" to make searches more educational.`
+Add "tutorial", "explained", or "for beginners" to make searches more educational.`,
       },
       {
         role: "user",
         content: `Topic: "${sanitizedTopic}"
 
-Break this into 3-5 subtasks and provide optimized YouTube search queries for educational videos on each.`
-      }
+Break this into 3-5 subtasks and provide optimized YouTube search queries for educational videos on each.`,
+      },
     ]);
 
-    console.log('AI response received');
+    console.log("AI response received");
 
     let parsedData;
     try {
       let cleanContent = content.trim();
-      if (cleanContent.startsWith('```json')) cleanContent = cleanContent.slice(7);
-      if (cleanContent.startsWith('```')) cleanContent = cleanContent.slice(3);
-      if (cleanContent.endsWith('```')) cleanContent = cleanContent.slice(0, -3);
+      if (cleanContent.startsWith("```json"))
+        cleanContent = cleanContent.slice(7);
+      if (cleanContent.startsWith("```")) cleanContent = cleanContent.slice(3);
+      if (cleanContent.endsWith("```"))
+        cleanContent = cleanContent.slice(0, -3);
       parsedData = JSON.parse(cleanContent.trim());
     } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
+      console.error("Failed to parse AI response:", parseError);
       parsedData = {
         subtasks: [
-          { title: `Introduction to ${sanitizedTopic}`, searchQuery: `${sanitizedTopic} introduction tutorial` },
-          { title: `Core concepts of ${sanitizedTopic}`, searchQuery: `${sanitizedTopic} explained for beginners` },
-          { title: `Practice ${sanitizedTopic}`, searchQuery: `${sanitizedTopic} examples practice` }
+          {
+            title: `Introduction to ${sanitizedTopic}`,
+            searchQuery: `${sanitizedTopic} introduction tutorial`,
+          },
+          {
+            title: `Core concepts of ${sanitizedTopic}`,
+            searchQuery: `${sanitizedTopic} explained for beginners`,
+          },
+          {
+            title: `Practice ${sanitizedTopic}`,
+            searchQuery: `${sanitizedTopic} examples practice`,
+          },
         ],
-        mainSearchQuery: `${sanitizedTopic} tutorial explained`
+        mainSearchQuery: `${sanitizedTopic} tutorial explained`,
       };
     }
 
-    const mainVideos = await searchYouTube(parsedData.mainSearchQuery || `${sanitizedTopic} tutorial`, YOUTUBE_API_KEY, 5);
+    const mainVideos = await searchYouTube(
+      parsedData.mainSearchQuery || `${sanitizedTopic} tutorial`,
+      YOUTUBE_API_KEY,
+      5,
+    );
     const primaryVideo = mainVideos[0];
 
     if (!primaryVideo) {
-      throw new Error('No videos found for this topic');
+      throw new Error("No videos found for this topic");
     }
 
     const subtasksWithVideos = await Promise.all(
-      (parsedData.subtasks || []).slice(0, 5).map(async (subtask: any, idx: number) => {
-        try {
-          const videos = await searchYouTube(subtask.searchQuery || `${sanitizedTopic} ${subtask.title}`, YOUTUBE_API_KEY, 5);
-          return {
-            title: subtask.title || `Part ${idx + 1}`,
-            description: subtask.searchQuery || '',
-            videos: videos.map((v, i) => ({
-              videoId: v.videoId,
-              title: v.title,
-              channel: v.channel,
-              views: v.viewCount,
-              duration: v.durationFormatted,
-              thumbnail: v.thumbnail,
-              engagementScore: v.engagementScore,
-              reason: i === 0 ? 'Highest engagement for this topic' : `Recommended video #${i + 1}`
-            }))
-          };
-        } catch (err) {
-          console.error(`Error searching for subtask ${subtask.title}:`, err);
-          return {
-            title: subtask.title || `Part ${idx + 1}`,
-            description: subtask.searchQuery || '',
-            videos: []
-          };
-        }
-      })
+      (parsedData.subtasks || [])
+        .slice(0, 5)
+        .map(async (subtask: any, idx: number) => {
+          try {
+            const videos = await searchYouTube(
+              subtask.searchQuery || `${sanitizedTopic} ${subtask.title}`,
+              YOUTUBE_API_KEY,
+              5,
+            );
+            return {
+              title: subtask.title || `Part ${idx + 1}`,
+              description: subtask.searchQuery || "",
+              videos: videos.map((v, i) => ({
+                videoId: v.videoId,
+                title: v.title,
+                channel: v.channel,
+                views: v.viewCount,
+                duration: v.durationFormatted,
+                thumbnail: v.thumbnail,
+                engagementScore: v.engagementScore,
+                reason:
+                  i === 0
+                    ? "Highest engagement for this topic"
+                    : `Recommended video #${i + 1}`,
+              })),
+            };
+          } catch (err) {
+            console.error(`Error searching for subtask ${subtask.title}:`, err);
+            return {
+              title: subtask.title || `Part ${idx + 1}`,
+              description: subtask.searchQuery || "",
+              videos: [],
+            };
+          }
+        }),
     );
 
-    console.log(`Found ${mainVideos.length} main videos and ${subtasksWithVideos.length} subtasks`);
+    console.log(
+      `Found ${mainVideos.length} main videos and ${subtasksWithVideos.length} subtasks`,
+    );
     await logRateLimitRequest(supabaseClient, user.id, "find-video", true);
 
     return new Response(
@@ -370,15 +435,16 @@ Break this into 3-5 subtasks and provide optimized YouTube search queries for ed
         reason: `Best educational video for "${sanitizedTopic}" with ${primaryVideo.viewCount} views`,
         subtasks: subtasksWithVideos,
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error: unknown) {
-    console.error('Error in find-video function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error("Error in find-video function:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     const errorCorsHeaders = getCORSHeaders(null);
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...errorCorsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 500,
+      headers: { ...errorCorsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

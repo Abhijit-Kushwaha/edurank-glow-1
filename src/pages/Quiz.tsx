@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   CheckCircle,
@@ -14,15 +14,15 @@ import {
   Brain,
   Zap,
   User,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import Logo from '@/components/Logo';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+} from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Logo from "@/components/Logo";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Question {
   id: number;
@@ -54,14 +54,16 @@ const Quiz = () => {
   const [showResult, setShowResult] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [noNotes, setNoNotes] = useState(false);
-  const [notes, setNotes] = useState<string>('');
+  const [notes, setNotes] = useState<string>("");
   const [adaptiveMode, setAdaptiveMode] = useState(false);
-  const [currentDifficulty, setCurrentDifficulty] = useState<string>('medium');
+  const [currentDifficulty, setCurrentDifficulty] = useState<string>("medium");
   const [generatingAdaptive, setGeneratingAdaptive] = useState(false);
   const [videoId, setVideoId] = useState<string | null>(null);
   const [savedQuizId, setSavedQuizId] = useState<string | null>(null);
   const [questionTimings, setQuestionTimings] = useState<QuestionTiming[]>([]);
-  const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
+  const [questionStartTime, setQuestionStartTime] = useState<number>(
+    Date.now(),
+  );
   const [coinsEarned, setCoinsEarned] = useState(0);
 
   useEffect(() => {
@@ -74,19 +76,19 @@ const Quiz = () => {
     try {
       // Get video_id from todo
       const { data: todoData } = await supabase
-        .from('todos')
-        .select('video_id')
-        .eq('id', quizId)
+        .from("todos")
+        .select("video_id")
+        .eq("id", quizId)
         .maybeSingle();
-      
+
       if (todoData?.video_id) {
         setVideoId(todoData.video_id);
       }
 
       const { data: existingQuiz } = await supabase
-        .from('quizzes')
-        .select('id, questions')
-        .eq('todo_id', quizId)
+        .from("quizzes")
+        .select("id, questions")
+        .eq("todo_id", quizId)
         .maybeSingle();
 
       if (existingQuiz?.questions) {
@@ -99,10 +101,10 @@ const Quiz = () => {
       }
 
       const { data: notesData } = await supabase
-        .from('notes')
-        .select('content')
-        .eq('todo_id', quizId)
-        .eq('is_ai_generated', true)
+        .from("notes")
+        .select("content")
+        .eq("todo_id", quizId)
+        .eq("is_ai_generated", true)
         .maybeSingle();
 
       if (!notesData?.content) {
@@ -113,7 +115,7 @@ const Quiz = () => {
 
       setNotes(notesData.content);
       setGenerating(true);
-      const { data, error } = await supabase.functions.invoke('generate-quiz', {
+      const { data, error } = await supabase.functions.invoke("generate-quiz", {
         body: {
           todoId: quizId,
           notes: notesData.content,
@@ -132,14 +134,17 @@ const Quiz = () => {
       }
       setQuestionStartTime(Date.now());
     } catch (error: any) {
-      console.error('Error fetching quiz:', error);
-      
-      if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
-        toast.error('Rate limit exceeded. Please try again later.');
-      } else if (error.message?.includes('402')) {
-        toast.error('Please add credits to continue using AI features.');
+      console.error("Error fetching quiz:", error);
+
+      if (
+        error.message?.includes("429") ||
+        error.message?.includes("Rate limit")
+      ) {
+        toast.error("Rate limit exceeded. Please try again later.");
+      } else if (error.message?.includes("402")) {
+        toast.error("Please add credits to continue using AI features.");
       } else {
-        toast.error('Failed to generate quiz');
+        toast.error("Failed to generate quiz");
       }
     } finally {
       setLoading(false);
@@ -148,7 +153,8 @@ const Quiz = () => {
   };
 
   const question = questions[currentQuestion];
-  const progress = questions.length > 0 ? ((currentQuestion + 1) / questions.length) * 100 : 0;
+  const progress =
+    questions.length > 0 ? ((currentQuestion + 1) / questions.length) * 100 : 0;
 
   const handleSelectAnswer = (index: number) => {
     if (!isSubmitted) {
@@ -158,20 +164,23 @@ const Quiz = () => {
 
   const handleSubmitAnswer = () => {
     if (selectedAnswer === null) {
-      toast.error('Please select an answer');
+      toast.error("Please select an answer");
       return;
     }
 
     // Record time taken for this question
     const endTime = Date.now();
     const timeTakenSeconds = (endTime - questionStartTime) / 1000;
-    
-    setQuestionTimings(prev => [...prev, {
-      questionIndex: currentQuestion,
-      startTime: questionStartTime,
-      endTime,
-      timeTakenSeconds: Math.round(timeTakenSeconds * 10) / 10, // Round to 1 decimal
-    }]);
+
+    setQuestionTimings((prev) => [
+      ...prev,
+      {
+        questionIndex: currentQuestion,
+        startTime: questionStartTime,
+        endTime,
+        timeTakenSeconds: Math.round(timeTakenSeconds * 10) / 10, // Round to 1 decimal
+      },
+    ]);
 
     setIsSubmitted(true);
     const newAnswers = [...answers, selectedAnswer];
@@ -179,9 +188,9 @@ const Quiz = () => {
 
     const isCorrect = selectedAnswer === question.correctAnswer;
     if (isCorrect) {
-      toast.success('Correct!');
+      toast.success("Correct!");
     } else {
-      toast.error('Not quite right');
+      toast.error("Not quite right");
     }
   };
 
@@ -190,14 +199,17 @@ const Quiz = () => {
 
     setGeneratingAdaptive(true);
     try {
-      const { data, error } = await supabase.functions.invoke('adaptive-question', {
-        body: {
-          notes,
-          previousQuestion: question.question,
-          wasCorrect,
-          difficulty: currentDifficulty,
+      const { data, error } = await supabase.functions.invoke(
+        "adaptive-question",
+        {
+          body: {
+            notes,
+            previousQuestion: question.question,
+            wasCorrect,
+            difficulty: currentDifficulty,
+          },
         },
-      });
+      );
 
       if (error) throw error;
       if (data.error) throw new Error(data.error);
@@ -205,7 +217,7 @@ const Quiz = () => {
       setCurrentDifficulty(data.difficulty);
       return data.question as Question;
     } catch (error) {
-      console.error('Error generating adaptive question:', error);
+      console.error("Error generating adaptive question:", error);
       return null;
     } finally {
       setGeneratingAdaptive(false);
@@ -243,9 +255,9 @@ const Quiz = () => {
     let coins = 0;
     answers.forEach((answer, index) => {
       if (answer === questions[index]?.correctAnswer) {
-        const diff = questions[index]?.difficulty || 'medium';
-        if (diff === 'easy') coins += 2;
-        else if (diff === 'hard') coins += 10;
+        const diff = questions[index]?.difficulty || "medium";
+        if (diff === "easy") coins += 2;
+        else if (diff === "hard") coins += 10;
         else coins += 5;
       }
     });
@@ -265,18 +277,18 @@ const Quiz = () => {
       const answersWithMeta = answers.map((answer, index) => ({
         selected: answer,
         correct: questions[index]?.correctAnswer,
-        difficulty: questions[index]?.difficulty || 'medium',
+        difficulty: questions[index]?.difficulty || "medium",
         isCorrect: answer === questions[index]?.correctAnswer,
       }));
 
-      await supabase.from('quiz_results').insert({
+      await supabase.from("quiz_results").insert({
         user_id: user.id,
         todo_id: quizId,
         score: percentage,
         correct_answers: score,
         total_questions: questions.length,
         answers: answersWithMeta,
-        difficulty: questions[0]?.difficulty || 'medium',
+        difficulty: questions[0]?.difficulty || "medium",
       });
 
       // Analyze weakness after saving results
@@ -285,32 +297,35 @@ const Quiz = () => {
           questionText: q.question,
           isCorrect: answers[index] === q.correctAnswer,
           timeTakenSeconds: questionTimings[index]?.timeTakenSeconds || 0,
-          difficulty: q.difficulty || 'medium',
+          difficulty: q.difficulty || "medium",
         }));
 
         try {
-          const { data, error } = await supabase.functions.invoke('analyze-weakness', {
-            body: {
-              todoId: quizId,
-              videoId,
-              quizId: savedQuizId,
-              questions: questionAttempts,
+          const { data, error } = await supabase.functions.invoke(
+            "analyze-weakness",
+            {
+              body: {
+                todoId: quizId,
+                videoId,
+                quizId: savedQuizId,
+                questions: questionAttempts,
+              },
             },
-          });
+          );
 
           if (error) {
-            console.error('Weakness analysis error:', error);
+            console.error("Weakness analysis error:", error);
           } else if (data?.weakTopics?.length > 0) {
             toast.info(`Found ${data.weakTopics.length} topic(s) to improve`, {
               icon: <AlertCircle className="h-4 w-4 text-primary" />,
             });
           }
         } catch (analysisError) {
-          console.error('Weakness analysis failed:', analysisError);
+          console.error("Weakness analysis failed:", analysisError);
         }
       }
     } catch (error) {
-      console.error('Error saving results:', error);
+      console.error("Error saving results:", error);
     }
   };
 
@@ -331,37 +346,53 @@ const Quiz = () => {
     setShowResult(false);
     setIsSubmitted(false);
     setAdaptiveMode(false);
-    setCurrentDifficulty('medium');
+    setCurrentDifficulty("medium");
   };
 
   const getDifficultyColor = (diff?: string) => {
     switch (diff) {
-      case 'easy': return 'bg-success/20 text-success border-success/30';
-      case 'hard': return 'bg-destructive/20 text-destructive border-destructive/30';
-      default: return 'bg-primary/20 text-primary border-primary/30';
+      case "easy":
+        return "bg-success/20 text-success border-success/30";
+      case "hard":
+        return "bg-destructive/20 text-destructive border-destructive/30";
+      default:
+        return "bg-primary/20 text-primary border-primary/30";
     }
   };
 
   const getTypeIcon = (type?: string) => {
     switch (type) {
-      case 'concept_check': return <Lightbulb className="h-4 w-4" />;
-      case 'mechanism_check': return <Brain className="h-4 w-4" />;
-      case 'application_check': return <Zap className="h-4 w-4" />;
-      case 'misconception_trap': return <AlertCircle className="h-4 w-4" />;
-      case 'why_question': return <Sparkles className="h-4 w-4" />;
-      default: return <Sparkles className="h-4 w-4" />;
+      case "concept_check":
+        return <Lightbulb className="h-4 w-4" />;
+      case "mechanism_check":
+        return <Brain className="h-4 w-4" />;
+      case "application_check":
+        return <Zap className="h-4 w-4" />;
+      case "misconception_trap":
+        return <AlertCircle className="h-4 w-4" />;
+      case "why_question":
+        return <Sparkles className="h-4 w-4" />;
+      default:
+        return <Sparkles className="h-4 w-4" />;
     }
   };
 
   const getTypeLabel = (type?: string) => {
     switch (type) {
-      case 'concept_check': return 'Concept Check';
-      case 'mechanism_check': return 'How It Works';
-      case 'application_check': return 'Real-World Application';
-      case 'misconception_trap': return 'Common Misconception';
-      case 'why_question': return 'Understanding Why';
-      case 'adaptive': return 'Adaptive Question';
-      default: return 'Question';
+      case "concept_check":
+        return "Concept Check";
+      case "mechanism_check":
+        return "How It Works";
+      case "application_check":
+        return "Real-World Application";
+      case "misconception_trap":
+        return "Common Misconception";
+      case "why_question":
+        return "Understanding Why";
+      case "adaptive":
+        return "Adaptive Question";
+      default:
+        return "Question";
     }
   };
 
@@ -370,7 +401,9 @@ const Quiz = () => {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <Loader2 className="h-8 w-8 text-primary animate-spin" />
         <p className="text-muted-foreground">
-          {generating ? 'Generating conceptual quiz questions...' : 'Loading quiz...'}
+          {generating
+            ? "Generating conceptual quiz questions..."
+            : "Loading quiz..."}
         </p>
       </div>
     );
@@ -381,8 +414,12 @@ const Quiz = () => {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <AlertCircle className="h-12 w-12 text-muted-foreground" />
         <p className="text-muted-foreground">No notes found for this task</p>
-        <p className="text-sm text-muted-foreground">Generate notes first by watching the video</p>
-        <Button onClick={() => navigate(`/video/${quizId}`)}>Watch Video</Button>
+        <p className="text-sm text-muted-foreground">
+          Generate notes first by watching the video
+        </p>
+        <Button onClick={() => navigate(`/video/${quizId}`)}>
+          Watch Video
+        </Button>
       </div>
     );
   }
@@ -391,8 +428,12 @@ const Quiz = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <AlertCircle className="h-12 w-12 text-muted-foreground" />
-        <p className="text-muted-foreground">Could not generate quiz questions</p>
-        <Button onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
+        <p className="text-muted-foreground">
+          Could not generate quiz questions
+        </p>
+        <Button onClick={() => navigate("/dashboard")}>
+          Back to Dashboard
+        </Button>
       </div>
     );
   }
@@ -406,11 +447,11 @@ const Quiz = () => {
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-lg text-center animate-slide-up">
           <div
-            className={`glass-card rounded-2xl p-8 ${isPassing ? 'neon-glow' : ''}`}
+            className={`glass-card rounded-2xl p-8 ${isPassing ? "neon-glow" : ""}`}
           >
             <div
               className={`w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center ${
-                isPassing ? 'gradient-bg' : 'bg-destructive/20'
+                isPassing ? "gradient-bg" : "bg-destructive/20"
               }`}
             >
               {isPassing ? (
@@ -421,7 +462,7 @@ const Quiz = () => {
             </div>
 
             <h1 className="text-3xl font-bold mb-2">
-              {isPassing ? 'Congratulations!' : 'Keep Learning!'}
+              {isPassing ? "Congratulations!" : "Keep Learning!"}
             </h1>
             <p className="text-muted-foreground mb-6">
               {isPassing
@@ -432,11 +473,15 @@ const Quiz = () => {
             <div className="text-5xl font-bold neon-text mb-2">
               {score}/{questions.length}
             </div>
-            <p className="text-muted-foreground mb-2">{Math.round(percentage)}% correct</p>
+            <p className="text-muted-foreground mb-2">
+              {Math.round(percentage)}% correct
+            </p>
             {coinsEarned > 0 && (
               <div className="flex items-center justify-center gap-2 mb-6 p-3 rounded-lg bg-primary/10 border border-primary/20">
                 <span className="text-2xl">🪙</span>
-                <span className="font-bold text-primary text-lg">+{coinsEarned} coins earned!</span>
+                <span className="font-bold text-primary text-lg">
+                  +{coinsEarned} coins earned!
+                </span>
               </div>
             )}
 
@@ -445,10 +490,13 @@ const Quiz = () => {
                 <div className="p-4 rounded-lg bg-success/10 border border-success/30">
                   <div className="flex items-center gap-2 text-success mb-1">
                     <CheckCircle className="h-4 w-4" />
-                    <span className="font-medium">Great conceptual understanding!</span>
+                    <span className="font-medium">
+                      Great conceptual understanding!
+                    </span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    You've shown deep comprehension of the material. Keep exploring!
+                    You've shown deep comprehension of the material. Keep
+                    exploring!
                   </p>
                 </div>
               ) : (
@@ -458,7 +506,8 @@ const Quiz = () => {
                     <span className="font-medium">Areas to strengthen</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Review the explanations for questions you missed, then try again!
+                    Review the explanations for questions you missed, then try
+                    again!
                   </p>
                 </div>
               )}
@@ -469,7 +518,11 @@ const Quiz = () => {
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Try Again
               </Button>
-              <Button variant="neon" className="flex-1" onClick={() => navigate('/dashboard')}>
+              <Button
+                variant="neon"
+                className="flex-1"
+                onClick={() => navigate("/dashboard")}
+              >
                 Dashboard
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
@@ -505,9 +558,9 @@ const Quiz = () => {
               <span className="text-sm text-muted-foreground">
                 Question {currentQuestion + 1} of {questions.length}
               </span>
-              <Avatar 
-                className="h-8 w-8 cursor-pointer border border-primary/30" 
-                onClick={() => navigate('/profile')}
+              <Avatar
+                className="h-8 w-8 cursor-pointer border border-primary/30"
+                onClick={() => navigate("/profile")}
               >
                 <AvatarImage src={profile?.avatar_url || undefined} />
                 <AvatarFallback className="bg-primary/20 text-primary">
@@ -526,11 +579,17 @@ const Quiz = () => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2 text-primary">
                 {getTypeIcon(question.type)}
-                <span className="text-sm font-medium">{getTypeLabel(question.type)}</span>
+                <span className="text-sm font-medium">
+                  {getTypeLabel(question.type)}
+                </span>
               </div>
               {question.difficulty && (
-                <Badge variant="outline" className={getDifficultyColor(question.difficulty)}>
-                  {question.difficulty.charAt(0).toUpperCase() + question.difficulty.slice(1)}
+                <Badge
+                  variant="outline"
+                  className={getDifficultyColor(question.difficulty)}
+                >
+                  {question.difficulty.charAt(0).toUpperCase() +
+                    question.difficulty.slice(1)}
                 </Badge>
               )}
             </div>
@@ -551,24 +610,24 @@ const Quiz = () => {
                   disabled={isSubmitted}
                   className={`w-full p-4 rounded-xl text-left transition-all duration-300 ${
                     showCorrect
-                      ? 'bg-success/20 border-2 border-success'
+                      ? "bg-success/20 border-2 border-success"
                       : showWrong
-                      ? 'bg-destructive/20 border-2 border-destructive'
-                      : isSelected
-                      ? 'glass-card neon-border'
-                      : 'glass-card hover:neon-glow border-2 border-transparent'
+                        ? "bg-destructive/20 border-2 border-destructive"
+                        : isSelected
+                          ? "glass-card neon-border"
+                          : "glass-card hover:neon-glow border-2 border-transparent"
                   }`}
                 >
                   <div className="flex items-center gap-4">
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                         showCorrect
-                          ? 'bg-success text-success-foreground'
+                          ? "bg-success text-success-foreground"
                           : showWrong
-                          ? 'bg-destructive text-destructive-foreground'
-                          : isSelected
-                          ? 'gradient-bg text-primary-foreground'
-                          : 'bg-muted text-muted-foreground'
+                            ? "bg-destructive text-destructive-foreground"
+                            : isSelected
+                              ? "gradient-bg text-primary-foreground"
+                              : "bg-muted text-muted-foreground"
                       }`}
                     >
                       {showCorrect ? (
@@ -592,7 +651,9 @@ const Quiz = () => {
                 <Lightbulb className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="font-medium text-primary mb-1">Explanation</p>
-                  <p className="text-sm text-muted-foreground">{question.explanation}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {question.explanation}
+                  </p>
                 </div>
               </div>
             </div>

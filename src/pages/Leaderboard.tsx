@@ -62,18 +62,26 @@ const Leaderboard = () => {
     if (index === 0) return <Crown className="h-5 w-5 text-yellow-500" />;
     if (index === 1) return <Medal className="h-5 w-5 text-gray-400" />;
     if (index === 2) return <Medal className="h-5 w-5 text-amber-600" />;
-    return <span className="text-muted-foreground font-medium w-5 text-center">{index + 1}</span>;
+    return (
+      <span className="text-muted-foreground font-medium w-5 text-center">
+        {index + 1}
+      </span>
+    );
   };
 
   const sortedEntries = getSortedEntries();
-  const userRank = sortedEntries.findIndex(e => e.user_id === user?.id) + 1;
-  const userStats = entries.find(e => e.user_id === user?.id);
+  const userRank = sortedEntries.findIndex((e) => e.user_id === user?.id) + 1;
+  const userStats = entries.find((e) => e.user_id === user?.id);
 
   return (
     <div className="min-h-screen bg-background">
       <header className="glass-card border-b border-border sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/dashboard")}
+          >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-2">
@@ -96,22 +104,30 @@ const Leaderboard = () => {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-3 rounded-lg bg-muted/50">
-                  <p className="text-2xl font-bold text-primary">#{userRank || "-"}</p>
+                  <p className="text-2xl font-bold text-primary">
+                    #{userRank || "-"}
+                  </p>
                   <p className="text-xs text-muted-foreground">Current Rank</p>
                 </div>
                 <div className="text-center p-3 rounded-lg bg-muted/50">
-                  <p className="text-2xl font-bold">{userStats.average_score.toFixed(1)}%</p>
+                  <p className="text-2xl font-bold">
+                    {userStats.average_score.toFixed(1)}%
+                  </p>
                   <p className="text-xs text-muted-foreground">Avg Score</p>
                 </div>
                 <div className="text-center p-3 rounded-lg bg-muted/50">
                   <div className="flex items-center justify-center gap-1">
                     <Flame className="h-5 w-5 text-orange-500" />
-                    <p className="text-2xl font-bold">{userStats.current_streak}</p>
+                    <p className="text-2xl font-bold">
+                      {userStats.current_streak}
+                    </p>
                   </div>
                   <p className="text-xs text-muted-foreground">Day Streak</p>
                 </div>
                 <div className="text-center p-3 rounded-lg bg-muted/50">
-                  <p className="text-2xl font-bold">{userStats.total_quizzes}</p>
+                  <p className="text-2xl font-bold">
+                    {userStats.total_quizzes}
+                  </p>
                   <p className="text-xs text-muted-foreground">Quizzes</p>
                 </div>
               </div>
@@ -146,7 +162,9 @@ const Leaderboard = () => {
                 ) : sortedEntries.length === 0 ? (
                   <div className="p-8 text-center text-muted-foreground">
                     <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No entries yet. Complete a quiz to join the leaderboard!</p>
+                    <p>
+                      No entries yet. Complete a quiz to join the leaderboard!
+                    </p>
                   </div>
                 ) : (
                   <div className="divide-y divide-border">
@@ -154,18 +172,22 @@ const Leaderboard = () => {
                       <div
                         key={entry.id}
                         className={`flex items-center gap-4 p-4 transition-colors ${
-                          entry.user_id === user?.id ? "bg-primary/10" : "hover:bg-muted/50"
+                          entry.user_id === user?.id
+                            ? "bg-primary/10"
+                            : "hover:bg-muted/50"
                         }`}
                       >
                         <div className="flex items-center justify-center w-8">
                           {getRankIcon(index)}
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate flex items-center gap-2">
-                            <span>{entry.display_name || 'Anonymous'}</span>
+                            <span>{entry.display_name || "Anonymous"}</span>
                             {entry.user_id === user?.id && (
-                              <Badge variant="secondary" className="text-xs">You</Badge>
+                              <Badge variant="secondary" className="text-xs">
+                                You
+                              </Badge>
                             )}
                           </p>
                           <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -188,11 +210,15 @@ const Leaderboard = () => {
                           {activeTab === "streak" && (
                             <div className="flex items-center gap-1 text-orange-500">
                               <Flame className="h-5 w-5" />
-                              <span className="text-lg font-bold">{entry.current_streak}</span>
+                              <span className="text-lg font-bold">
+                                {entry.current_streak}
+                              </span>
                             </div>
                           )}
                           {activeTab === "quizzes" && (
-                            <p className="text-lg font-bold">{entry.total_quizzes}</p>
+                            <p className="text-lg font-bold">
+                              {entry.total_quizzes}
+                            </p>
                           )}
                         </div>
                       </div>

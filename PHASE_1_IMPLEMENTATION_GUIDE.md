@@ -9,13 +9,16 @@
 ## ✅ COMPLETED - Phase 1 Critical Fixes
 
 ### 1. ✅ CORS Configuration Hardened
+
 **Status:** DONE - All 6 backend functions updated
 
 **What was fixed:**
+
 - ❌ Changed from: `Access-Control-Allow-Origin: *` (allows any origin)
 - ✅ Changed to: Whitelist-based CORS configuration
 
 **Files updated:**
+
 - `supabase/functions/generate-notes/index.ts`
 - `supabase/functions/find-video/index.ts`
 - `supabase/functions/generate-quiz/index.ts`
@@ -24,30 +27,31 @@
 - `supabase/functions/fix-weak-areas-quiz/index.ts`
 
 **How it works:**
+
 ```typescript
 function getCORSHeaders(originHeader: string | null): Record<string, string> {
   // Only allow whitelisted origins
   const ALLOWED_ORIGINS = [
-    'https://edurank.app',
-    'https://www.edurank.app',
-    'http://localhost:5173',  // Dev only
+    "https://edurank.app",
+    "https://www.edurank.app",
+    "http://localhost:5173", // Dev only
   ];
-  
+
   // Only set Access-Control-Allow-Origin if origin is explicitly whitelisted
-  const allowedOrigin = ALLOWED_ORIGINS.includes(originHeader || '') 
-    ? originHeader 
+  const allowedOrigin = ALLOWED_ORIGINS.includes(originHeader || "")
+    ? originHeader
     : null;
 
   const headers: Record<string, string> = {
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Max-Age': '3600',
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Max-Age": "3600",
   };
-  
+
   // Only include CORS header if origin is whitelisted
   if (allowedOrigin) {
-    headers['Access-Control-Allow-Origin'] = allowedOrigin;
+    headers["Access-Control-Allow-Origin"] = allowedOrigin;
   }
-  
+
   return headers;
 }
 ```
@@ -57,17 +61,21 @@ function getCORSHeaders(originHeader: string | null): Record<string, string> {
 ---
 
 ### 2. ✅ API Keys Masked in Logs
+
 **Status:** DONE
 
 **What was fixed:**
+
 - ❌ Before: `console.error('YouTube search error:', response.status, errorText);` (errorText contains full response with headers)
 - ✅ After: `console.error('YouTube search error:', response.status);` (no sensitive data)
 
 **Files updated:**
+
 - `supabase/functions/generate-notes/index.ts` (Perplexity API key)
 - `supabase/functions/find-video/index.ts` (YouTube API key)
 
 **Why it matters:** Prevents API keys from being exposed in:
+
 - Server logs
 - Error tracking systems (Sentry, LogRocket)
 - Browser DevTools
@@ -77,16 +85,20 @@ function getCORSHeaders(originHeader: string | null): Record<string, string> {
 ---
 
 ### 3. ✅ Session Storage Switched
+
 **Status:** DONE
 
 **What was fixed:**
+
 - ❌ Before: `storage: localStorage` (persists across browser restarts, vulnerable to theft)
 - ✅ After: `storage: sessionStorage` (cleared when tab closes)
 
 **File updated:**
+
 - `src/integrations/supabase/client.ts`
 
 **How it works:**
+
 ```typescript
 const secureStorage = {
   getItem: (key: string) => sessionStorage.getItem(key),
@@ -96,14 +108,15 @@ const secureStorage = {
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: secureStorage,  // ✅ sessionStorage instead of localStorage
-    persistSession: false,   // ✅ Don't persist across browser sessions
-    autoRefreshToken: true,  // ✅ Keep tokens fresh within session
-  }
+    storage: secureStorage, // ✅ sessionStorage instead of localStorage
+    persistSession: false, // ✅ Don't persist across browser sessions
+    autoRefreshToken: true, // ✅ Keep tokens fresh within session
+  },
 });
 ```
 
 **Security benefit:**
+
 - JWT tokens deleted when tab closed
 - Prevents credential theft from browser history/cache
 - Prevents `localStorage` theft via XSS attacks
@@ -111,16 +124,20 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
 ---
 
 ### 4. ✅ JWT Verification Enabled
+
 **Status:** DONE
 
 **What was fixed:**
+
 - ❌ Before: `verify_jwt = false` (manual verification, error-prone)
 - ✅ After: `verify_jwt = true` (Supabase handles automatically)
 
 **File updated:**
+
 - `supabase/config.toml`
 
 **How it works:**
+
 ```toml
 [functions.generate-notes]
 verify_jwt = true  # ✅ Supabase verifies JWT before function runs
@@ -131,6 +148,7 @@ verify_jwt = true
 ```
 
 **Why this matters:**
+
 - Reduces attack surface (no manual JWT parsing)
 - Consistent authentication across all functions
 - Automatic token validation by Supabase
@@ -139,9 +157,11 @@ verify_jwt = true
 ---
 
 ### 5. ✅ Rate Limiting Utility Created
+
 **Status:** DONE
 
 **What was created:**
+
 - New file: `supabase/functions/_shared/rateLimit.ts`
 - Provides reusable rate limiting logic
 - Tracks requests per user, per operation
@@ -152,46 +172,51 @@ verify_jwt = true
 When `verify_jwt: true` is set in `supabase/config.toml`, the platform provides verified JWT claims. Extract the user ID like this:
 
 ```typescript
-import { checkRateLimit, logRateLimitRequest, DEFAULT_RATE_LIMITS } from "../_shared/rateLimit.ts";
+import {
+  checkRateLimit,
+  logRateLimitRequest,
+  DEFAULT_RATE_LIMITS,
+} from "../_shared/rateLimit.ts";
 
 serve(async (req) => {
   try {
     // Get verified JWT claims from the request context
     // The sub claim contains the user ID
     const jwt_claims = req.context?.claims; // Verify this matches your runtime
-    
+
     // Defensively check that userId exists
     const { sub: userId } = jwt_claims || {};
     if (!userId) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized: Missing user ID in JWT claims' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({
+          error: "Unauthorized: Missing user ID in JWT claims",
+        }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
       );
     }
 
     // Check rate limit
     const rateLimitResult = await checkRateLimit(supabaseClient, {
-      operation: 'generate-notes',
+      operation: "generate-notes",
       userId,
-      limitsPerHour: DEFAULT_RATE_LIMITS['generate-notes'].limitsPerHour,
-      limitsPerDay: DEFAULT_RATE_LIMITS['generate-notes'].limitsPerDay,
+      limitsPerHour: DEFAULT_RATE_LIMITS["generate-notes"].limitsPerHour,
+      limitsPerDay: DEFAULT_RATE_LIMITS["generate-notes"].limitsPerDay,
     });
 
     if (!rateLimitResult.allowed) {
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: rateLimitResult.message,
-          resetAt: rateLimitResult.resetAtHour 
+          resetAt: rateLimitResult.resetAtHour,
         }),
-        { status: 429, headers: corsHeaders }
+        { status: 429, headers: corsHeaders },
       );
     }
 
     // Process request...
-    
+
     // Log the request for auditing
-    await logRateLimitRequest(supabaseClient, userId, 'generate-notes', true);
-    
+    await logRateLimitRequest(supabaseClient, userId, "generate-notes", true);
   } catch (error) {
     // Handle error...
   }
@@ -213,6 +238,7 @@ serve(async (req) => {
 ## 🔧 STILL TODO - Complete Implementation
 
 ### Required Database Migration
+
 Before rate limiting works, you need to create the `rate_limit_logs` table:
 
 ```sql
@@ -237,28 +263,36 @@ FOR SELECT
 USING (auth.uid() = user_id);
 
 -- Create indexes for fast lookups
-CREATE INDEX rate_limit_logs_user_operation_created 
+CREATE INDEX rate_limit_logs_user_operation_created
 ON public.rate_limit_logs(user_id, operation, created_at DESC);
 
-CREATE INDEX rate_limit_logs_operation_created 
+CREATE INDEX rate_limit_logs_operation_created
 ON public.rate_limit_logs(operation, created_at DESC);
 ```
 
 **How to apply:**
+
 1. Go to Supabase dashboard → SQL Editor
 2. Create new query
 3. Paste the SQL above
 4. Execute
 
 ### Integrate rate limiting into backend functions
+
 Each function needs 3 steps:
 
 **Step 1:** Import rate limiting
+
 ```typescript
-import { checkRateLimit, logRateLimitRequest, DEFAULT_RATE_LIMITS } from "../_shared/rateLimit.ts";
+import {
+  checkRateLimit,
+  logRateLimitRequest,
+  DEFAULT_RATE_LIMITS,
+} from "../_shared/rateLimit.ts";
 ```
 
 **Step 2:** Check rate limit before processing
+
 ```typescript
 const userId = /* extract from verified JWT */;
 const rateLimitResult = await checkRateLimit(supabaseClient, {
@@ -277,8 +311,9 @@ if (!rateLimitResult.allowed) {
 ```
 
 **Step 3:** Log the request
+
 ```typescript
-await logRateLimitRequest(supabaseClient, userId, 'generate-notes', true);
+await logRateLimitRequest(supabaseClient, userId, "generate-notes", true);
 ```
 
 ---
@@ -288,7 +323,7 @@ await logRateLimitRequest(supabaseClient, userId, 'generate-notes', true);
 Before deploying Phase 1 fixes:
 
 - [ ] Pull latest changes from `main` branch
-- [ ] Test CORS locally: 
+- [ ] Test CORS locally:
   ```bash
   curl -H "Origin: http://localhost:5173" http://localhost:54321/functions/v1/generate-notes
   ```
@@ -304,6 +339,7 @@ Before deploying Phase 1 fixes:
 - [ ] Load test rate limiting logic locally (no database needed for test)
 
 ### Deployment steps:
+
 1. **Backup database** (Supabase → Settings → Backups)
 2. **Create migration file** for `rate_limit_logs` table
 3. **Deploy config.toml changes** (JWT verification)
@@ -348,6 +384,7 @@ After Phase 1 is deployed and stable, proceed with:
 ## 🔍 Monitoring & Testing
 
 ### Test Rate Limiting (After Phase 1 deployed)
+
 ```bash
 # Make 4 rapid requests to generate-notes
 # 4th should return 429 Too Many Requests
@@ -359,14 +396,18 @@ done
 ```
 
 ### Monitor CORS Issues
+
 Check browser console for CORS errors:
+
 ```
-Access to XMLHttpRequest at 'https://api.edurank.app/functions/v1/generate-notes' 
+Access to XMLHttpRequest at 'https://api.edurank.app/functions/v1/generate-notes'
 from origin 'https://malicious-site.com' has been blocked by CORS policy
 ```
+
 This is GOOD - it means CORS is working
 
 ### Session Token Lifecycle
+
 1. User logs in → token in sessionStorage
 2. Page refresh → token still there
 3. Close browser tab → token cleared ❌
@@ -397,13 +438,13 @@ If you encounter issues:
 
 ## Summary of Changes
 
-| Item | Before | After | Files |
-|------|--------|-------|-------|
-| CORS | `*` | Whitelist | 6 functions |
-| Logs | Unmasked keys | Masked | 2 functions |
-| Storage | localStorage | sessionStorage | 1 file |
-| JWT | Manual check | Auto verify | config.toml |
-| Rate Limit | None | Implemented | _shared/rateLimit.ts |
+| Item       | Before        | After          | Files                 |
+| ---------- | ------------- | -------------- | --------------------- |
+| CORS       | `*`           | Whitelist      | 6 functions           |
+| Logs       | Unmasked keys | Masked         | 2 functions           |
+| Storage    | localStorage  | sessionStorage | 1 file                |
+| JWT        | Manual check  | Auto verify    | config.toml           |
+| Rate Limit | None          | Implemented    | \_shared/rateLimit.ts |
 
 **Total changes:** 10 files modified, 2 new files created
 

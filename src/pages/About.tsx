@@ -1,13 +1,13 @@
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Mail, Users, Sparkles, Heart, Map } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import Logo from '@/components/Logo';
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Mail, Users, Sparkles, Heart, Map } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Logo from "@/components/Logo";
 
 const teamMembers = [
-  { name: 'Abhijit Kushwaha', role: 'Backend Coder & Integrator' },
-  { name: 'Prince Kumar Verma', role: 'UI Designer & Game Developer' },
-  { name: 'Dewashish Kesharwani', role: 'Backend Coder & Game Developer' },
-  { name: 'Abhinav Bajpai', role: 'Researcher, Marketing & Data Management' },
+  { name: "Abhijit Kushwaha", role: "Backend Coder & Integrator" },
+  { name: "Prince Kumar Verma", role: "UI Designer & Game Developer" },
+  { name: "Dewashish Kesharwani", role: "Backend Coder & Game Developer" },
+  { name: "Abhinav Bajpai", role: "Researcher, Marketing & Data Management" },
 ];
 
 const About = () => {
@@ -39,7 +39,10 @@ const About = () => {
 
           <h2 className="text-xl font-semibold mb-3">Who We Are</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Brain Buddy is an educational platform built with the vision of improving how students learn using structured guidance and technology. What started as curiosity slowly turned into a mission to create smarter, more efficient learning experiences.
+            Brain Buddy is an educational platform built with the vision of
+            improving how students learn using structured guidance and
+            technology. What started as curiosity slowly turned into a mission
+            to create smarter, more efficient learning experiences.
           </p>
         </section>
 
@@ -61,12 +64,17 @@ const About = () => {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <span className="text-primary font-semibold">
-                      {member.name.split(' ').map(n => n[0]).join('')}
+                      {member.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
                     </span>
                   </div>
                   <div>
                     <p className="font-medium">{member.name}</p>
-                    <p className="text-sm text-muted-foreground">{member.role}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {member.role}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -80,29 +88,50 @@ const About = () => {
             <div className="p-2 rounded-lg bg-primary/10">
               <Map className="h-5 w-5 text-primary" />
             </div>
-            <h2 className="text-xl font-semibold">The Journey of Building Brain Buddy</h2>
+            <h2 className="text-xl font-semibold">
+              The Journey of Building Brain Buddy
+            </h2>
           </div>
 
           <div className="space-y-4 text-muted-foreground leading-relaxed">
             <p>
-              Brain Buddy began as a simple idea at home — a vision to improve how students learn using structured guidance and technology.
+              Brain Buddy began as a simple idea at home — a vision to improve
+              how students learn using structured guidance and technology.
             </p>
             <p>
-              We shared the idea with our class teacher, <span className="font-medium text-foreground">Swati Singh</span>, who listened carefully and encouraged us to move forward.
+              We shared the idea with our class teacher,{" "}
+              <span className="font-medium text-foreground">Swati Singh</span>,
+              who listened carefully and encouraged us to move forward.
             </p>
             <p>Later, we met the school leadership:</p>
             <ul className="list-disc list-inside space-y-1 pl-2">
-              <li><span className="font-medium text-foreground">Swati S. Shaligram</span> – Principal</li>
-              <li><span className="font-medium text-foreground">Kabir Ahmed</span> – Vice Principal</li>
+              <li>
+                <span className="font-medium text-foreground">
+                  Swati S. Shaligram
+                </span>{" "}
+                – Principal
+              </li>
+              <li>
+                <span className="font-medium text-foreground">Kabir Ahmed</span>{" "}
+                – Vice Principal
+              </li>
             </ul>
             <p>
-              They understood our goals and supported us instead of dismissing us as "just students."
+              They understood our goals and supported us instead of dismissing
+              us as "just students."
             </p>
             <p>
-              With guidance from our IT teachers, <span className="font-medium text-foreground">Mridul Sir</span> and <span className="font-medium text-foreground">Meenu Ma'am</span>, and access to school resources, we worked continuously — debugging, redesigning, refining — until BrainBuddy became a real educational platform.
+              With guidance from our IT teachers,{" "}
+              <span className="font-medium text-foreground">Mridul Sir</span>{" "}
+              and{" "}
+              <span className="font-medium text-foreground">Meenu Ma'am</span>,
+              and access to school resources, we worked continuously —
+              debugging, redesigning, refining — until BrainBuddy became a real
+              educational platform.
             </p>
             <p className="font-medium text-foreground italic">
-              Brain Buddy is built not just with code, but with belief and determination.
+              Brain Buddy is built not just with code, but with belief and
+              determination.
             </p>
           </div>
         </section>
@@ -130,7 +159,9 @@ const About = () => {
           </div>
 
           <div className="space-y-3">
-            <p className="text-muted-foreground">Have questions or feedback? Reach out to us!</p>
+            <p className="text-muted-foreground">
+              Have questions or feedback? Reach out to us!
+            </p>
             <a
               href="mailto:qbitworld018@gmail.com"
               className="inline-flex items-center gap-2 text-primary hover:underline font-medium"

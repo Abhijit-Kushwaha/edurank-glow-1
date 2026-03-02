@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Plus,
   CheckCircle2,
@@ -12,20 +12,20 @@ import {
   Loader2,
   Trash2,
   Search,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useRateLimiter } from '@/hooks/useRateLimiter';
-import WeakTopicCards from '@/components/WeakTopicCards';
-import { WeeklyGoalsWidget } from '@/components/dashboard/WeeklyGoalsWidget';
-import { StudyRemindersCard } from '@/components/dashboard/StudyRemindersCard';
-import { DailyChallengesCard } from '@/components/dashboard/DailyChallengesCard';
-import { StreakFreezeCard } from '@/components/dashboard/StreakFreezeCard';
-import FriendsWidget from '@/components/friends/FriendsWidget';
+} from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useRateLimiter } from "@/hooks/useRateLimiter";
+import WeakTopicCards from "@/components/WeakTopicCards";
+import { WeeklyGoalsWidget } from "@/components/dashboard/WeeklyGoalsWidget";
+import { StudyRemindersCard } from "@/components/dashboard/StudyRemindersCard";
+import { DailyChallengesCard } from "@/components/dashboard/DailyChallengesCard";
+import { StreakFreezeCard } from "@/components/dashboard/StreakFreezeCard";
+import FriendsWidget from "@/components/friends/FriendsWidget";
 
 interface Todo {
   id: string;
@@ -41,7 +41,7 @@ const Dashboard = () => {
   const { user, profile } = useAuth();
   const { canMakeRequest, isRateLimited } = useRateLimiter();
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [newTodoTitle, setNewTodoTitle] = useState('');
+  const [newTodoTitle, setNewTodoTitle] = useState("");
   const [showInput, setShowInput] = useState(false);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -51,7 +51,11 @@ const Dashboard = () => {
   const completedCount = todos.filter((t) => t.completed).length;
   const progress = todos.length > 0 ? (completedCount / todos.length) * 100 : 0;
 
-  const displayName = profile?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Student';
+  const displayName =
+    profile?.name ||
+    user?.user_metadata?.name ||
+    user?.email?.split("@")[0] ||
+    "Student";
 
   useEffect(() => {
     if (user) {
@@ -62,15 +66,15 @@ const Dashboard = () => {
   const fetchTodos = async () => {
     try {
       const { data, error } = await supabase
-        .from('todos')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("todos")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       setTodos(data || []);
     } catch (error) {
-      console.error('Error fetching todos:', error);
-      toast.error('Failed to load tasks');
+      console.error("Error fetching todos:", error);
+      toast.error("Failed to load tasks");
     } finally {
       setLoading(false);
     }
@@ -87,10 +91,10 @@ const Dashboard = () => {
     }
 
     setAdding(true);
-    
+
     try {
       // First, use AI to find the best video for this topic
-      toast.info('Finding the best video for your topic...', {
+      toast.info("Finding the best video for your topic...", {
         icon: <Search className="h-4 w-4 text-primary animate-pulse" />,
       });
 
@@ -99,9 +103,10 @@ const Dashboard = () => {
       let subtasksData: any[] = [];
 
       try {
-        const { data: videoData, error: videoError } = await supabase.functions.invoke('find-video', {
-          body: { topic: newTodoTitle.trim() },
-        });
+        const { data: videoData, error: videoError } =
+          await supabase.functions.invoke("find-video", {
+            body: { topic: newTodoTitle.trim() },
+          });
 
         if (!videoError && videoData && !videoData.error) {
           videoId = videoData.videoId;
@@ -109,12 +114,12 @@ const Dashboard = () => {
           subtasksData = videoData.subtasks || [];
         }
       } catch (aiError) {
-        console.error('AI video search failed:', aiError);
+        console.error("AI video search failed:", aiError);
         // Continue without video if AI fails
       }
 
       const { data, error } = await supabase
-        .from('todos')
+        .from("todos")
         .insert({
           title: newTodoTitle.trim(),
           video_id: videoId,
@@ -130,10 +135,10 @@ const Dashboard = () => {
       if (data && subtasksData.length > 0) {
         for (let i = 0; i < subtasksData.length; i++) {
           const subtask = subtasksData[i];
-          
+
           // Insert subtask
           const { data: subtaskRow, error: subtaskError } = await supabase
-            .from('subtasks')
+            .from("subtasks")
             .insert({
               todo_id: data.id,
               user_id: user.id,
@@ -144,48 +149,50 @@ const Dashboard = () => {
             .single();
 
           if (subtaskError) {
-            console.error('Error saving subtask:', subtaskError);
+            console.error("Error saving subtask:", subtaskError);
             continue;
           }
 
           // Insert videos for this subtask
           if (subtaskRow && subtask.videos?.length > 0) {
-            const videosToInsert = subtask.videos.map((video: any, idx: number) => ({
-              subtask_id: subtaskRow.id,
-              user_id: user.id,
-              video_id: video.videoId,
-              title: video.title,
-              channel: video.channel,
-              engagement_score: video.engagementScore,
-              reason: video.reason,
-              order_index: idx,
-            }));
+            const videosToInsert = subtask.videos.map(
+              (video: any, idx: number) => ({
+                subtask_id: subtaskRow.id,
+                user_id: user.id,
+                video_id: video.videoId,
+                title: video.title,
+                channel: video.channel,
+                engagement_score: video.engagementScore,
+                reason: video.reason,
+                order_index: idx,
+              }),
+            );
 
             const { error: videosError } = await supabase
-              .from('subtask_videos')
+              .from("subtask_videos")
               .insert(videosToInsert);
 
             if (videosError) {
-              console.error('Error saving subtask videos:', videosError);
+              console.error("Error saving subtask videos:", videosError);
             }
           }
         }
       }
 
       setTodos([data, ...todos]);
-      setNewTodoTitle('');
+      setNewTodoTitle("");
       setShowInput(false);
-      
+
       if (videoId) {
-        toast.success('Task added with AI-recommended video!', {
+        toast.success("Task added with AI-recommended video!", {
           icon: <Sparkles className="h-4 w-4 text-primary" />,
         });
       } else {
-        toast.success('Task added!');
+        toast.success("Task added!");
       }
     } catch (error) {
-      console.error('Error adding todo:', error);
-      toast.error('Failed to add task');
+      console.error("Error adding todo:", error);
+      toast.error("Failed to add task");
     } finally {
       setAdding(false);
     }
@@ -197,9 +204,9 @@ const Dashboard = () => {
 
     try {
       const { error } = await supabase
-        .from('todos')
+        .from("todos")
         .update({ completed: !todo.completed })
-        .eq('id', id);
+        .eq("id", id);
 
       if (error) throw error;
 
@@ -208,36 +215,33 @@ const Dashboard = () => {
           if (t.id === id) {
             const completed = !t.completed;
             if (completed) {
-              toast.success('Great job! Quiz unlocked!', {
+              toast.success("Great job! Quiz unlocked!", {
                 icon: <Trophy className="h-4 w-4 text-primary" />,
               });
             }
             return { ...t, completed };
           }
           return t;
-        })
+        }),
       );
     } catch (error) {
-      console.error('Error updating todo:', error);
-      toast.error('Failed to update task');
+      console.error("Error updating todo:", error);
+      toast.error("Failed to update task");
     }
   };
 
   const deleteTodo = async (id: string) => {
     setDeletingId(id);
     try {
-      const { error } = await supabase
-        .from('todos')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from("todos").delete().eq("id", id);
 
       if (error) throw error;
 
       setTodos(todos.filter((t) => t.id !== id));
-      toast.success('Task deleted');
+      toast.success("Task deleted");
     } catch (error) {
-      console.error('Error deleting todo:', error);
-      toast.error('Failed to delete task');
+      console.error("Error deleting todo:", error);
+      toast.error("Failed to delete task");
     } finally {
       setDeletingId(null);
     }
@@ -268,7 +272,9 @@ const Dashboard = () => {
                 </p>
               </div>
             </div>
-            <span className="text-2xl font-bold neon-text">{Math.round(progress)}%</span>
+            <span className="text-2xl font-bold neon-text">
+              {Math.round(progress)}%
+            </span>
           </div>
           <Progress value={progress} className="h-3" />
         </section>
@@ -300,8 +306,12 @@ const Dashboard = () => {
             {todos.length === 0 && !showInput && (
               <div className="glass-card rounded-xl p-8 text-center">
                 <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-2">No study tasks yet.</p>
-                <p className="text-sm text-muted-foreground">Add a topic and AI will find the best video for you!</p>
+                <p className="text-muted-foreground mb-2">
+                  No study tasks yet.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Add a topic and AI will find the best video for you!
+                </p>
               </div>
             )}
 
@@ -309,7 +319,7 @@ const Dashboard = () => {
               <div
                 key={todo.id}
                 className={`glass-card rounded-xl p-4 transition-all duration-300 ${
-                  todo.completed ? 'opacity-70' : 'hover:neon-glow'
+                  todo.completed ? "opacity-70" : "hover:neon-glow"
                 }`}
               >
                 <div className="flex items-start gap-4">
@@ -326,7 +336,9 @@ const Dashboard = () => {
                   <div className="flex-1 min-w-0">
                     <span
                       className={`block font-medium ${
-                        todo.completed ? 'line-through text-muted-foreground' : ''
+                        todo.completed
+                          ? "line-through text-muted-foreground"
+                          : ""
                       }`}
                     >
                       {todo.title}
@@ -383,7 +395,10 @@ const Dashboard = () => {
             ))}
 
             {showInput && (
-              <form onSubmit={handleAddTodo} className="glass-card rounded-xl p-4 space-y-3">
+              <form
+                onSubmit={handleAddTodo}
+                className="glass-card rounded-xl p-4 space-y-3"
+              >
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                   <Sparkles className="h-4 w-4 text-primary" />
                   AI will find the best video for your topic
@@ -395,17 +410,26 @@ const Dashboard = () => {
                   autoFocus
                 />
                 <div className="flex gap-2">
-                  <Button type="submit" variant="neon" disabled={adding || !newTodoTitle.trim()}>
+                  <Button
+                    type="submit"
+                    variant="neon"
+                    disabled={adding || !newTodoTitle.trim()}
+                  >
                     {adding ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         Finding video...
                       </>
                     ) : (
-                      'Add Task'
+                      "Add Task"
                     )}
                   </Button>
-                  <Button type="button" variant="ghost" onClick={() => setShowInput(false)} disabled={adding}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setShowInput(false)}
+                    disabled={adding}
+                  >
                     Cancel
                   </Button>
                 </div>

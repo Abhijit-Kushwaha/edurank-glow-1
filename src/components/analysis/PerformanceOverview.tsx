@@ -1,7 +1,17 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { CheckCircle2, XCircle, Trophy, Target, Zap, Star } from 'lucide-react';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { CheckCircle2, XCircle, Trophy, Target, Zap, Star } from "lucide-react";
 
 interface PerformanceOverviewProps {
   overallStats: {
@@ -18,26 +28,55 @@ interface PerformanceOverviewProps {
 }
 
 const PerformanceOverview = ({ overallStats }: PerformanceOverviewProps) => {
-  const accuracy = overallStats.totalQuestions > 0
-    ? Math.round((overallStats.correctAnswers / overallStats.totalQuestions) * 100)
-    : 0;
+  const accuracy =
+    overallStats.totalQuestions > 0
+      ? Math.round(
+          (overallStats.correctAnswers / overallStats.totalQuestions) * 100,
+        )
+      : 0;
 
   const pieData = [
-    { name: 'Correct', value: overallStats.correctAnswers, color: 'hsl(var(--success))' },
-    { name: 'Incorrect', value: overallStats.totalQuestions - overallStats.correctAnswers, color: 'hsl(var(--destructive))' },
+    {
+      name: "Correct",
+      value: overallStats.correctAnswers,
+      color: "hsl(var(--success))",
+    },
+    {
+      name: "Incorrect",
+      value: overallStats.totalQuestions - overallStats.correctAnswers,
+      color: "hsl(var(--destructive))",
+    },
   ];
 
   const topicData = [
-    { name: 'Strong', value: overallStats.strongTopics, fill: 'hsl(var(--success))' },
-    { name: 'Moderate', value: overallStats.topicsStudied - overallStats.strongTopics - overallStats.weakTopics, fill: 'hsl(var(--warning))' },
-    { name: 'Weak', value: overallStats.weakTopics, fill: 'hsl(var(--destructive))' },
+    {
+      name: "Strong",
+      value: overallStats.strongTopics,
+      fill: "hsl(var(--success))",
+    },
+    {
+      name: "Moderate",
+      value:
+        overallStats.topicsStudied -
+        overallStats.strongTopics -
+        overallStats.weakTopics,
+      fill: "hsl(var(--warning))",
+    },
+    {
+      name: "Weak",
+      value: overallStats.weakTopics,
+      fill: "hsl(var(--destructive))",
+    },
   ];
 
   const getPerformanceLevel = () => {
-    if (accuracy >= 80) return { label: 'Excellent', color: 'text-success', icon: Trophy };
-    if (accuracy >= 60) return { label: 'Good', color: 'text-primary', icon: Star };
-    if (accuracy >= 40) return { label: 'Average', color: 'text-warning', icon: Target };
-    return { label: 'Needs Work', color: 'text-destructive', icon: Zap };
+    if (accuracy >= 80)
+      return { label: "Excellent", color: "text-success", icon: Trophy };
+    if (accuracy >= 60)
+      return { label: "Good", color: "text-primary", icon: Star };
+    if (accuracy >= 40)
+      return { label: "Average", color: "text-warning", icon: Target };
+    return { label: "Needs Work", color: "text-destructive", icon: Zap };
   };
 
   const performance = getPerformanceLevel();
@@ -80,7 +119,9 @@ const PerformanceOverview = ({ overallStats }: PerformanceOverviewProps) => {
                   <CheckCircle2 className="h-4 w-4 text-success" />
                   <span className="text-sm">Correct</span>
                 </div>
-                <span className="font-bold text-success">{overallStats.correctAnswers}</span>
+                <span className="font-bold text-success">
+                  {overallStats.correctAnswers}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -93,8 +134,12 @@ const PerformanceOverview = ({ overallStats }: PerformanceOverviewProps) => {
               </div>
               <div className="pt-2 border-t border-border">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Accuracy</span>
-                  <span className="text-xl font-bold neon-text">{accuracy}%</span>
+                  <span className="text-sm text-muted-foreground">
+                    Accuracy
+                  </span>
+                  <span className="text-xl font-bold neon-text">
+                    {accuracy}%
+                  </span>
                 </div>
               </div>
             </div>
@@ -119,18 +164,22 @@ const PerformanceOverview = ({ overallStats }: PerformanceOverviewProps) => {
               Based on your overall accuracy of {accuracy}%
             </p>
           </div>
-          
+
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Progress to next level</span>
               <span className="text-muted-foreground">
-                {accuracy < 40 ? '40%' : accuracy < 60 ? '60%' : accuracy < 80 ? '80%' : '100%'} needed
+                {accuracy < 40
+                  ? "40%"
+                  : accuracy < 60
+                    ? "60%"
+                    : accuracy < 80
+                      ? "80%"
+                      : "100%"}{" "}
+                needed
               </span>
             </div>
-            <Progress 
-              value={accuracy} 
-              className="h-2"
-            />
+            <Progress value={accuracy} className="h-2" />
           </div>
 
           <div className="grid grid-cols-2 gap-4 pt-4">
@@ -139,7 +188,9 @@ const PerformanceOverview = ({ overallStats }: PerformanceOverviewProps) => {
               <p className="text-xs text-muted-foreground">Best Score</p>
             </div>
             <div className="text-center p-3 rounded-lg bg-muted/50">
-              <p className="text-2xl font-bold">{overallStats.totalQuestions}</p>
+              <p className="text-2xl font-bold">
+                {overallStats.totalQuestions}
+              </p>
               <p className="text-xs text-muted-foreground">Total Questions</p>
             </div>
           </div>
@@ -159,18 +210,18 @@ const PerformanceOverview = ({ overallStats }: PerformanceOverviewProps) => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={topicData} layout="vertical">
                 <XAxis type="number" hide />
-                <YAxis 
-                  type="category" 
-                  dataKey="name" 
+                <YAxis
+                  type="category"
+                  dataKey="name"
                   width={80}
                   tick={{ fontSize: 12 }}
                   stroke="hsl(var(--muted-foreground))"
                 />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))', 
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
                   }}
                 />
                 <Bar dataKey="value" radius={[0, 4, 4, 0]} />
@@ -180,11 +231,19 @@ const PerformanceOverview = ({ overallStats }: PerformanceOverviewProps) => {
           <div className="flex justify-center gap-6 mt-4">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-success" />
-              <span className="text-sm">Strong ({overallStats.strongTopics})</span>
+              <span className="text-sm">
+                Strong ({overallStats.strongTopics})
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-warning" />
-              <span className="text-sm">Moderate ({overallStats.topicsStudied - overallStats.strongTopics - overallStats.weakTopics})</span>
+              <span className="text-sm">
+                Moderate (
+                {overallStats.topicsStudied -
+                  overallStats.strongTopics -
+                  overallStats.weakTopics}
+                )
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-destructive" />

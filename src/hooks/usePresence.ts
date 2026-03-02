@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface PresenceState {
   /** Map of userId -> online status */
@@ -11,7 +11,7 @@ export interface PresenceState {
 
 /**
  * Hook that tracks online/offline status of friends using Supabase Realtime Presence.
- * 
+ *
  * How it works:
  * 1. On mount, joins a shared "presence:friends" channel
  * 2. Tracks the current user as online with user_id
@@ -27,7 +27,7 @@ export const usePresence = (friendIds: string[] = []): PresenceState => {
     if (!user) return;
 
     // Join a global presence channel - all authenticated users join this
-    const channel = supabase.channel('presence:global', {
+    const channel = supabase.channel("presence:global", {
       config: {
         presence: {
           key: user.id,
@@ -36,10 +36,10 @@ export const usePresence = (friendIds: string[] = []): PresenceState => {
     });
 
     channel
-      .on('presence', { event: 'sync' }, () => {
+      .on("presence", { event: "sync" }, () => {
         const state = channel.presenceState();
         const online = new Set<string>();
-        
+
         // Extract all online user IDs from presence state
         Object.keys(state).forEach((key) => {
           // Only track users who are in our friends list
@@ -47,10 +47,10 @@ export const usePresence = (friendIds: string[] = []): PresenceState => {
             online.add(key);
           }
         });
-        
+
         setOnlineUsers(online);
       })
-      .on('presence', { event: 'join' }, ({ key }) => {
+      .on("presence", { event: "join" }, ({ key }) => {
         if (friendIds.includes(key)) {
           setOnlineUsers((prev) => {
             const next = new Set(prev);
@@ -59,7 +59,7 @@ export const usePresence = (friendIds: string[] = []): PresenceState => {
           });
         }
       })
-      .on('presence', { event: 'leave' }, ({ key }) => {
+      .on("presence", { event: "leave" }, ({ key }) => {
         setOnlineUsers((prev) => {
           const next = new Set(prev);
           next.delete(key);
@@ -67,7 +67,7 @@ export const usePresence = (friendIds: string[] = []): PresenceState => {
         });
       })
       .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
+        if (status === "SUBSCRIBED") {
           // Track this user as online
           await channel.track({
             user_id: user.id,
@@ -82,11 +82,11 @@ export const usePresence = (friendIds: string[] = []): PresenceState => {
       channel.unsubscribe();
       channelRef.current = null;
     };
-  }, [user, friendIds.join(',')]); // Re-subscribe when friends list changes
+  }, [user, friendIds.join(",")]); // Re-subscribe when friends list changes
 
   const isOnline = useCallback(
     (userId: string) => onlineUsers.has(userId),
-    [onlineUsers]
+    [onlineUsers],
   );
 
   return { onlineUsers, isOnline };

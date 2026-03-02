@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Lock, Loader2, CheckCircle } from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import Logo from '@/components/Logo';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Lock, Loader2, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import Logo from "@/components/Logo";
+import { supabase } from "@/integrations/supabase/client";
 
 const ResetPassword = () => {
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isReset, setIsReset] = useState(false);
   const [isValidSession, setIsValidSession] = useState(false);
@@ -18,7 +18,7 @@ const ResetPassword = () => {
   useEffect(() => {
     // Check if user arrived via a valid reset link
     supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
+      if (event === "PASSWORD_RECOVERY") {
         setIsValidSession(true);
       }
     });
@@ -35,11 +35,11 @@ const ResetPassword = () => {
     e.preventDefault();
 
     if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+      toast.error("Password must be at least 6 characters");
       return;
     }
     if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error("Passwords do not match");
       return;
     }
 
@@ -53,7 +53,7 @@ const ResetPassword = () => {
         setIsReset(true);
       }
     } catch (error) {
-      toast.error('Failed to reset password');
+      toast.error("Failed to reset password");
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +72,11 @@ const ResetPassword = () => {
             <p className="text-muted-foreground mb-6">
               Your password has been updated successfully.
             </p>
-            <Button variant="neon" onClick={() => navigate('/dashboard')} className="w-full">
+            <Button
+              variant="neon"
+              onClick={() => navigate("/dashboard")}
+              className="w-full"
+            >
               Go to Dashboard
             </Button>
           </div>
@@ -91,9 +95,14 @@ const ResetPassword = () => {
           <div className="glass-card rounded-2xl p-8">
             <h1 className="text-2xl font-bold mb-2">Invalid or Expired Link</h1>
             <p className="text-muted-foreground mb-6">
-              This password reset link is invalid or has expired. Please request a new one.
+              This password reset link is invalid or has expired. Please request
+              a new one.
             </p>
-            <Button variant="outline" onClick={() => navigate('/forgot-password')} className="w-full">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/forgot-password")}
+              className="w-full"
+            >
               Request New Link
             </Button>
           </div>
@@ -112,7 +121,9 @@ const ResetPassword = () => {
         <div className="glass-card rounded-2xl p-8 animate-slide-up">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold mb-2">Set New Password</h1>
-            <p className="text-muted-foreground">Enter your new password below.</p>
+            <p className="text-muted-foreground">
+              Enter your new password below.
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -141,14 +152,20 @@ const ResetPassword = () => {
               />
             </div>
 
-            <Button type="submit" variant="neon" size="lg" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              variant="neon"
+              size="lg"
+              className="w-full"
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Updating...
                 </div>
               ) : (
-                'Reset Password'
+                "Reset Password"
               )}
             </Button>
           </form>

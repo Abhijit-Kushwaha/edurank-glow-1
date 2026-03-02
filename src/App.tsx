@@ -56,18 +56,102 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/dashboard" element={<ProtectedWithLayout><Dashboard /></ProtectedWithLayout>} />
-              <Route path="/ai-chat" element={<ProtectedWithLayout><AIChat /></ProtectedWithLayout>} />
-              <Route path="/ai-notes" element={<ProtectedWithLayout><AINotes /></ProtectedWithLayout>} />
-              <Route path="/video/:todoId" element={<ProtectedWithLayout><VideoPlayer /></ProtectedWithLayout>} />
-              <Route path="/notes/:todoId" element={<ProtectedWithLayout><Notes /></ProtectedWithLayout>} />
-              <Route path="/quiz/:quizId" element={<ProtectedWithLayout><Quiz /></ProtectedWithLayout>} />
-              <Route path="/profile" element={<ProtectedWithLayout><Profile /></ProtectedWithLayout>} />
-              <Route path="/quiz-history" element={<ProtectedWithLayout><QuizHistory /></ProtectedWithLayout>} />
-              <Route path="/leaderboard" element={<ProtectedWithLayout><Leaderboard /></ProtectedWithLayout>} />
-              <Route path="/fix-weak-areas" element={<ProtectedWithLayout><FixWeakAreas /></ProtectedWithLayout>} />
-              <Route path="/analysis" element={<ProtectedWithLayout><Analysis /></ProtectedWithLayout>} />
-              <Route path="/friends" element={<ProtectedWithLayout><Friends /></ProtectedWithLayout>} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedWithLayout>
+                    <Dashboard />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/ai-chat"
+                element={
+                  <ProtectedWithLayout>
+                    <AIChat />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/ai-notes"
+                element={
+                  <ProtectedWithLayout>
+                    <AINotes />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/video/:todoId"
+                element={
+                  <ProtectedWithLayout>
+                    <VideoPlayer />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/notes/:todoId"
+                element={
+                  <ProtectedWithLayout>
+                    <Notes />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/quiz/:quizId"
+                element={
+                  <ProtectedWithLayout>
+                    <Quiz />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedWithLayout>
+                    <Profile />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/quiz-history"
+                element={
+                  <ProtectedWithLayout>
+                    <QuizHistory />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/leaderboard"
+                element={
+                  <ProtectedWithLayout>
+                    <Leaderboard />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/fix-weak-areas"
+                element={
+                  <ProtectedWithLayout>
+                    <FixWeakAreas />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/analysis"
+                element={
+                  <ProtectedWithLayout>
+                    <Analysis />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/friends"
+                element={
+                  <ProtectedWithLayout>
+                    <Friends />
+                  </ProtectedWithLayout>
+                }
+              />
               <Route path="/about" element={<About />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

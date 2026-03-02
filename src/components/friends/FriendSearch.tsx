@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { Search, UserPlus, Loader2 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useState } from "react";
+import { Search, UserPlus, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface SearchResult {
   userId: string;
@@ -16,7 +16,7 @@ interface FriendSearchProps {
 }
 
 const FriendSearch = ({ onSearch, onAddFriend }: FriendSearchProps) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [addingId, setAddingId] = useState<string | null>(null);
@@ -48,21 +48,34 @@ const FriendSearch = ({ onSearch, onAddFriend }: FriendSearchProps) => {
           placeholder="Search by username..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
         />
-        <Button onClick={handleSearch} disabled={searching || !query.trim()} size="icon">
-          {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+        <Button
+          onClick={handleSearch}
+          disabled={searching || !query.trim()}
+          size="icon"
+        >
+          {searching ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Search className="h-4 w-4" />
+          )}
         </Button>
       </div>
 
       {results.length > 0 && (
         <div className="space-y-2">
           {results.map((r) => (
-            <div key={r.userId} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+            <div
+              key={r.userId}
+              className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+            >
               <div className="flex items-center gap-3">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={r.avatarUrl || undefined} />
-                  <AvatarFallback className="text-xs">{r.name[0]?.toUpperCase()}</AvatarFallback>
+                  <AvatarFallback className="text-xs">
+                    {r.name[0]?.toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
                 <span className="text-sm font-medium">{r.name}</span>
               </div>
@@ -84,7 +97,9 @@ const FriendSearch = ({ onSearch, onAddFriend }: FriendSearchProps) => {
       )}
 
       {!searching && results.length === 0 && query.trim() && (
-        <p className="text-sm text-muted-foreground text-center py-2">No users found.</p>
+        <p className="text-sm text-muted-foreground text-center py-2">
+          No users found.
+        </p>
       )}
     </div>
   );

@@ -4,23 +4,25 @@ import { checkRateLimit, logRateLimitRequest } from "../_shared/rateLimit.ts";
 
 // Allowed origins for CORS - prevents CSRF attacks
 const ALLOWED_ORIGINS = [
-  'https://brainbuddy.app',
-  'https://www.brainbuddy.app',
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://lovable.dev',
+  "https://brainbuddy.app",
+  "https://www.brainbuddy.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://lovable.dev",
 ];
 
 function getCORSHeaders(originHeader: string | null): Record<string, string> {
-  const allowedOrigin = (originHeader && ALLOWED_ORIGINS.includes(originHeader))
-    ? originHeader
-    : ALLOWED_ORIGINS[0];
+  const allowedOrigin =
+    originHeader && ALLOWED_ORIGINS.includes(originHeader)
+      ? originHeader
+      : ALLOWED_ORIGINS[0];
 
   return {
-    'Access-Control-Allow-Origin': allowedOrigin,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Max-Age': '3600',
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Max-Age": "3600",
   };
 }
 
@@ -43,52 +45,69 @@ const FORBIDDEN_PATTERNS = [
   /override\s+instructions/i,
 ];
 
-function sanitizeInput(input: string, maxLength: number): { isValid: boolean; sanitized: string; error?: string } {
-  if (!input || typeof input !== 'string') {
-    return { isValid: false, sanitized: '', error: 'Input must be a non-empty string' };
+function sanitizeInput(
+  input: string,
+  maxLength: number,
+): { isValid: boolean; sanitized: string; error?: string } {
+  if (!input || typeof input !== "string") {
+    return {
+      isValid: false,
+      sanitized: "",
+      error: "Input must be a non-empty string",
+    };
   }
 
   let sanitized = input.trim();
   if (sanitized.length === 0) {
-    return { isValid: false, sanitized: '', error: 'Input cannot be empty' };
+    return { isValid: false, sanitized: "", error: "Input cannot be empty" };
   }
   if (sanitized.length > maxLength) {
-    return { isValid: false, sanitized: '', error: `Input exceeds maximum length of ${maxLength} characters` };
+    return {
+      isValid: false,
+      sanitized: "",
+      error: `Input exceeds maximum length of ${maxLength} characters`,
+    };
   }
 
   for (const pattern of FORBIDDEN_PATTERNS) {
     if (pattern.test(sanitized)) {
-      console.warn('Potential prompt injection detected');
-      return { isValid: false, sanitized: '', error: 'Invalid input detected' };
+      console.warn("Potential prompt injection detected");
+      return { isValid: false, sanitized: "", error: "Invalid input detected" };
     }
   }
 
   sanitized = sanitized
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-    .replace(/[<>]/g, '')
-    .replace(/\\/g, '')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+    .replace(/[<>]/g, "")
+    .replace(/\\/g, "")
     .trim();
 
   return { isValid: true, sanitized };
 }
 
 function validateId(id: string): { isValid: boolean; error?: string } {
-  if (!id || typeof id !== 'string') {
-    return { isValid: false, error: 'ID must be a non-empty string' };
+  if (!id || typeof id !== "string") {
+    return { isValid: false, error: "ID must be a non-empty string" };
   }
   if (id.length > MAX_ID_LENGTH) {
-    return { isValid: false, error: `ID exceeds maximum length of ${MAX_ID_LENGTH} characters` };
+    return {
+      isValid: false,
+      error: `ID exceeds maximum length of ${MAX_ID_LENGTH} characters`,
+    };
   }
   if (!/^[a-zA-Z0-9_-]+$/.test(id)) {
-    return { isValid: false, error: 'Invalid ID format' };
+    return { isValid: false, error: "Invalid ID format" };
   }
   return { isValid: true };
 }
 
 // Fetch video context using Perplexity API
-async function fetchVideoContext(videoTitle: string, videoId: string): Promise<string> {
+async function fetchVideoContext(
+  videoTitle: string,
+  videoId: string,
+): Promise<string> {
   const PERPLEXITY_API_KEY = Deno.env.get("perplexity_api_key");
-  
+
   if (!PERPLEXITY_API_KEY) {
     console.log("Perplexity API key not configured, skipping context fetch");
     return "";
@@ -99,7 +118,7 @@ async function fetchVideoContext(videoTitle: string, videoId: string): Promise<s
     const response = await fetch("https://api.perplexity.ai/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${PERPLEXITY_API_KEY}`,
+        Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -107,7 +126,8 @@ async function fetchVideoContext(videoTitle: string, videoId: string): Promise<s
         messages: [
           {
             role: "system",
-            content: "You are a research assistant. Provide comprehensive educational content and key concepts related to the given YouTube video topic."
+            content:
+              "You are a research assistant. Provide comprehensive educational content and key concepts related to the given YouTube video topic.",
           },
           {
             role: "user",
@@ -119,8 +139,8 @@ Provide:
 1. Main concepts and definitions
 2. Key facts and important points
 3. Related subtopics
-4. Study-worthy information`
-          }
+4. Study-worthy information`,
+          },
         ],
         max_tokens: 2000,
       }),
@@ -136,7 +156,10 @@ Provide:
     console.log("Video context fetched successfully, length:", context.length);
     return context;
   } catch (error) {
-    console.error("Error fetching video context:", error instanceof Error ? error.message : "Unknown error");
+    console.error(
+      "Error fetching video context:",
+      error instanceof Error ? error.message : "Unknown error",
+    );
     return "";
   }
 }
@@ -144,18 +167,22 @@ Provide:
 // Lovable AI Gateway call
 const LOVABLE_AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
-async function callLovableAI(messages: { role: string; content: string }[]): Promise<string> {
+async function callLovableAI(
+  messages: { role: string; content: string }[],
+): Promise<string> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) {
     throw new Error("LOVABLE_API_KEY is not configured");
   }
 
-  console.log("Calling Lovable AI (gemini-3-flash-preview) for notes generation...");
-  
+  console.log(
+    "Calling Lovable AI (gemini-3-flash-preview) for notes generation...",
+  );
+
   const response = await fetch(LOVABLE_AI_GATEWAY, {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -168,12 +195,14 @@ async function callLovableAI(messages: { role: string; content: string }[]): Pro
 
   if (!response.ok) {
     console.error("Lovable AI error:", response.status);
-    
+
     if (response.status === 429) {
       throw new Error("Rate limit exceeded. Please try again later.");
     }
     if (response.status === 402) {
-      throw new Error("Payment required. Please add funds to your Lovable AI workspace.");
+      throw new Error(
+        "Payment required. Please add funds to your Lovable AI workspace.",
+      );
     }
     if (response.status === 401) {
       throw new Error("Invalid API key or authentication failed.");
@@ -187,37 +216,43 @@ async function callLovableAI(messages: { role: string; content: string }[]): Pro
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    const corsHeaders = getCORSHeaders(req.headers.get('origin'));
+    const corsHeaders = getCORSHeaders(req.headers.get("origin"));
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const corsHeaders = getCORSHeaders(req.headers.get('origin'));
+    const corsHeaders = getCORSHeaders(req.headers.get("origin"));
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: "No authorization header" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
+      { global: { headers: { Authorization: authHeader } } },
     );
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser();
     if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
     console.log(`Processing notes request for user ${user.id}`);
@@ -230,34 +265,49 @@ serve(async (req) => {
       limitsPerDay: 10,
     });
     if (!rateLimitResult.allowed) {
-      return new Response(
-        JSON.stringify({ error: rateLimitResult.message }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: rateLimitResult.message }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const { videoTitle, videoId, todoId } = await req.json();
 
     if (!videoTitle || !videoId || !todoId) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: videoTitle, videoId, todoId" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          error: "Missing required fields: videoTitle, videoId, todoId",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
     const titleValidation = sanitizeInput(videoTitle, MAX_TITLE_LENGTH);
     if (!titleValidation.isValid) {
       return new Response(
-        JSON.stringify({ error: titleValidation.error || "Invalid video title" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          error: titleValidation.error || "Invalid video title",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
     const videoIdValidation = validateId(videoId);
     if (!videoIdValidation.isValid) {
       return new Response(
-        JSON.stringify({ error: videoIdValidation.error || "Invalid video ID" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          error: videoIdValidation.error || "Invalid video ID",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -265,7 +315,10 @@ serve(async (req) => {
     if (!todoIdValidation.isValid) {
       return new Response(
         JSON.stringify({ error: todoIdValidation.error || "Invalid todo ID" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -290,7 +343,7 @@ Format your response in clear markdown with:
 ## Key Concepts
 ## Important Points  
 ## Summary
-## Study Tips`
+## Study Tips`,
       },
       {
         role: "user",
@@ -299,10 +352,14 @@ Format your response in clear markdown with:
 **Video Title:** "${sanitizedTitle}"
 **Video ID:** ${videoId}
 
-${videoContext ? `**Research Context:**
+${
+  videoContext
+    ? `**Research Context:**
 ${videoContext}
 
-Use the above research context to create accurate, detailed study notes.` : ""}
+Use the above research context to create accurate, detailed study notes.`
+    : ""
+}
 
 Create professional study notes that would help a student:
 1. Understand the core concepts
@@ -310,7 +367,7 @@ Create professional study notes that would help a student:
 3. Apply the knowledge effectively
 4. Prepare for exams on this topic
 
-Make the notes comprehensive and educational.`
+Make the notes comprehensive and educational.`,
       },
     ]);
 
@@ -321,7 +378,7 @@ Make the notes comprehensive and educational.`
     console.log("Notes generated successfully using Lovable AI");
 
     await logRateLimitRequest(supabaseClient, user.id, "generate-notes", true);
-    await serviceClient.rpc('check_achievements', { uid: user.id });
+    await serviceClient.rpc("check_achievements", { uid: user.id });
 
     const { data: savedNote, error: saveError } = await supabaseClient
       .from("notes")
@@ -338,30 +395,34 @@ Make the notes comprehensive and educational.`
     if (saveError) {
       console.error("Error saving notes:", saveError);
       return new Response(
-        JSON.stringify({ 
-          notes: generatedNotes, 
+        JSON.stringify({
+          notes: generatedNotes,
           saved: false,
-          error: "Notes generated but failed to save" 
+          error: "Notes generated but failed to save",
         }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     return new Response(
-      JSON.stringify({ 
-        notes: generatedNotes, 
+      JSON.stringify({
+        notes: generatedNotes,
         saved: true,
-        noteId: savedNote.id 
+        noteId: savedNote.id,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
-
   } catch (error) {
     console.error("Error in generate-notes function:", error);
     const errorCorsHeaders = getCORSHeaders(null);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...errorCorsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
+      {
+        status: 500,
+        headers: { ...errorCorsHeaders, "Content-Type": "application/json" },
+      },
     );
   }
 });

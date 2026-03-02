@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   CheckCircle,
@@ -14,14 +14,14 @@ import {
   Target,
   Zap,
   TrendingUp,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import Logo from '@/components/Logo';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+} from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import Logo from "@/components/Logo";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Question {
   id: number;
@@ -55,8 +55,12 @@ const FixWeakAreas = () => {
   const [showResult, setShowResult] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [weakTopics, setWeakTopics] = useState<WeakTopic[]>([]);
-  const [topicScores, setTopicScores] = useState<Record<string, { correct: number; total: number }>>({});
-  const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
+  const [topicScores, setTopicScores] = useState<
+    Record<string, { correct: number; total: number }>
+  >({});
+  const [questionStartTime, setQuestionStartTime] = useState<number>(
+    Date.now(),
+  );
 
   useEffect(() => {
     if (user) {
@@ -68,63 +72,65 @@ const FixWeakAreas = () => {
     try {
       // Get weak topics
       const { data: performanceData, error: perfError } = await supabase
-        .from('user_topic_performance')
-        .select(`
+        .from("user_topic_performance")
+        .select(
+          `
           id,
           topic_id,
           weakness_score,
           strength_status
-        `)
-        .in('strength_status', ['weak', 'moderate'])
-        .order('weakness_score', { ascending: false })
+        `,
+        )
+        .in("strength_status", ["weak", "moderate"])
+        .order("weakness_score", { ascending: false })
         .limit(5);
 
       if (perfError) throw perfError;
 
       if (!performanceData || performanceData.length === 0) {
-        toast.info('No weak topics found. Great job!');
+        toast.info("No weak topics found. Great job!");
         setLoading(false);
         return;
       }
 
       // Get topic details
-      const topicIds = performanceData.map(p => p.topic_id);
+      const topicIds = performanceData.map((p) => p.topic_id);
       const { data: topicsData } = await supabase
-        .from('topics')
-        .select('id, name')
-        .in('id', topicIds);
+        .from("topics")
+        .select("id, name")
+        .in("id", topicIds);
 
-      const topicMap = new Map(topicsData?.map(t => [t.id, t.name]) || []);
+      const topicMap = new Map(topicsData?.map((t) => [t.id, t.name]) || []);
 
       // Get related todos with notes for each weak topic
       const { data: analysisData } = await supabase
-        .from('video_topic_analysis')
-        .select('topic_id, todo_id')
-        .in('topic_id', topicIds)
-        .eq('is_weak_topic', true)
+        .from("video_topic_analysis")
+        .select("topic_id, todo_id")
+        .in("topic_id", topicIds)
+        .eq("is_weak_topic", true)
         .limit(10);
 
-      const todoIds = [...new Set(analysisData?.map(a => a.todo_id) || [])];
-      
-      let notesMap = new Map<string, string>();
+      const todoIds = [...new Set(analysisData?.map((a) => a.todo_id) || [])];
+
+      const notesMap = new Map<string, string>();
       if (todoIds.length > 0) {
         const { data: notesData } = await supabase
-          .from('notes')
-          .select('todo_id, content')
-          .in('todo_id', todoIds)
-          .eq('is_ai_generated', true);
-        
-        notesData?.forEach(n => {
+          .from("notes")
+          .select("todo_id, content")
+          .in("todo_id", todoIds)
+          .eq("is_ai_generated", true);
+
+        notesData?.forEach((n) => {
           notesMap.set(n.todo_id, n.content);
         });
       }
 
-      const topics: WeakTopic[] = performanceData.map(p => {
-        const analysis = analysisData?.find(a => a.topic_id === p.topic_id);
+      const topics: WeakTopic[] = performanceData.map((p) => {
+        const analysis = analysisData?.find((a) => a.topic_id === p.topic_id);
         return {
           id: p.id,
           topicId: p.topic_id,
-          topicName: topicMap.get(p.topic_id) || 'Unknown Topic',
+          topicName: topicMap.get(p.topic_id) || "Unknown Topic",
           weaknessScore: Number(p.weakness_score),
           todoId: analysis?.todo_id,
           notes: analysis?.todo_id ? notesMap.get(analysis.todo_id) : undefined,
@@ -136,8 +142,8 @@ const FixWeakAreas = () => {
       // Generate targeted questions for weak topics
       await generateWeakTopicQuestions(topics);
     } catch (error) {
-      console.error('Error fetching weak topics:', error);
-      toast.error('Failed to load weak topics');
+      console.error("Error fetching weak topics:", error);
+      toast.error("Failed to load weak topics");
     } finally {
       setLoading(false);
     }
@@ -145,32 +151,40 @@ const FixWeakAreas = () => {
 
   const generateWeakTopicQuestions = async (topics: WeakTopic[]) => {
     setGenerating(true);
-    
+
     try {
       // Combine notes from different topics
       const notesContent = topics
-        .filter(t => t.notes)
-        .map(t => `## ${t.topicName}\n${t.notes}`)
-        .join('\n\n---\n\n');
+        .filter((t) => t.notes)
+        .map((t) => `## ${t.topicName}\n${t.notes}`)
+        .join("\n\n---\n\n");
 
       if (!notesContent) {
         // Generate questions based on topic names only
-        const topicsList = topics.map(t => t.topicName).join(', ');
-        
-        const { data, error } = await supabase.functions.invoke('fix-weak-areas-quiz', {
-          body: {
-            topics: topics.map(t => ({ name: t.topicName, weaknessScore: t.weaknessScore })),
-            questionsPerTopic: 2,
+        const topicsList = topics.map((t) => t.topicName).join(", ");
+
+        const { data, error } = await supabase.functions.invoke(
+          "fix-weak-areas-quiz",
+          {
+            body: {
+              topics: topics.map((t) => ({
+                name: t.topicName,
+                weaknessScore: t.weaknessScore,
+              })),
+              questionsPerTopic: 2,
+            },
           },
-        });
+        );
 
         if (error) throw error;
         if (data.error) throw new Error(data.error);
 
-        const quizQuestions = (data.questions || []).map((q: any, i: number) => ({
-          ...q,
-          id: i + 1,
-        }));
+        const quizQuestions = (data.questions || []).map(
+          (q: any, i: number) => ({
+            ...q,
+            id: i + 1,
+          }),
+        );
 
         setQuestions(quizQuestions);
         setQuestionStartTime(Date.now());
@@ -178,13 +192,19 @@ const FixWeakAreas = () => {
       }
 
       // Use notes to generate targeted questions
-      const { data, error } = await supabase.functions.invoke('fix-weak-areas-quiz', {
-        body: {
-          topics: topics.map(t => ({ name: t.topicName, weaknessScore: t.weaknessScore })),
-          notes: notesContent,
-          questionsPerTopic: 2,
+      const { data, error } = await supabase.functions.invoke(
+        "fix-weak-areas-quiz",
+        {
+          body: {
+            topics: topics.map((t) => ({
+              name: t.topicName,
+              weaknessScore: t.weaknessScore,
+            })),
+            notes: notesContent,
+            questionsPerTopic: 2,
+          },
         },
-      });
+      );
 
       if (error) throw error;
       if (data.error) throw new Error(data.error);
@@ -197,14 +217,14 @@ const FixWeakAreas = () => {
       setQuestions(quizQuestions);
       setQuestionStartTime(Date.now());
     } catch (error: any) {
-      console.error('Error generating questions:', error);
-      
-      if (error.message?.includes('429')) {
-        toast.error('Rate limit exceeded. Please try again later.');
-      } else if (error.message?.includes('402')) {
-        toast.error('Please add credits to continue.');
+      console.error("Error generating questions:", error);
+
+      if (error.message?.includes("429")) {
+        toast.error("Rate limit exceeded. Please try again later.");
+      } else if (error.message?.includes("402")) {
+        toast.error("Please add credits to continue.");
       } else {
-        toast.error('Failed to generate practice questions');
+        toast.error("Failed to generate practice questions");
       }
     } finally {
       setGenerating(false);
@@ -212,7 +232,8 @@ const FixWeakAreas = () => {
   };
 
   const question = questions[currentQuestion];
-  const progress = questions.length > 0 ? ((currentQuestion + 1) / questions.length) * 100 : 0;
+  const progress =
+    questions.length > 0 ? ((currentQuestion + 1) / questions.length) * 100 : 0;
 
   const handleSelectAnswer = (index: number) => {
     if (!isSubmitted) {
@@ -222,7 +243,7 @@ const FixWeakAreas = () => {
 
   const handleSubmitAnswer = () => {
     if (selectedAnswer === null) {
-      toast.error('Please select an answer');
+      toast.error("Please select an answer");
       return;
     }
 
@@ -231,10 +252,10 @@ const FixWeakAreas = () => {
     setAnswers(newAnswers);
 
     const isCorrect = selectedAnswer === question.correctAnswer;
-    
+
     // Track per-topic score
-    setTopicScores(prev => {
-      const topicId = question.topicId || 'unknown';
+    setTopicScores((prev) => {
+      const topicId = question.topicId || "unknown";
       const current = prev[topicId] || { correct: 0, total: 0 };
       return {
         ...prev,
@@ -246,9 +267,9 @@ const FixWeakAreas = () => {
     });
 
     if (isCorrect) {
-      toast.success('Correct! You\'re improving!');
+      toast.success("Correct! You're improving!");
     } else {
-      toast.error('Not quite, but keep going!');
+      toast.error("Not quite, but keep going!");
     }
   };
 
@@ -267,15 +288,15 @@ const FixWeakAreas = () => {
   const saveProgress = async () => {
     // Mark recommendations as completed
     const completedTopicIds = Object.keys(topicScores);
-    
+
     if (completedTopicIds.length > 0) {
       try {
         await supabase
-          .from('recommendation_queue')
+          .from("recommendation_queue")
           .update({ is_completed: true })
-          .in('topic_id', completedTopicIds);
+          .in("topic_id", completedTopicIds);
       } catch (error) {
-        console.error('Error updating recommendations:', error);
+        console.error("Error updating recommendations:", error);
       }
     }
   };
@@ -302,9 +323,12 @@ const FixWeakAreas = () => {
 
   const getDifficultyColor = (diff?: string) => {
     switch (diff) {
-      case 'easy': return 'bg-success/20 text-success border-success/30';
-      case 'hard': return 'bg-destructive/20 text-destructive border-destructive/30';
-      default: return 'bg-primary/20 text-primary border-primary/30';
+      case "easy":
+        return "bg-success/20 text-success border-success/30";
+      case "hard":
+        return "bg-destructive/20 text-destructive border-destructive/30";
+      default:
+        return "bg-primary/20 text-primary border-primary/30";
     }
   };
 
@@ -313,7 +337,9 @@ const FixWeakAreas = () => {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <Loader2 className="h-8 w-8 text-primary animate-spin" />
         <p className="text-muted-foreground">
-          {generating ? 'Creating targeted practice questions...' : 'Analyzing your weak areas...'}
+          {generating
+            ? "Creating targeted practice questions..."
+            : "Analyzing your weak areas..."}
         </p>
       </div>
     );
@@ -325,9 +351,10 @@ const FixWeakAreas = () => {
         <Trophy className="h-12 w-12 text-success" />
         <h1 className="text-2xl font-bold">You're Doing Great!</h1>
         <p className="text-muted-foreground text-center max-w-md">
-          No weak areas detected. Keep taking quizzes to identify areas for improvement.
+          No weak areas detected. Keep taking quizzes to identify areas for
+          improvement.
         </p>
-        <Button variant="neon" onClick={() => navigate('/dashboard')}>
+        <Button variant="neon" onClick={() => navigate("/dashboard")}>
           Back to Dashboard
         </Button>
       </div>
@@ -338,24 +365,31 @@ const FixWeakAreas = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <AlertCircle className="h-12 w-12 text-muted-foreground" />
-        <p className="text-muted-foreground">Could not generate practice questions</p>
-        <Button onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
+        <p className="text-muted-foreground">
+          Could not generate practice questions
+        </p>
+        <Button onClick={() => navigate("/dashboard")}>
+          Back to Dashboard
+        </Button>
       </div>
     );
   }
 
   const score = calculateScore();
-  const percentage = questions.length > 0 ? (score / questions.length) * 100 : 0;
+  const percentage =
+    questions.length > 0 ? (score / questions.length) * 100 : 0;
   const isPassing = percentage >= 60;
 
   if (showResult) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-lg text-center animate-slide-up">
-          <div className={`glass-card rounded-2xl p-8 ${isPassing ? 'neon-glow' : ''}`}>
+          <div
+            className={`glass-card rounded-2xl p-8 ${isPassing ? "neon-glow" : ""}`}
+          >
             <div
               className={`w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center ${
-                isPassing ? 'gradient-bg' : 'bg-primary/20'
+                isPassing ? "gradient-bg" : "bg-primary/20"
               }`}
             >
               {isPassing ? (
@@ -366,30 +400,41 @@ const FixWeakAreas = () => {
             </div>
 
             <h1 className="text-3xl font-bold mb-2">
-              {isPassing ? 'Great Improvement!' : 'Keep Practicing!'}
+              {isPassing ? "Great Improvement!" : "Keep Practicing!"}
             </h1>
             <p className="text-muted-foreground mb-6">
               {isPassing
-                ? 'You\'re getting stronger in your weak areas!'
-                : 'Every practice session makes you better.'}
+                ? "You're getting stronger in your weak areas!"
+                : "Every practice session makes you better."}
             </p>
 
             <div className="text-5xl font-bold neon-text mb-2">
               {score}/{questions.length}
             </div>
-            <p className="text-muted-foreground mb-6">{Math.round(percentage)}% correct</p>
+            <p className="text-muted-foreground mb-6">
+              {Math.round(percentage)}% correct
+            </p>
 
             {/* Per-topic breakdown */}
             <div className="space-y-2 mb-6 text-left">
-              <p className="text-sm font-medium text-muted-foreground mb-2">Topic Progress:</p>
-              {weakTopics.map(topic => {
+              <p className="text-sm font-medium text-muted-foreground mb-2">
+                Topic Progress:
+              </p>
+              {weakTopics.map((topic) => {
                 const topicScore = topicScores[topic.topicId];
                 if (!topicScore) return null;
-                const topicPercent = Math.round((topicScore.correct / topicScore.total) * 100);
+                const topicPercent = Math.round(
+                  (topicScore.correct / topicScore.total) * 100,
+                );
                 return (
-                  <div key={topic.topicId} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                  <div
+                    key={topic.topicId}
+                    className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
+                  >
                     <span className="text-sm">{topic.topicName}</span>
-                    <Badge variant={topicPercent >= 50 ? 'default' : 'destructive'}>
+                    <Badge
+                      variant={topicPercent >= 50 ? "default" : "destructive"}
+                    >
                       {topicScore.correct}/{topicScore.total}
                     </Badge>
                   </div>
@@ -402,7 +447,11 @@ const FixWeakAreas = () => {
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Practice Again
               </Button>
-              <Button variant="neon" className="flex-1" onClick={() => navigate('/dashboard')}>
+              <Button
+                variant="neon"
+                className="flex-1"
+                onClick={() => navigate("/dashboard")}
+              >
                 Dashboard
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
@@ -443,7 +492,10 @@ const FixWeakAreas = () => {
           {/* Topic badge */}
           {question.topicName && (
             <div className="mb-4 flex items-center gap-2">
-              <Badge variant="outline" className="bg-destructive/10 border-destructive/30">
+              <Badge
+                variant="outline"
+                className="bg-destructive/10 border-destructive/30"
+              >
                 <Zap className="h-3 w-3 mr-1" />
                 {question.topicName}
               </Badge>
@@ -457,8 +509,12 @@ const FixWeakAreas = () => {
                 <span className="text-sm font-medium">Targeted Practice</span>
               </div>
               {question.difficulty && (
-                <Badge variant="outline" className={getDifficultyColor(question.difficulty)}>
-                  {question.difficulty.charAt(0).toUpperCase() + question.difficulty.slice(1)}
+                <Badge
+                  variant="outline"
+                  className={getDifficultyColor(question.difficulty)}
+                >
+                  {question.difficulty.charAt(0).toUpperCase() +
+                    question.difficulty.slice(1)}
                 </Badge>
               )}
             </div>
@@ -479,24 +535,24 @@ const FixWeakAreas = () => {
                   disabled={isSubmitted}
                   className={`w-full p-4 rounded-xl text-left transition-all duration-300 ${
                     showCorrect
-                      ? 'bg-success/20 border-2 border-success'
+                      ? "bg-success/20 border-2 border-success"
                       : showWrong
-                      ? 'bg-destructive/20 border-2 border-destructive'
-                      : isSelected
-                      ? 'glass-card neon-border'
-                      : 'glass-card hover:neon-glow border-2 border-transparent'
+                        ? "bg-destructive/20 border-2 border-destructive"
+                        : isSelected
+                          ? "glass-card neon-border"
+                          : "glass-card hover:neon-glow border-2 border-transparent"
                   }`}
                 >
                   <div className="flex items-center gap-4">
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                         showCorrect
-                          ? 'bg-success text-success-foreground'
+                          ? "bg-success text-success-foreground"
                           : showWrong
-                          ? 'bg-destructive text-destructive-foreground'
-                          : isSelected
-                          ? 'gradient-bg text-primary-foreground'
-                          : 'bg-muted text-muted-foreground'
+                            ? "bg-destructive text-destructive-foreground"
+                            : isSelected
+                              ? "gradient-bg text-primary-foreground"
+                              : "bg-muted text-muted-foreground"
                       }`}
                     >
                       {showCorrect ? (
@@ -520,7 +576,9 @@ const FixWeakAreas = () => {
                 <Lightbulb className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="font-medium text-primary mb-1">Explanation</p>
-                  <p className="text-sm text-muted-foreground">{question.explanation}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {question.explanation}
+                  </p>
                 </div>
               </div>
             </div>

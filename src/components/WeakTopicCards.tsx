@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
   TrendingDown,
@@ -10,12 +10,12 @@ import {
   Target,
   Sparkles,
   Play,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import VideoPlayerDialog from './VideoPlayerDialog';
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import VideoPlayerDialog from "./VideoPlayerDialog";
 
 interface WeakTopic {
   id: string;
@@ -65,42 +65,45 @@ const WeakTopicCards = () => {
     try {
       // Fetch weak topics with low accuracy
       const { data: performanceData, error: perfError } = await supabase
-        .from('user_topic_performance')
-        .select(`
+        .from("user_topic_performance")
+        .select(
+          `
           id,
           topic_id,
           weakness_score,
           strength_status,
           correct_answers,
           total_questions
-        `)
-        .in('strength_status', ['weak', 'moderate'])
-        .order('weakness_score', { ascending: false })
+        `,
+        )
+        .in("strength_status", ["weak", "moderate"])
+        .order("weakness_score", { ascending: false })
         .limit(5);
 
       if (perfError) {
-        console.error('Error fetching performance:', perfError);
+        console.error("Error fetching performance:", perfError);
       }
 
       // Get topic names
       if (performanceData && performanceData.length > 0) {
-        const topicIds = performanceData.map(p => p.topic_id);
+        const topicIds = performanceData.map((p) => p.topic_id);
         const { data: topicsData } = await supabase
-          .from('topics')
-          .select('id, name')
-          .in('id', topicIds);
+          .from("topics")
+          .select("id, name")
+          .in("id", topicIds);
 
-        const topicMap = new Map(topicsData?.map(t => [t.id, t.name]) || []);
+        const topicMap = new Map(topicsData?.map((t) => [t.id, t.name]) || []);
 
-        const topics: WeakTopic[] = performanceData.map(p => ({
+        const topics: WeakTopic[] = performanceData.map((p) => ({
           id: p.id,
           topicId: p.topic_id,
-          topicName: topicMap.get(p.topic_id) || 'Unknown Topic',
+          topicName: topicMap.get(p.topic_id) || "Unknown Topic",
           weaknessScore: Number(p.weakness_score),
           strengthStatus: p.strength_status,
-          accuracy: p.total_questions > 0 
-            ? Math.round((p.correct_answers / p.total_questions) * 100) 
-            : 0,
+          accuracy:
+            p.total_questions > 0
+              ? Math.round((p.correct_answers / p.total_questions) * 100)
+              : 0,
         }));
 
         setWeakTopics(topics);
@@ -108,8 +111,9 @@ const WeakTopicCards = () => {
 
       // Fetch recommendations
       const { data: recData, error: recError } = await supabase
-        .from('recommendation_queue')
-        .select(`
+        .from("recommendation_queue")
+        .select(
+          `
           id,
           topic_id,
           todo_id,
@@ -121,24 +125,25 @@ const WeakTopicCards = () => {
           video_id,
           video_title,
           video_channel
-        `)
-        .eq('is_dismissed', false)
-        .eq('is_completed', false)
-        .order('priority', { ascending: false })
+        `,
+        )
+        .eq("is_dismissed", false)
+        .eq("is_completed", false)
+        .order("priority", { ascending: false })
         .limit(3);
 
       if (recError) {
-        console.error('Error fetching recommendations:', recError);
+        console.error("Error fetching recommendations:", recError);
       }
 
       if (recData) {
-        const recs: Recommendation[] = recData.map(r => ({
+        const recs: Recommendation[] = recData.map((r) => ({
           id: r.id,
           topicId: r.topic_id,
           todoId: r.todo_id,
           type: r.recommendation_type,
           title: r.title,
-          description: r.description || '',
+          description: r.description || "",
           priority: r.priority,
           weaknessScore: Number(r.weakness_score) || 0,
           videoId: r.video_id,
@@ -148,39 +153,39 @@ const WeakTopicCards = () => {
         setRecommendations(recs);
       }
     } catch (error) {
-      console.error('Error fetching weak topics:', error);
+      console.error("Error fetching weak topics:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const dismissRecommendation = async (id: string) => {
-    setDismissedIds(prev => new Set([...prev, id]));
-    
+    setDismissedIds((prev) => new Set([...prev, id]));
+
     try {
       await supabase
-        .from('recommendation_queue')
+        .from("recommendation_queue")
         .update({ is_dismissed: true })
-        .eq('id', id);
+        .eq("id", id);
     } catch (error) {
-      console.error('Error dismissing recommendation:', error);
+      console.error("Error dismissing recommendation:", error);
     }
   };
 
   const handleFixWeakAreas = () => {
-    navigate('/fix-weak-areas');
+    navigate("/fix-weak-areas");
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 70) return 'text-destructive';
-    if (score >= 40) return 'text-warning';
-    return 'text-muted-foreground';
+    if (score >= 70) return "text-destructive";
+    if (score >= 40) return "text-warning";
+    return "text-muted-foreground";
   };
 
   const getAccuracyColor = (accuracy: number) => {
-    if (accuracy >= 70) return 'text-success';
-    if (accuracy >= 50) return 'text-warning';
-    return 'text-destructive';
+    if (accuracy >= 70) return "text-success";
+    if (accuracy >= 50) return "text-warning";
+    return "text-destructive";
   };
 
   if (loading) {
@@ -192,7 +197,9 @@ const WeakTopicCards = () => {
     return null;
   }
 
-  const visibleRecommendations = recommendations.filter(r => !dismissedIds.has(r.id));
+  const visibleRecommendations = recommendations.filter(
+    (r) => !dismissedIds.has(r.id),
+  );
 
   return (
     <section className="space-y-4 animate-fade-in">
@@ -222,16 +229,18 @@ const WeakTopicCards = () => {
                 {/* Video Thumbnail */}
                 {rec.videoId && (
                   <button
-                    onClick={() => setSelectedVideo({
-                      videoId: rec.videoId!,
-                      videoTitle: rec.videoTitle || undefined,
-                      videoChannel: rec.videoChannel || undefined,
-                    })}
+                    onClick={() =>
+                      setSelectedVideo({
+                        videoId: rec.videoId!,
+                        videoTitle: rec.videoTitle || undefined,
+                        videoChannel: rec.videoChannel || undefined,
+                      })
+                    }
                     className="relative flex-shrink-0 w-40 h-24 group cursor-pointer"
                   >
                     <img
                       src={`https://img.youtube.com/vi/${rec.videoId}/mqdefault.jpg`}
-                      alt={rec.videoTitle || 'Video thumbnail'}
+                      alt={rec.videoTitle || "Video thumbnail"}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -246,7 +255,7 @@ const WeakTopicCards = () => {
                     </div>
                   </button>
                 )}
-                
+
                 {/* Content */}
                 <div className="flex-1 min-w-0 p-4 pl-0">
                   <div className="flex items-start justify-between gap-4">
@@ -258,7 +267,9 @@ const WeakTopicCards = () => {
                           {Math.round(rec.weaknessScore)}% weak
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">{rec.description}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {rec.description}
+                      </p>
                       {rec.videoTitle && (
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
                           📺 {rec.videoTitle}
@@ -269,7 +280,9 @@ const WeakTopicCards = () => {
                       <Button
                         variant="neon"
                         size="sm"
-                        onClick={() => rec.todoId && navigate(`/quiz/${rec.todoId}`)}
+                        onClick={() =>
+                          rec.todoId && navigate(`/quiz/${rec.todoId}`)
+                        }
                         disabled={!rec.todoId}
                       >
                         Fix Now
@@ -322,14 +335,16 @@ const WeakTopicCards = () => {
       )}
 
       {/* Motivational CTA */}
-      {weakTopics.some(t => t.strengthStatus === 'weak') && (
+      {weakTopics.some((t) => t.strengthStatus === "weak") && (
         <div className="glass-card rounded-xl p-4 bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/20">
               <Sparkles className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="font-medium">Beat your weakness, climb the leaderboard!</p>
+              <p className="font-medium">
+                Beat your weakness, climb the leaderboard!
+              </p>
               <p className="text-sm text-muted-foreground">
                 This concept is blocking your rank growth. Fix it now!
               </p>
@@ -344,7 +359,7 @@ const WeakTopicCards = () => {
       <VideoPlayerDialog
         open={!!selectedVideo}
         onOpenChange={(open) => !open && setSelectedVideo(null)}
-        videoId={selectedVideo?.videoId || ''}
+        videoId={selectedVideo?.videoId || ""}
         videoTitle={selectedVideo?.videoTitle}
         videoChannel={selectedVideo?.videoChannel}
       />

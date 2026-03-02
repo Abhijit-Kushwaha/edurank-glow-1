@@ -1,21 +1,32 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight, Sparkles, AtSign, Check, X } from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import Logo from '@/components/Logo';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Mail,
+  Lock,
+  User,
+  ArrowRight,
+  Sparkles,
+  AtSign,
+  Check,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import Logo from "@/components/Logo";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [username, setUsername] = useState('');
-  const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState<
+    boolean | null
+  >(null);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -25,7 +36,7 @@ const Auth = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   }, [user, navigate]);
 
@@ -40,19 +51,19 @@ const Auth = () => {
       setIsCheckingUsername(true);
       try {
         const { data, error } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('name', username.trim())
+          .from("profiles")
+          .select("id")
+          .eq("name", username.trim())
           .maybeSingle();
 
         if (error) {
-          console.error('Error checking username:', error);
+          console.error("Error checking username:", error);
           setIsUsernameAvailable(null);
         } else {
           setIsUsernameAvailable(data === null);
         }
       } catch (error) {
-        console.error('Error checking username:', error);
+        console.error("Error checking username:", error);
         setIsUsernameAvailable(null);
       } finally {
         setIsCheckingUsername(false);
@@ -72,39 +83,44 @@ const Auth = () => {
         if (error) {
           toast.error(error);
         } else {
-          toast.success('Welcome back!');
-          navigate('/dashboard');
+          toast.success("Welcome back!");
+          navigate("/dashboard");
         }
       } else {
         if (!name.trim()) {
-          toast.error('Please enter your name');
+          toast.error("Please enter your name");
           setIsLoading(false);
           return;
         }
         if (!username.trim()) {
-          toast.error('Please enter a username');
+          toast.error("Please enter a username");
           setIsLoading(false);
           return;
         }
         if (isUsernameAvailable === false) {
-          toast.error('This username is already taken');
+          toast.error("This username is already taken");
           setIsLoading(false);
           return;
         }
         const { error } = await signup(email, password, name, username.trim());
         if (error) {
-          if (error.includes('profiles_name_unique') || error.includes('duplicate key')) {
-            toast.error('This username is already taken. Please choose another.');
+          if (
+            error.includes("profiles_name_unique") ||
+            error.includes("duplicate key")
+          ) {
+            toast.error(
+              "This username is already taken. Please choose another.",
+            );
           } else {
             toast.error(error);
           }
         } else {
-          toast.success('Account created successfully!');
-          navigate('/dashboard');
+          toast.success("Account created successfully!");
+          navigate("/dashboard");
         }
       }
     } catch (error) {
-      toast.error('Something went wrong');
+      toast.error("Something went wrong");
     } finally {
       setIsLoading(false);
     }
@@ -128,12 +144,12 @@ const Auth = () => {
         <div className="glass-card rounded-2xl p-8 animate-slide-up">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold mb-2">
-              {isLogin ? 'Welcome Back' : 'Create Account'}
+              {isLogin ? "Welcome Back" : "Create Account"}
             </h1>
             <p className="text-muted-foreground">
               {isLogin
-                ? 'Sign in to continue your learning journey'
-                : 'Start your AI-powered study experience'}
+                ? "Sign in to continue your learning journey"
+                : "Start your AI-powered study experience"}
             </p>
           </div>
 
@@ -210,7 +226,9 @@ const Auth = () => {
                     type="text"
                     placeholder="Username (unique)"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value.replace(/\s/g, ''))}
+                    onChange={(e) =>
+                      setUsername(e.target.value.replace(/\s/g, ""))
+                    }
                     className="pl-10 pr-10"
                     required={!isLogin}
                   />
@@ -227,7 +245,9 @@ const Auth = () => {
                   )}
                 </div>
                 {username.trim() && isUsernameAvailable === false && (
-                  <p className="text-xs text-destructive -mt-2">This username is already taken</p>
+                  <p className="text-xs text-destructive -mt-2">
+                    This username is already taken
+                  </p>
                 )}
               </>
             )}
@@ -272,7 +292,7 @@ const Auth = () => {
               ) : (
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4" />
-                  {isLogin ? 'Sign In' : 'Create Account'}
+                  {isLogin ? "Sign In" : "Create Account"}
                   <ArrowRight className="h-4 w-4" />
                 </div>
               )}
@@ -283,7 +303,7 @@ const Auth = () => {
             <div className="mt-4 text-center">
               <button
                 type="button"
-                onClick={() => navigate('/forgot-password')}
+                onClick={() => navigate("/forgot-password")}
                 className="text-sm text-muted-foreground hover:text-primary hover:underline"
               >
                 Forgot Password?
@@ -293,13 +313,13 @@ const Auth = () => {
 
           <div className="mt-6 text-center">
             <p className="text-muted-foreground">
-              {isLogin ? "Don't have an account?" : 'Already have an account?'}
+              {isLogin ? "Don't have an account?" : "Already have an account?"}
               <button
                 type="button"
                 onClick={() => setIsLogin(!isLogin)}
                 className="ml-2 text-primary hover:underline font-medium"
               >
-                {isLogin ? 'Sign Up' : 'Sign In'}
+                {isLogin ? "Sign Up" : "Sign In"}
               </button>
             </p>
           </div>
@@ -307,7 +327,7 @@ const Auth = () => {
 
         {/* Features preview */}
         <div className="mt-8 grid grid-cols-3 gap-4 text-center animate-fade-in">
-          {['AI Notes', 'Video Lessons', 'Smart Quizzes'].map((feature) => (
+          {["AI Notes", "Video Lessons", "Smart Quizzes"].map((feature) => (
             <div key={feature} className="text-xs text-muted-foreground">
               <Sparkles className="h-4 w-4 mx-auto mb-1 text-primary" />
               {feature}

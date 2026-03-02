@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Trophy, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { getAchievementIcon } from './iconMap';
-import { Achievement, TIER_INFO, REWARD_LABELS } from './types';
-import confetti from 'canvas-confetti';
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, Trophy, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { getAchievementIcon } from "./iconMap";
+import { Achievement, TIER_INFO, REWARD_LABELS } from "./types";
+import confetti from "canvas-confetti";
 
 interface AchievementUnlockCelebrationProps {
   achievement: Achievement | null;
   onClose: () => void;
 }
 
-const AchievementUnlockCelebration = ({ 
-  achievement, 
-  onClose 
+const AchievementUnlockCelebration = ({
+  achievement,
+  onClose,
 }: AchievementUnlockCelebrationProps) => {
   const [showReward, setShowReward] = useState(false);
 
@@ -23,13 +23,14 @@ const AchievementUnlockCelebration = ({
       const duration = 3000;
       const end = Date.now() + duration;
 
-      const colors = achievement.tier === 'diamond' 
-        ? ['#a855f7', '#ec4899', '#8b5cf6']
-        : achievement.tier === 'gold'
-        ? ['#fbbf24', '#f59e0b', '#d97706']
-        : achievement.tier === 'platinum'
-        ? ['#06b6d4', '#0891b2', '#0e7490']
-        : ['#f97316', '#fb923c', '#fdba74'];
+      const colors =
+        achievement.tier === "diamond"
+          ? ["#a855f7", "#ec4899", "#8b5cf6"]
+          : achievement.tier === "gold"
+            ? ["#fbbf24", "#f59e0b", "#d97706"]
+            : achievement.tier === "platinum"
+              ? ["#06b6d4", "#0891b2", "#0e7490"]
+              : ["#f97316", "#fb923c", "#fdba74"];
 
       const frame = () => {
         confetti({
@@ -37,14 +38,14 @@ const AchievementUnlockCelebration = ({
           angle: 60,
           spread: 55,
           origin: { x: 0, y: 0.7 },
-          colors
+          colors,
         });
         confetti({
           particleCount: 3,
           angle: 120,
           spread: 55,
           origin: { x: 1, y: 0.7 },
-          colors
+          colors,
         });
 
         if (Date.now() < end) {
@@ -66,17 +67,17 @@ const AchievementUnlockCelebration = ({
   const formatReward = () => {
     const { reward_type, reward_value } = achievement;
     switch (reward_type) {
-      case 'xp_bonus':
+      case "xp_bonus":
         return `+${reward_value.amount} XP`;
-      case 'xp_multiplier':
+      case "xp_multiplier":
         return `${reward_value.amount}x XP boost for ${reward_value.duration_hours} hours`;
-      case 'streak_protection':
-        return `${reward_value.uses} Streak Shield${(reward_value.uses || 1) > 1 ? 's' : ''} added`;
-      case 'profile_highlight':
+      case "streak_protection":
+        return `${reward_value.uses} Streak Shield${(reward_value.uses || 1) > 1 ? "s" : ""} added`;
+      case "profile_highlight":
         return `"${reward_value.badge}" badge unlocked`;
-      case 'leaderboard_visibility':
+      case "leaderboard_visibility":
         return `${reward_value.level} flair activated`;
-      case 'unlock_mode':
+      case "unlock_mode":
         return `${reward_value.mode} mode unlocked`;
       default:
         return REWARD_LABELS[reward_type];
@@ -96,7 +97,7 @@ const AchievementUnlockCelebration = ({
           initial={{ scale: 0.5, opacity: 0, y: 50 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.5, opacity: 0, y: 50 }}
-          transition={{ type: 'spring', damping: 15 }}
+          transition={{ type: "spring", damping: 15 }}
           className="relative w-full max-w-sm bg-card rounded-2xl shadow-2xl overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
@@ -114,10 +115,10 @@ const AchievementUnlockCelebration = ({
           <div className="absolute inset-0 overflow-hidden">
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
               className={`absolute -inset-full ${tierInfo.bgColor} opacity-20`}
               style={{
-                background: `conic-gradient(from 0deg, transparent, ${tierInfo.borderColor.replace('border-', 'var(--')}) 30%, transparent 60%)`
+                background: `conic-gradient(from 0deg, transparent, ${tierInfo.borderColor.replace("border-", "var(--")}) 30%, transparent 60%)`,
               }}
             />
           </div>
@@ -142,7 +143,7 @@ const AchievementUnlockCelebration = ({
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', delay: 0.3, damping: 10 }}
+              transition={{ type: "spring", delay: 0.3, damping: 10 }}
               className={`mx-auto w-20 h-20 rounded-2xl ${tierInfo.bgColor} border-2 ${tierInfo.borderColor} flex items-center justify-center mb-4`}
             >
               <IconComponent className={`h-10 w-10 ${tierInfo.color}`} />
@@ -155,7 +156,9 @@ const AchievementUnlockCelebration = ({
               transition={{ delay: 0.4 }}
             >
               <h2 className="text-xl font-bold mb-1">{achievement.name}</h2>
-              <span className={`inline-block text-xs font-medium px-2 py-1 rounded-full ${tierInfo.bgColor} ${tierInfo.color} uppercase tracking-wide`}>
+              <span
+                className={`inline-block text-xs font-medium px-2 py-1 rounded-full ${tierInfo.bgColor} ${tierInfo.color} uppercase tracking-wide`}
+              >
                 {tierInfo.label} Tier
               </span>
             </motion.div>
@@ -180,7 +183,9 @@ const AchievementUnlockCelebration = ({
                 >
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <Trophy className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium text-primary">Reward Earned</span>
+                    <span className="text-sm font-medium text-primary">
+                      Reward Earned
+                    </span>
                   </div>
                   <p className="text-lg font-bold">{formatReward()}</p>
                 </motion.div>

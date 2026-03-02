@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Shield, ShieldCheck, Flame, AlertTriangle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { Shield, ShieldCheck, Flame, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,9 +8,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'sonner';
+} from "@/components/ui/dialog";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 interface StreakProtectionModalProps {
   open: boolean;
@@ -37,7 +37,7 @@ const StreakProtectionModal = ({
 
     if (success) {
       setUsed(true);
-      toast.success('Streak Shield activated! Your streak is safe.', {
+      toast.success("Streak Shield activated! Your streak is safe.", {
         icon: <ShieldCheck className="w-4 h-4 text-primary" />,
       });
       setTimeout(() => {
@@ -45,7 +45,7 @@ const StreakProtectionModal = ({
         setUsed(false);
       }, 2000);
     } else {
-      toast.error('Failed to use Streak Shield');
+      toast.error("Failed to use Streak Shield");
     }
   };
 
@@ -77,14 +77,18 @@ const StreakProtectionModal = ({
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ type: 'spring', bounce: 0.5 }}
+                  transition={{ type: "spring", bounce: 0.5 }}
                   className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center"
                 >
                   <ShieldCheck className="w-10 h-10 text-primary" />
                 </motion.div>
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-primary">Shield Activated!</h3>
-                  <p className="text-muted-foreground">Your {currentStreak}-day streak is protected</p>
+                  <h3 className="text-lg font-semibold text-primary">
+                    Shield Activated!
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Your {currentStreak}-day streak is protected
+                  </p>
                 </div>
               </motion.div>
             ) : (
@@ -103,7 +107,9 @@ const StreakProtectionModal = ({
                     </div>
                     <div>
                       <p className="font-semibold">Current Streak</p>
-                      <p className="text-2xl font-bold text-orange-500">{currentStreak} days</p>
+                      <p className="text-2xl font-bold text-orange-500">
+                        {currentStreak} days
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -116,7 +122,9 @@ const StreakProtectionModal = ({
                     </div>
                     <div>
                       <p className="font-semibold">Streak Shields</p>
-                      <p className="text-2xl font-bold text-primary">{streakProtections}</p>
+                      <p className="text-2xl font-bold text-primary">
+                        {streakProtections}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -125,7 +133,9 @@ const StreakProtectionModal = ({
                   <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
                     <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-destructive">No shields available</p>
+                      <p className="text-sm font-medium text-destructive">
+                        No shields available
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         Earn shields by unlocking achievements!
                       </p>
@@ -142,13 +152,13 @@ const StreakProtectionModal = ({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleUseProtection} 
+            <Button
+              onClick={handleUseProtection}
               disabled={!hasProtection || isUsing}
               className="gap-2"
             >
               <ShieldCheck className="w-4 h-4" />
-              {isUsing ? 'Activating...' : 'Use Streak Shield'}
+              {isUsing ? "Activating..." : "Use Streak Shield"}
             </Button>
           </DialogFooter>
         )}

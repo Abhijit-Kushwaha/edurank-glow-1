@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import YouTube, { YouTubeEvent, YouTubePlayer } from 'react-youtube';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import YouTube, { YouTubeEvent, YouTubePlayer } from "react-youtube";
 import {
   ArrowLeft,
   FileText,
@@ -10,13 +10,13 @@ import {
   CheckCircle,
   AlertCircle,
   User,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import Logo from '@/components/Logo';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import SubtasksSidebar from '@/components/SubtasksSidebar';
+} from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import Logo from "@/components/Logo";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import SubtasksSidebar from "@/components/SubtasksSidebar";
 
 interface Todo {
   id: string;
@@ -68,15 +68,15 @@ const VideoPlayer = () => {
     try {
       // Fetch todo
       const { data: todoData, error: todoError } = await supabase
-        .from('todos')
-        .select('id, title, video_id, description')
-        .eq('id', todoId)
+        .from("todos")
+        .select("id, title, video_id, description")
+        .eq("id", todoId)
         .maybeSingle();
 
       if (todoError) throw todoError;
       if (!todoData) {
-        toast.error('Task not found');
-        navigate('/dashboard');
+        toast.error("Task not found");
+        navigate("/dashboard");
         return;
       }
       setTodo(todoData);
@@ -84,8 +84,9 @@ const VideoPlayer = () => {
 
       // Fetch subtasks with their videos
       const { data: subtasksData, error: subtasksError } = await supabase
-        .from('subtasks')
-        .select(`
+        .from("subtasks")
+        .select(
+          `
           id,
           title,
           order_index,
@@ -98,12 +99,13 @@ const VideoPlayer = () => {
             reason,
             order_index
           )
-        `)
-        .eq('todo_id', todoId)
-        .order('order_index');
+        `,
+        )
+        .eq("todo_id", todoId)
+        .order("order_index");
 
       if (subtasksError) {
-        console.error('Error fetching subtasks:', subtasksError);
+        console.error("Error fetching subtasks:", subtasksError);
       } else if (subtasksData) {
         const formattedSubtasks: Subtask[] = subtasksData.map((s: any) => ({
           id: s.id,
@@ -116,9 +118,9 @@ const VideoPlayer = () => {
 
       // Fetch existing progress
       const { data: progressData } = await supabase
-        .from('video_progress')
-        .select('progress_percent')
-        .eq('todo_id', todoId)
+        .from("video_progress")
+        .select("progress_percent")
+        .eq("todo_id", todoId)
         .maybeSingle();
 
       if (progressData) {
@@ -131,19 +133,19 @@ const VideoPlayer = () => {
 
       // Fetch existing notes
       const { data: notesData } = await supabase
-        .from('notes')
-        .select('content')
-        .eq('todo_id', todoId)
-        .eq('is_ai_generated', true)
+        .from("notes")
+        .select("content")
+        .eq("todo_id", todoId)
+        .eq("is_ai_generated", true)
         .maybeSingle();
 
       if (notesData) {
-        setNotes(notesData.content.split('\n').filter((n: string) => n.trim()));
+        setNotes(notesData.content.split("\n").filter((n: string) => n.trim()));
         setShowNotesButton(true);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to load video');
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load video");
     } finally {
       setLoading(false);
     }
@@ -151,27 +153,28 @@ const VideoPlayer = () => {
 
   const saveProgress = async (currentProgress: number) => {
     if (!user || !todoId || !todo?.video_id) return;
-    
+
     // Only save if progress changed significantly (every 5%)
     if (Math.abs(currentProgress - lastSavedProgress) < 5) return;
 
     try {
-      const { error } = await supabase
-        .from('video_progress')
-        .upsert({
+      const { error } = await supabase.from("video_progress").upsert(
+        {
           user_id: user.id,
           todo_id: todoId,
           video_id: todo.video_id,
           progress_percent: currentProgress,
           completed: currentProgress >= 90,
-        }, {
-          onConflict: 'todo_id,user_id',
-        });
+        },
+        {
+          onConflict: "todo_id,user_id",
+        },
+      );
 
       if (error) throw error;
       setLastSavedProgress(currentProgress);
     } catch (error) {
-      console.error('Error saving progress:', error);
+      console.error("Error saving progress:", error);
     }
   };
 
@@ -187,7 +190,7 @@ const VideoPlayer = () => {
 
           if (currentProgress >= 50 && !showNotesButton) {
             setShowNotesButton(true);
-            toast.success('AI Notes available!', {
+            toast.success("AI Notes available!", {
               icon: <Sparkles className="h-4 w-4 text-primary" />,
             });
           }
@@ -224,13 +227,16 @@ const VideoPlayer = () => {
     setShowNotes(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('generate-notes', {
-        body: {
-          videoId: todo.video_id,
-          videoTitle: todo.title,
-          todoId: todoId,
+      const { data, error } = await supabase.functions.invoke(
+        "generate-notes",
+        {
+          body: {
+            videoId: todo.video_id,
+            videoTitle: todo.title,
+            todoId: todoId,
+          },
         },
-      });
+      );
 
       if (error) throw error;
 
@@ -239,19 +245,24 @@ const VideoPlayer = () => {
       }
 
       const generatedNotes = data.notes as string;
-      const noteLines = generatedNotes.split('\n').filter((n: string) => n.trim());
+      const noteLines = generatedNotes
+        .split("\n")
+        .filter((n: string) => n.trim());
       setNotes(noteLines);
 
-      toast.success('Notes generated successfully!');
+      toast.success("Notes generated successfully!");
     } catch (error: any) {
-      console.error('Error generating notes:', error);
-      
-      if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
-        toast.error('Rate limit exceeded. Please try again later.');
-      } else if (error.message?.includes('402')) {
-        toast.error('Please add credits to continue using AI features.');
+      console.error("Error generating notes:", error);
+
+      if (
+        error.message?.includes("429") ||
+        error.message?.includes("Rate limit")
+      ) {
+        toast.error("Rate limit exceeded. Please try again later.");
+      } else if (error.message?.includes("402")) {
+        toast.error("Please add credits to continue using AI features.");
       } else {
-        toast.error('Failed to generate notes. Please try again.');
+        toast.error("Failed to generate notes. Please try again.");
       }
     } finally {
       setIsGeneratingNotes(false);
@@ -259,8 +270,8 @@ const VideoPlayer = () => {
   };
 
   const opts = {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     playerVars: {
       autoplay: 0,
       modestbranding: 1,
@@ -281,21 +292,25 @@ const VideoPlayer = () => {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <AlertCircle className="h-12 w-12 text-destructive" />
         <p className="text-muted-foreground">No video found for this task</p>
-        <Button onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
+        <Button onClick={() => navigate("/dashboard")}>
+          Back to Dashboard
+        </Button>
       </div>
     );
   }
 
   // Create main video entry for sidebar
-  const mainVideo = todo ? {
-    id: 'main-video',
-    video_id: todo.video_id!,
-    title: todo.title,
-    channel: 'Main Video',
-    engagement_score: null,
-    reason: null,
-    order_index: 0,
-  } : null;
+  const mainVideo = todo
+    ? {
+        id: "main-video",
+        video_id: todo.video_id!,
+        title: todo.title,
+        channel: "Main Video",
+        engagement_score: null,
+        reason: null,
+        order_index: 0,
+      }
+    : null;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -311,7 +326,11 @@ const VideoPlayer = () => {
       <header className="sticky top-0 z-50 glass-card border-b border-border/50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/dashboard")}
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <Logo size="sm" />
@@ -328,13 +347,13 @@ const VideoPlayer = () => {
             )}
             {/* Profile Picture */}
             <button
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate("/profile")}
               className="w-9 h-9 rounded-full overflow-hidden border-2 border-primary/50 hover:border-primary transition-colors flex-shrink-0"
             >
               {profile?.avatar_url ? (
                 <img
                   src={profile.avatar_url}
-                  alt={profile.name || 'Profile'}
+                  alt={profile.name || "Profile"}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -403,7 +422,11 @@ const VideoPlayer = () => {
                 <Sparkles className="h-4 w-4 text-primary" />
                 AI-Generated Notes
               </h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowNotes(false)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowNotes(false)}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -412,7 +435,9 @@ const VideoPlayer = () => {
               {isGeneratingNotes ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <Loader2 className="h-8 w-8 text-primary animate-spin mb-4" />
-                  <p className="text-muted-foreground">Generating AI notes...</p>
+                  <p className="text-muted-foreground">
+                    Generating AI notes...
+                  </p>
                 </div>
               ) : (
                 notes.slice(0, 15).map((note, index) => (
@@ -422,7 +447,9 @@ const VideoPlayer = () => {
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <CheckCircle className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                    <p className="text-sm">{note.replace(/^[-*#]+\s*/, '').replace(/\*\*/g, '')}</p>
+                    <p className="text-sm">
+                      {note.replace(/^[-*#]+\s*/, "").replace(/\*\*/g, "")}
+                    </p>
                   </div>
                 ))
               )}

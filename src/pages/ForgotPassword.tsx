@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Mail, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import Logo from '@/components/Logo';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Mail, ArrowLeft, Loader2, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import Logo from "@/components/Logo";
+import { supabase } from "@/integrations/supabase/client";
 
 const ForgotPassword = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSent, setIsSent] = useState(false);
   const navigate = useNavigate();
@@ -16,24 +16,27 @@ const ForgotPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
-      toast.error('Please enter your email');
+      toast.error("Please enter your email");
       return;
     }
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email.trim(),
+        {
+          redirectTo: `${window.location.origin}/reset-password`,
+        },
+      );
 
       if (error) {
-        console.error('Reset error:', error);
+        console.error("Reset error:", error);
       }
 
       // Always show success to not reveal if email exists
       setIsSent(true);
     } catch (error) {
-      console.error('Reset error:', error);
+      console.error("Reset error:", error);
       setIsSent(true);
     } finally {
       setIsLoading(false);
@@ -51,9 +54,14 @@ const ForgotPassword = () => {
             <CheckCircle className="h-16 w-16 text-primary mx-auto mb-4" />
             <h1 className="text-2xl font-bold mb-2">Check Your Email</h1>
             <p className="text-muted-foreground mb-6">
-              If an account exists with that email, we've sent a password reset link. Please check your inbox and spam folder.
+              If an account exists with that email, we've sent a password reset
+              link. Please check your inbox and spam folder.
             </p>
-            <Button variant="outline" onClick={() => navigate('/auth')} className="w-full">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/auth")}
+              className="w-full"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Sign In
             </Button>
@@ -91,14 +99,20 @@ const ForgotPassword = () => {
               />
             </div>
 
-            <Button type="submit" variant="neon" size="lg" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              variant="neon"
+              size="lg"
+              className="w-full"
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Sending...
                 </div>
               ) : (
-                'Send Reset Link'
+                "Send Reset Link"
               )}
             </Button>
           </form>
@@ -106,7 +120,7 @@ const ForgotPassword = () => {
           <div className="mt-6 text-center">
             <button
               type="button"
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate("/auth")}
               className="text-muted-foreground hover:text-primary hover:underline text-sm"
             >
               <ArrowLeft className="h-3 w-3 inline mr-1" />

@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
+import { useState, useCallback } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 10;
@@ -32,8 +32,12 @@ export const useRateLimiter = () => {
 
     if (state.requestCount >= MAX_REQUESTS_PER_WINDOW) {
       setIsRateLimited(true);
-      const remainingTime = Math.ceil((RATE_LIMIT_WINDOW_MS - (now - state.windowStart)) / 1000);
-      toast.error(`Rate limit exceeded. Please wait ${remainingTime}s before trying again.`);
+      const remainingTime = Math.ceil(
+        (RATE_LIMIT_WINDOW_MS - (now - state.windowStart)) / 1000,
+      );
+      toast.error(
+        `Rate limit exceeded. Please wait ${remainingTime}s before trying again.`,
+      );
       return false;
     }
 

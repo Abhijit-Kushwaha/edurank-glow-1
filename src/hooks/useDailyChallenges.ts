@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface DailyChallenge {
   id: string;
@@ -10,7 +10,7 @@ export interface DailyChallenge {
   target_value: number;
   base_xp_reward: number;
   bonus_multiplier: number;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
 }
 
 export interface UserDailyChallenge {
@@ -40,24 +40,28 @@ export const useDailyChallenges = () => {
 
     try {
       // First, try to assign daily challenges (will return existing if already assigned)
-      const { data: assignedData, error: assignError } = await supabase
-        .rpc('assign_daily_challenges', { p_user_id: user.id });
+      const { data: assignedData, error: assignError } = await supabase.rpc(
+        "assign_daily_challenges",
+        { p_user_id: user.id },
+      );
 
       if (assignError) {
-        console.error('Error assigning challenges:', assignError);
+        console.error("Error assigning challenges:", assignError);
       }
 
       // Fetch user's daily challenges with challenge details
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
       const { data: userChallenges, error: fetchError } = await supabase
-        .from('user_daily_challenges')
-        .select(`
+        .from("user_daily_challenges")
+        .select(
+          `
           *,
           challenge:daily_challenges(*)
-        `)
-        .eq('user_id', user.id)
-        .eq('challenge_date', today)
-        .order('is_completed', { ascending: true });
+        `,
+        )
+        .eq("user_id", user.id)
+        .eq("challenge_date", today)
+        .order("is_completed", { ascending: true });
 
       if (fetchError) throw fetchError;
 
@@ -69,7 +73,7 @@ export const useDailyChallenges = () => {
 
       setChallenges(transformedChallenges);
     } catch (error) {
-      console.error('Error fetching daily challenges:', error);
+      console.error("Error fetching daily challenges:", error);
     } finally {
       setLoading(false);
     }
@@ -79,11 +83,11 @@ export const useDailyChallenges = () => {
     const now = new Date();
     const endOfDay = new Date(now);
     endOfDay.setHours(23, 59, 59, 999);
-    
+
     const diff = endOfDay.getTime() - now.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     return { hours, minutes, totalMs: diff };
   }, []);
 
@@ -96,18 +100,18 @@ export const useDailyChallenges = () => {
     if (!user) return;
 
     const channel = supabase
-      .channel('daily-challenges')
+      .channel("daily-challenges")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'user_daily_challenges',
+          event: "UPDATE",
+          schema: "public",
+          table: "user_daily_challenges",
           filter: `user_id=eq.${user.id}`,
         },
         () => {
           fetchChallenges();
-        }
+        },
       )
       .subscribe();
 
@@ -116,8 +120,11 @@ export const useDailyChallenges = () => {
     };
   }, [user, fetchChallenges]);
 
-  const completedCount = challenges.filter(c => c.is_completed).length;
-  const totalXpEarned = challenges.reduce((sum, c) => sum + (c.xp_earned || 0), 0);
+  const completedCount = challenges.filter((c) => c.is_completed).length;
+  const totalXpEarned = challenges.reduce(
+    (sum, c) => sum + (c.xp_earned || 0),
+    0,
+  );
 
   return {
     challenges,
@@ -132,30 +139,30 @@ export const useDailyChallenges = () => {
 
 export const getDifficultyColor = (difficulty: string) => {
   switch (difficulty) {
-    case 'easy':
-      return 'text-green-500 bg-green-500/10 border-green-500/30';
-    case 'medium':
-      return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/30';
-    case 'hard':
-      return 'text-red-500 bg-red-500/10 border-red-500/30';
+    case "easy":
+      return "text-green-500 bg-green-500/10 border-green-500/30";
+    case "medium":
+      return "text-yellow-500 bg-yellow-500/10 border-yellow-500/30";
+    case "hard":
+      return "text-red-500 bg-red-500/10 border-red-500/30";
     default:
-      return 'text-muted-foreground bg-muted/10 border-border/30';
+      return "text-muted-foreground bg-muted/10 border-border/30";
   }
 };
 
 export const getChallengeIcon = (challengeType: string) => {
   switch (challengeType) {
-    case 'quiz_count':
-      return 'FileQuestion';
-    case 'questions_answered':
-      return 'HelpCircle';
-    case 'perfect_quiz':
-      return 'Star';
-    case 'speed_quiz':
-      return 'Zap';
-    case 'quiz_score':
-      return 'Target';
+    case "quiz_count":
+      return "FileQuestion";
+    case "questions_answered":
+      return "HelpCircle";
+    case "perfect_quiz":
+      return "Star";
+    case "speed_quiz":
+      return "Zap";
+    case "quiz_score":
+      return "Target";
     default:
-      return 'Trophy';
+      return "Trophy";
   }
 };

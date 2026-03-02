@@ -1,7 +1,11 @@
-import { Sparkles, Zap } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, Zap } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface XpLevelBarProps {
   level: number;
@@ -11,13 +15,19 @@ interface XpLevelBarProps {
   xpMultiplier: number;
 }
 
-const XpLevelBar = ({ level, totalXp, xpProgress, xpToNextLevel, xpMultiplier }: XpLevelBarProps) => {
+const XpLevelBar = ({
+  level,
+  totalXp,
+  xpProgress,
+  xpToNextLevel,
+  xpMultiplier,
+}: XpLevelBarProps) => {
   const xpInLevel = Math.floor((xpProgress / 100) * xpToNextLevel);
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <motion.div 
+        <motion.div
           className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/50 cursor-pointer hover:bg-muted/70 transition-colors"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -26,14 +36,16 @@ const XpLevelBar = ({ level, totalXp, xpProgress, xpToNextLevel, xpMultiplier }:
           {/* Level Badge */}
           <div className="relative flex items-center justify-center">
             <div className="w-7 h-7 rounded-full gradient-bg flex items-center justify-center">
-              <span className="text-xs font-bold text-primary-foreground">{level}</span>
+              <span className="text-xs font-bold text-primary-foreground">
+                {level}
+              </span>
             </div>
             {xpMultiplier > 1 && (
-              <motion.div 
+              <motion.div
                 className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-secondary flex items-center justify-center"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: 'spring' }}
+                transition={{ delay: 0.2, type: "spring" }}
               >
                 <Zap className="w-2.5 h-2.5 text-secondary-foreground" />
               </motion.div>
@@ -45,7 +57,9 @@ const XpLevelBar = ({ level, totalXp, xpProgress, xpToNextLevel, xpMultiplier }:
             <div className="flex items-center justify-between text-xs mb-0.5">
               <span className="text-muted-foreground flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-primary" />
-                <span className="font-medium text-foreground">{totalXp.toLocaleString()}</span>
+                <span className="font-medium text-foreground">
+                  {totalXp.toLocaleString()}
+                </span>
                 <span>XP</span>
               </span>
             </div>
@@ -65,7 +79,9 @@ const XpLevelBar = ({ level, totalXp, xpProgress, xpToNextLevel, xpMultiplier }:
           </div>
           <div className="flex items-center justify-between gap-4">
             <span className="text-muted-foreground">Next Level</span>
-            <span className="font-medium">{xpInLevel}/{xpToNextLevel}</span>
+            <span className="font-medium">
+              {xpInLevel}/{xpToNextLevel}
+            </span>
           </div>
           {xpMultiplier > 1 && (
             <div className="flex items-center justify-between gap-4 text-secondary">

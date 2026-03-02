@@ -18,7 +18,10 @@ const FORBIDDEN_PATTERNS = [
   /override\s+instructions/i,
 ];
 
-function validateMessages(messages: any[]): { isValid: boolean; error?: string } {
+function validateMessages(messages: any[]): {
+  isValid: boolean;
+  error?: string;
+} {
   if (!Array.isArray(messages) || messages.length === 0) {
     return { isValid: false, error: "Messages must be a non-empty array" };
   }
@@ -48,7 +51,7 @@ serve(async (req) => {
   const preflightResponse = handleCORSPreflight(req);
   if (preflightResponse) return preflightResponse;
 
-  const corsHeaders = getCORSHeaders(req.headers.get('origin'));
+  const corsHeaders = getCORSHeaders(req.headers.get("origin"));
 
   try {
     const authHeader = req.headers.get("Authorization");
@@ -62,7 +65,7 @@ serve(async (req) => {
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
+      { global: { headers: { Authorization: authHeader } } },
     );
 
     const {
@@ -84,10 +87,10 @@ serve(async (req) => {
       limitsPerDay: 100,
     });
     if (!rateLimitResult.allowed) {
-      return new Response(
-        JSON.stringify({ error: rateLimitResult.message }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: rateLimitResult.message }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const { messages, userContext } = await req.json();
@@ -95,10 +98,10 @@ serve(async (req) => {
     // Input validation
     const validation = validateMessages(messages);
     if (!validation.isValid) {
-      return new Response(
-        JSON.stringify({ error: validation.error }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: validation.error }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -147,21 +150,31 @@ ${userContext?.subject ? `Current subject: ${userContext.subject}` : ""}`;
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({
+            error: "Rate limit exceeded. Please try again later.",
+          }),
+          {
+            status: 429,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
         );
       }
       if (response.status === 402) {
         return new Response(
           JSON.stringify({ error: "Payment required. Please add funds." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          {
+            status: 402,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
         );
       }
       throw new Error(`AI gateway error: ${response.status}`);
     }
 
     const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content || "Sorry, I couldn't generate a response.";
+    const reply =
+      data.choices?.[0]?.message?.content ||
+      "Sorry, I couldn't generate a response.";
 
     // Log successful request
     await logRateLimitRequest(supabaseClient, user.id, "ai-chat", true);
@@ -173,7 +186,10 @@ ${userContext?.subject ? `Current subject: ${userContext.subject}` : ""}`;
     console.error("ai-chat error:", error);
     return new Response(
       JSON.stringify({ error: "An error occurred processing your request" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   }
 });

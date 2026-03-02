@@ -7,8 +7,10 @@ const LOVABLE_AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 function detectSubjectType(subject?: string, topic?: string): string {
   const combined = `${subject || ""} ${topic || ""}`.toLowerCase();
-  if (/math|algebra|geometry|calculus|trigonometry|equation/.test(combined)) return "numerical";
-  if (/history|civics|geography|political|economics/.test(combined)) return "theory-heavy";
+  if (/math|algebra|geometry|calculus|trigonometry|equation/.test(combined))
+    return "numerical";
+  if (/history|civics|geography|political|economics/.test(combined))
+    return "theory-heavy";
   if (/physics|chemistry|biology|science/.test(combined)) return "conceptual";
   return "general";
 }
@@ -17,7 +19,7 @@ serve(async (req) => {
   const preflightResponse = handleCORSPreflight(req);
   if (preflightResponse) return preflightResponse;
 
-  const corsHeaders = getCORSHeaders(req.headers.get('origin'));
+  const corsHeaders = getCORSHeaders(req.headers.get("origin"));
 
   try {
     const authHeader = req.headers.get("Authorization");
@@ -31,10 +33,13 @@ serve(async (req) => {
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
+      { global: { headers: { Authorization: authHeader } } },
     );
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser();
     if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -50,10 +55,10 @@ serve(async (req) => {
       limitsPerDay: 20,
     });
     if (!rateLimitResult.allowed) {
-      return new Response(
-        JSON.stringify({ error: rateLimitResult.message }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: rateLimitResult.message }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const { topic, subject, classLevel } = await req.json();
@@ -79,11 +84,14 @@ serve(async (req) => {
 
     let subjectHint = "";
     if (subjectType === "numerical") {
-      subjectHint = "Focus on step-by-step solutions, formulas, and worked examples.";
+      subjectHint =
+        "Focus on step-by-step solutions, formulas, and worked examples.";
     } else if (subjectType === "theory-heavy") {
-      subjectHint = "Focus on timelines, causes & effects, key dates, and important facts.";
+      subjectHint =
+        "Focus on timelines, causes & effects, key dates, and important facts.";
     } else if (subjectType === "conceptual") {
-      subjectHint = "Focus on concepts, diagrams explanation (in text), processes, and scientific principles.";
+      subjectHint =
+        "Focus on concepts, diagrams explanation (in text), processes, and scientific principles.";
     }
 
     const systemPrompt = `You are BrainBuddy Notes Engine — an ultra-fast, exam-focused notes generator for students.
@@ -169,7 +177,10 @@ Topic: "${topic.trim()}"${subject ? `\nSubject: ${subject}` : ""}${classLevel ? 
     console.error("ai-notes-gen error:", error);
     return new Response(
       JSON.stringify({ error: "An error occurred generating notes" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   }
 });

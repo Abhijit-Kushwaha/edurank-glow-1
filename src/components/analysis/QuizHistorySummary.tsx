@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   History,
   TrendingUp,
@@ -12,10 +12,10 @@ import {
   CheckCircle2,
   ArrowRight,
   Loader2,
-} from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { format } from 'date-fns';
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { format } from "date-fns";
 
 interface QuizResult {
   id: string;
@@ -44,8 +44,9 @@ const QuizHistorySummary = () => {
   const fetchRecentQuizzes = async () => {
     try {
       const { data, error } = await supabase
-        .from('quiz_results')
-        .select(`
+        .from("quiz_results")
+        .select(
+          `
           id,
           todo_id,
           score,
@@ -55,9 +56,10 @@ const QuizHistorySummary = () => {
           time_taken_seconds,
           created_at,
           todos (title)
-        `)
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
+        `,
+        )
+        .eq("user_id", user?.id)
+        .order("created_at", { ascending: false })
         .limit(5);
 
       if (error) throw error;
@@ -65,7 +67,7 @@ const QuizHistorySummary = () => {
       const formattedResults: QuizResult[] = (data || []).map((r: any) => ({
         id: r.id,
         todoId: r.todo_id,
-        todoTitle: r.todos?.title || 'Unknown Quiz',
+        todoTitle: r.todos?.title || "Unknown Quiz",
         score: r.score,
         previousScore: r.previous_score,
         correctAnswers: r.correct_answers,
@@ -76,24 +78,27 @@ const QuizHistorySummary = () => {
 
       setRecentQuizzes(formattedResults);
     } catch (error) {
-      console.error('Error fetching quiz history:', error);
+      console.error("Error fetching quiz history:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const getTrendIcon = (current: number, previous: number | null) => {
-    if (previous === null) return <Minus className="h-4 w-4 text-muted-foreground" />;
-    if (current > previous) return <TrendingUp className="h-4 w-4 text-success" />;
-    if (current < previous) return <TrendingDown className="h-4 w-4 text-destructive" />;
+    if (previous === null)
+      return <Minus className="h-4 w-4 text-muted-foreground" />;
+    if (current > previous)
+      return <TrendingUp className="h-4 w-4 text-success" />;
+    if (current < previous)
+      return <TrendingDown className="h-4 w-4 text-destructive" />;
     return <Minus className="h-4 w-4 text-muted-foreground" />;
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-success';
-    if (score >= 60) return 'text-primary';
-    if (score >= 40) return 'text-warning';
-    return 'text-destructive';
+    if (score >= 80) return "text-success";
+    if (score >= 60) return "text-primary";
+    if (score >= 40) return "text-warning";
+    return "text-destructive";
   };
 
   const formatTime = (seconds: number) => {
@@ -132,7 +137,11 @@ const QuizHistorySummary = () => {
           <History className="h-5 w-5 text-primary" />
           Recent Quiz Activity
         </CardTitle>
-        <Button variant="ghost" size="sm" onClick={() => navigate('/quiz-history')}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/quiz-history")}
+        >
           View All
           <ArrowRight className="h-4 w-4 ml-1" />
         </Button>
@@ -145,11 +154,13 @@ const QuizHistorySummary = () => {
               className="flex items-center gap-4 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
             >
               <div className="flex-shrink-0">
-                <div className={`text-2xl font-bold ${getScoreColor(quiz.score)}`}>
+                <div
+                  className={`text-2xl font-bold ${getScoreColor(quiz.score)}`}
+                >
                   {quiz.score}%
                 </div>
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{quiz.todoTitle}</p>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -174,7 +185,7 @@ const QuizHistorySummary = () => {
               </div>
 
               <div className="text-xs text-muted-foreground">
-                {format(new Date(quiz.createdAt), 'MMM d')}
+                {format(new Date(quiz.createdAt), "MMM d")}
               </div>
             </div>
           ))}

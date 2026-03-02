@@ -98,24 +98,38 @@ const AINotes = () => {
 
         {/* Form */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-          <Select value={classLevel} onValueChange={(v) => { setClassLevel(v); setSubject(""); }}>
+          <Select
+            value={classLevel}
+            onValueChange={(v) => {
+              setClassLevel(v);
+              setSubject("");
+            }}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Class / Level" />
             </SelectTrigger>
             <SelectContent>
               {FILTER_OPTIONS.classes.map((c) => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
-          <Select value={subject} onValueChange={setSubject} disabled={!classLevel}>
+          <Select
+            value={subject}
+            onValueChange={setSubject}
+            disabled={!classLevel}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Subject" />
             </SelectTrigger>
             <SelectContent>
               {subjectsForClass.map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -154,7 +168,8 @@ const AINotes = () => {
           <div className="flex flex-col items-center justify-center h-full gap-4 py-16">
             <BookOpen className="h-12 w-12 text-muted-foreground" />
             <p className="text-muted-foreground text-center max-w-sm">
-              Select a subject and topic, then hit Generate to get structured, exam-ready notes instantly.
+              Select a subject and topic, then hit Generate to get structured,
+              exam-ready notes instantly.
             </p>
           </div>
         )}
@@ -162,7 +177,11 @@ const AINotes = () => {
         {isLoading && (
           <div className="space-y-4 animate-pulse max-w-3xl mx-auto">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-4 bg-muted rounded w-full" style={{ width: `${80 - i * 8}%` }} />
+              <div
+                key={i}
+                className="h-4 bg-muted rounded w-full"
+                style={{ width: `${80 - i * 8}%` }}
+              />
             ))}
           </div>
         )}
@@ -171,7 +190,11 @@ const AINotes = () => {
           <div className="max-w-3xl mx-auto space-y-4">
             <div className="flex justify-end">
               <Button variant="outline" size="sm" onClick={handleCopy}>
-                {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                {copied ? (
+                  <Check className="h-4 w-4 mr-1" />
+                ) : (
+                  <Copy className="h-4 w-4 mr-1" />
+                )}
                 {copied ? "Copied" : "Copy"}
               </Button>
             </div>

@@ -9,11 +9,12 @@ All reported issues have been systematically fixed. This document tracks each ch
 **Issue:** persistSession was set to `false`, rendering secureStorage unused and forcing re-authentication on refresh.
 
 **Fix Applied:**
+
 ```typescript
 // Before
 persistSession: false,   // Don't persist sessions across browser tabs/windows
 
-// After  
+// After
 persistSession: true,    // Persist within session but clear on tab close
 ```
 
@@ -26,25 +27,26 @@ persistSession: true,    // Persist within session but clear on tab close
 **Issue:** Fallback logic assigned `ALLOWED_ORIGINS[0]` to unauthorized origins, allowing unintended access.
 
 **Fix Applied:**
+
 ```typescript
 // Before - UNSAFE
-const allowedOrigin = ALLOWED_ORIGINS.includes(originHeader || '')
+const allowedOrigin = ALLOWED_ORIGINS.includes(originHeader || "")
   ? originHeader
-  : ALLOWED_ORIGINS[0];  // ❌ Allows unauthorized origins
+  : ALLOWED_ORIGINS[0]; // ❌ Allows unauthorized origins
 
 // After - SECURE
-const allowedOrigin = ALLOWED_ORIGINS.includes(originHeader || '') 
-  ? originHeader 
+const allowedOrigin = ALLOWED_ORIGINS.includes(originHeader || "")
+  ? originHeader
   : null;
 
 const headers: Record<string, string> = {
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '3600',
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "3600",
 };
 
 // Only include header if origin is whitelisted
 if (allowedOrigin) {
-  headers['Access-Control-Allow-Origin'] = allowedOrigin;
+  headers["Access-Control-Allow-Origin"] = allowedOrigin;
 }
 ```
 
@@ -58,6 +60,7 @@ if (allowedOrigin) {
 
 **Fix Applied:**
 Added detailed code example showing:
+
 - How to access `jwt_claims` from request context
 - Extracting `sub` claim to get `userId`
 - Defensive null check for missing claims with error response
@@ -70,8 +73,8 @@ const jwt_claims = req.context?.claims;
 const { sub: userId } = jwt_claims || {};
 if (!userId) {
   return new Response(
-    JSON.stringify({ error: 'Unauthorized: Missing user ID in JWT claims' }),
-    { status: 401, headers: { 'Content-Type': 'application/json' } }
+    JSON.stringify({ error: "Unauthorized: Missing user ID in JWT claims" }),
+    { status: 401, headers: { "Content-Type": "application/json" } },
   );
 }
 ```
@@ -86,6 +89,7 @@ if (!userId) {
 
 **Fix Applied:**
 Removed duplicate constraint:
+
 ```sql
 // Before - REDUNDANT
 user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -107,13 +111,13 @@ user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
 **Fix Applied:**
 Replaced with qualitative labels and added methodology note:
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| CSRF vulnerability | High | None | Eliminated |
-| API key exposure risk | High | Low | Critical → Safe |
-| Session theft via storage | Medium | Low | Medium → Low |
-| Auth bypass surface | High | Low | Critical → Safe |
-| API abuse prevention | None | Good | None → Good |
+| Metric                    | Before | After | Improvement     |
+| ------------------------- | ------ | ----- | --------------- |
+| CSRF vulnerability        | High   | None  | Eliminated      |
+| API key exposure risk     | High   | Low   | Critical → Safe |
+| Session theft via storage | Medium | Low   | Medium → Low    |
+| Auth bypass surface       | High   | Low   | Critical → Safe |
+| API abuse prevention      | None   | Good  | None → Good     |
 
 **Overall security posture:** Weak → Strong
 
@@ -129,20 +133,21 @@ Replaced with qualitative labels and added methodology note:
 
 **Fix Applied:**
 Replaced with explicit token location verification:
+
 ```javascript
 // Check that auth tokens are NOT in localStorage
 const localStorageKeys = Object.keys(localStorage);
-const hasTokensInLocal = localStorageKeys.filter(k => 
-  k.includes('auth') || k.includes('supabase') || k.includes('token')
+const hasTokensInLocal = localStorageKeys.filter(
+  (k) => k.includes("auth") || k.includes("supabase") || k.includes("token"),
 );
-console.log('Tokens in localStorage:', hasTokensInLocal);  // Should be EMPTY
+console.log("Tokens in localStorage:", hasTokensInLocal); // Should be EMPTY
 
 // Check that auth tokens ARE in sessionStorage
 const sessionStorageKeys = Object.keys(sessionStorage);
-const hasTokensInSession = sessionStorageKeys.filter(k => 
-  k.includes('auth') || k.includes('supabase') || k.includes('token')
+const hasTokensInSession = sessionStorageKeys.filter(
+  (k) => k.includes("auth") || k.includes("supabase") || k.includes("token"),
 );
-console.log('Tokens in sessionStorage:', hasTokensInSession);  // Should have entries
+console.log("Tokens in sessionStorage:", hasTokensInSession); // Should have entries
 ```
 
 **Impact:** Reviewers can now verify tokens are stored in the correct location.
@@ -155,6 +160,7 @@ console.log('Tokens in sessionStorage:', hasTokensInSession);  // Should have en
 
 **Fix Applied:**
 Changed developer note to clarify:
+
 ```
 // Before - CONTRADICTORY
 All changes are backward compatible
@@ -173,6 +179,7 @@ APIs remain backward compatible; note that session behavior is a user-facing cha
 
 **Fix Applied:**
 Updated with concrete steps:
+
 - **Storage location:** Browser DevTools → Application → Session Storage
 - **Inspection method:** Filter sessionStorage keys for "auth", "supabase", "token"
 - **Valid JWT test:** Use Authorization: Bearer header with valid JWT
@@ -188,6 +195,7 @@ Updated with concrete steps:
 
 **Fix Applied:**
 Replaced curl-only guidance with browser-based testing:
+
 ```bash
 # Use browser DevTools:
 # 1. Open https://edurank.app in your browser
@@ -209,6 +217,7 @@ curl -i -H "Origin: https://edurank.app" ... | grep -i access-control
 **Issue:** Numbered list jumped from "2." to "4.", skipping "3."
 
 **Fix Applied:**
+
 ```
 // Before
 1. **Create shared utilities**
@@ -231,17 +240,18 @@ curl -i -H "Origin: https://edurank.app" ... | grep -i access-control
 
 **Fix Applied:**
 Updated code example to show proper conditional CORS header setting:
+
 ```typescript
 // Only allow explicitly whitelisted origins
 const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : null;
 
 const headers: Record<string, string> = {
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 // Only set CORS header if origin is whitelisted
 if (allowedOrigin) {
-  headers['Access-Control-Allow-Origin'] = allowedOrigin;
+  headers["Access-Control-Allow-Origin"] = allowedOrigin;
 }
 ```
 
@@ -249,12 +259,13 @@ if (allowedOrigin) {
 
 ---
 
-## 12. ✅ Reset Time Computation - supabase/functions/_shared/rateLimit.ts (lines 74-92)
+## 12. ✅ Reset Time Computation - supabase/functions/\_shared/rateLimit.ts (lines 74-92)
 
 **Issue:** Reset times used `hourAgo.getTime() + 60*60*1000` (equals now), providing no meaningful expiration.
 
 **Fix Applied:**
 Implemented conservative estimate based on current time:
+
 ```typescript
 // Before - MEANINGLESS
 resetAtHour: new Date(hourAgo.getTime() + 60 * 60 * 1000),  // equals now
@@ -268,28 +279,29 @@ resetAtDay: new Date(now.getTime() + 24 * 60 * 60 * 1000),  // 1 day from now
 
 ---
 
-## 13. ✅ Daily Error Handling - supabase/functions/_shared/rateLimit.ts (lines 66-68)
+## 13. ✅ Daily Error Handling - supabase/functions/\_shared/rateLimit.ts (lines 66-68)
 
 **Issue:** Daily error handling only logged, leaving `dailyCount` null and potentially allowing requests.
 
 **Fix Applied:**
 Implemented consistent fail-open behavior matching hourly error handling:
+
 ```typescript
 // Before - INCONSISTENT
 if (dailyError) {
-  console.error('Error checking daily rate limit:', dailyError);
+  console.error("Error checking daily rate limit:", dailyError);
   // No return - continues with dailyCount = null
 }
 
 // After - CONSISTENT FAIL-OPEN
 if (dailyError) {
-  console.error('Error checking daily rate limit:', dailyError);
+  console.error("Error checking daily rate limit:", dailyError);
   return {
     allowed: true,
     remaining: config.limitsPerDay,
     resetAtHour: new Date(now.getTime() + 60 * 60 * 1000),
     resetAtDay: new Date(now.getTime() + 24 * 60 * 60 * 1000),
-    message: 'Rate limit check failed (allowing request)'
+    message: "Rate limit check failed (allowing request)",
   };
 }
 ```
@@ -304,6 +316,7 @@ if (dailyError) {
 
 **Fix Applied:**
 Restricted to service role only:
+
 ```sql
 // Before - OVERLY PERMISSIVE
 CREATE POLICY "Service role can insert rate limit logs"
@@ -328,6 +341,7 @@ WITH CHECK (auth.role() = 'service_role');  // ✅ Only service role
 
 **Fix Applied:**
 Removed overly permissive INSERT policy entirely:
+
 ```sql
 // Before - OVERLY PERMISSIVE
 CREATE POLICY "Service role can insert audit logs"
@@ -349,6 +363,7 @@ WITH CHECK (true);  // ❌ Deleted
 
 **Fix Applied:**
 Added authorization check comparing `p_user_id` to `auth.uid()`:
+
 ```sql
 -- Before - NO AUTHORIZATION
 BEGIN
@@ -361,7 +376,7 @@ BEGIN
   IF p_user_id != auth.uid() THEN
     RAISE EXCEPTION 'Unauthorized: Users can only check their own rate limits';
   END IF;
-  
+
   v_hour_ago := NOW() - INTERVAL '1 hour';
 ```
 
@@ -375,6 +390,7 @@ BEGIN
 
 **Fix Applied:**
 Implemented actual expiration time based on oldest request in window:
+
 ```sql
 // Before - MISLEADING
 RETURN QUERY SELECT
@@ -392,7 +408,7 @@ BEGIN
   SELECT COUNT(*), MIN(created_at) INTO v_hour_count, v_oldest_hour_time
   FROM public.rate_limit_logs
   WHERE user_id = p_user_id AND operation = p_operation AND created_at > v_hour_ago;
-  
+
   -- Return actual expiration (oldest request time + window)
   RETURN QUERY SELECT
     v_hour_count,
@@ -409,7 +425,7 @@ BEGIN
 
 ✅ **Build Status:** npm run build succeeded  
 ✅ **No TypeScript Errors:** All changes are type-safe  
-✅ **All 17 Issues Resolved** in documentation and implementation  
+✅ **All 17 Issues Resolved** in documentation and implementation
 
 ---
 
@@ -417,10 +433,9 @@ BEGIN
 
 1. `src/integrations/supabase/client.ts` - 1 fix
 2. `PHASE_1_IMPLEMENTATION_GUIDE.md` - 3 fixes
-3. `SECURITY_FIXES_QUICK_REFERENCE.md` - 4 fixes  
+3. `SECURITY_FIXES_QUICK_REFERENCE.md` - 4 fixes
 4. `SECURITY_REVIEW_SUMMARY.md` - 2 fixes
 5. `supabase/functions/_shared/rateLimit.ts` - 2 fixes
 6. `supabase/migrations/20260122000000_add_rate_limiting_and_audit_tables.sql` - 4 fixes
 
 **Total Issues Fixed:** 17 ✅
-

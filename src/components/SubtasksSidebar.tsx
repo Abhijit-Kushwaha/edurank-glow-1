@@ -1,8 +1,22 @@
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Play, Clock, Eye, User, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { useState } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Play,
+  Clock,
+  Eye,
+  User,
+  Sparkles,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SubtaskVideo {
   id: string;
@@ -28,14 +42,19 @@ interface SubtasksSidebarProps {
   mainVideo?: SubtaskVideo | null;
 }
 
-const SubtasksSidebar = ({ subtasks, onVideoSelect, currentVideoId, mainVideo }: SubtasksSidebarProps) => {
+const SubtasksSidebar = ({
+  subtasks,
+  onVideoSelect,
+  currentVideoId,
+  mainVideo,
+}: SubtasksSidebarProps) => {
   const [isOpen, setIsOpen] = useState(true);
   const [expandedSubtasks, setExpandedSubtasks] = useState<Set<string>>(
-    new Set(subtasks.slice(0, 2).map(s => s.id))
+    new Set(subtasks.slice(0, 2).map((s) => s.id)),
   );
 
   const toggleSubtask = (subtaskId: string) => {
-    setExpandedSubtasks(prev => {
+    setExpandedSubtasks((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(subtaskId)) {
         newSet.delete(subtaskId);
@@ -65,7 +84,7 @@ const SubtasksSidebar = ({ subtasks, onVideoSelect, currentVideoId, mainVideo }:
       {/* Sidebar */}
       <div
         className={`fixed left-0 top-0 h-full z-30 transition-transform duration-300 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="h-full w-80 glass-card border-r border-border/50 flex flex-col pt-20">
@@ -168,8 +187,8 @@ const VideoCard = ({ video, isActive, onSelect }: VideoCardProps) => {
       onClick={onSelect}
       className={`w-full p-2 rounded-lg transition-all text-left group ${
         isActive
-          ? 'bg-primary/20 border border-primary/50'
-          : 'bg-background/50 hover:bg-muted border border-transparent'
+          ? "bg-primary/20 border border-primary/50"
+          : "bg-background/50 hover:bg-muted border border-transparent"
       }`}
     >
       {/* Thumbnail */}

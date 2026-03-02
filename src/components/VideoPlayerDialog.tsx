@@ -1,7 +1,12 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { ExternalLink, X } from 'lucide-react';
-import YouTube, { YouTubeProps } from 'react-youtube';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { ExternalLink, X } from "lucide-react";
+import YouTube, { YouTubeProps } from "react-youtube";
 
 interface VideoPlayerDialogProps {
   open: boolean;
@@ -18,9 +23,9 @@ const VideoPlayerDialog = ({
   videoTitle,
   videoChannel,
 }: VideoPlayerDialogProps) => {
-  const opts: YouTubeProps['opts'] = {
-    width: '100%',
-    height: '100%',
+  const opts: YouTubeProps["opts"] = {
+    width: "100%",
+    height: "100%",
     playerVars: {
       autoplay: 1,
       modestbranding: 1,
@@ -35,17 +40,24 @@ const VideoPlayerDialog = ({
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <DialogTitle className="text-lg font-semibold line-clamp-2">
-                {videoTitle || 'Video'}
+                {videoTitle || "Video"}
               </DialogTitle>
               {videoChannel && (
-                <p className="text-sm text-muted-foreground mt-1">{videoChannel}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {videoChannel}
+                </p>
               )}
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank')}
+                onClick={() =>
+                  window.open(
+                    `https://www.youtube.com/watch?v=${videoId}`,
+                    "_blank",
+                  )
+                }
               >
                 <ExternalLink className="h-3 w-3 mr-1" />
                 Open in YouTube

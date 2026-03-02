@@ -49,7 +49,10 @@ const AIChat = () => {
     try {
       const { data, error } = await supabase.functions.invoke("ai-chat", {
         body: {
-          messages: newMessages.map((m) => ({ role: m.role, content: m.content })),
+          messages: newMessages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
           userContext: {
             name: profile?.name || "Student",
             class: null,
@@ -101,7 +104,9 @@ const AIChat = () => {
           </div>
           <div>
             <h1 className="font-bold text-lg">BrainBuddy AI</h1>
-            <p className="text-xs text-muted-foreground">Your AI study partner</p>
+            <p className="text-xs text-muted-foreground">
+              Your AI study partner
+            </p>
           </div>
         </div>
         {messages.length > 0 && (
@@ -122,7 +127,8 @@ const AIChat = () => {
             <div className="text-center">
               <h2 className="text-xl font-bold mb-2">Hey! I'm BrainBuddy 🧠</h2>
               <p className="text-muted-foreground max-w-md">
-                Ask me anything — doubts, exam tips, study guidance. I'm here to help!
+                Ask me anything — doubts, exam tips, study guidance. I'm here to
+                help!
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg w-full">

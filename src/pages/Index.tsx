@@ -1,9 +1,15 @@
-import { useNavigate } from 'react-router-dom';
-import { Sparkles, MessageCircle, BookOpen, Trophy, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import Logo from '@/components/Logo';
-import { useAuth } from '@/contexts/AuthContext';
-import { useEffect } from 'react';
+import { useNavigate } from "react-router-dom";
+import {
+  Sparkles,
+  MessageCircle,
+  BookOpen,
+  Trophy,
+  ArrowRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Logo from "@/components/Logo";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -11,7 +17,7 @@ const Index = () => {
 
   useEffect(() => {
     if (!isLoading && user) {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   }, [user, isLoading, navigate]);
 
@@ -36,7 +42,7 @@ const Index = () => {
       <header className="relative z-10 container mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
           <Logo size="md" />
-          <Button variant="outline" onClick={() => navigate('/auth')}>
+          <Button variant="outline" onClick={() => navigate("/auth")}>
             Sign In
           </Button>
         </div>
@@ -47,12 +53,13 @@ const Index = () => {
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-fade-in">
             <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">Your AI Friend for Learning & Problem Solving</span>
+            <span className="text-sm font-medium">
+              Your AI Friend for Learning & Problem Solving
+            </span>
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-slide-up font-display">
-            Solve Any Problem with{' '}
-            <span className="neon-text">BrainBuddy</span>
+            Solve Any Problem with <span className="neon-text">BrainBuddy</span>
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto animate-slide-up">
@@ -65,7 +72,7 @@ const Index = () => {
               variant="neon"
               size="lg"
               className="text-lg"
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate("/auth")}
             >
               Start Learning Free
               <ArrowRight className="h-5 w-5 ml-2" />
@@ -74,7 +81,7 @@ const Index = () => {
               variant="outline"
               size="lg"
               className="text-lg"
-              onClick={() => navigate('/about')}
+              onClick={() => navigate("/about")}
             >
               Learn More
             </Button>
@@ -85,18 +92,19 @@ const Index = () => {
             {[
               {
                 icon: MessageCircle,
-                title: 'AI Chat',
-                description: 'Instant problem solving with your AI study buddy',
+                title: "AI Chat",
+                description: "Instant problem solving with your AI study buddy",
               },
               {
                 icon: BookOpen,
-                title: 'Smart Notes',
-                description: 'AI-generated comprehensive study notes from videos',
+                title: "Smart Notes",
+                description:
+                  "AI-generated comprehensive study notes from videos",
               },
               {
                 icon: Trophy,
-                title: 'Interactive Quizzes',
-                description: 'Test your knowledge and track your progress',
+                title: "Interactive Quizzes",
+                description: "Test your knowledge and track your progress",
               },
             ].map((feature, index) => (
               <div
@@ -108,7 +116,9 @@ const Index = () => {
                   <feature.icon className="h-6 w-6 text-primary-foreground" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground">{feature.description}</p>
+                <p className="text-sm text-muted-foreground">
+                  {feature.description}
+                </p>
               </div>
             ))}
           </div>
@@ -119,7 +129,7 @@ const Index = () => {
       <footer className="relative z-10 container mx-auto px-4 py-8 text-center text-muted-foreground text-sm">
         <p className="mb-2">© 2025 BrainBuddy. All rights reserved.</p>
         <button
-          onClick={() => navigate('/about')}
+          onClick={() => navigate("/about")}
           className="text-primary hover:underline"
         >
           About Us

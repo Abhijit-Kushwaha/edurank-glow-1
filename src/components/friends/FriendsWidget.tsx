@@ -1,12 +1,12 @@
-import { useNavigate } from 'react-router-dom';
-import { Users, MessageCircle, UserPlus, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { useFriends } from '@/hooks/useFriends';
-import { usePresence } from '@/hooks/usePresence';
-import OnlineIndicator from './OnlineIndicator';
-import { useMemo } from 'react';
+import { useNavigate } from "react-router-dom";
+import { Users, MessageCircle, UserPlus, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { useFriends } from "@/hooks/useFriends";
+import { usePresence } from "@/hooks/usePresence";
+import OnlineIndicator from "./OnlineIndicator";
+import { useMemo } from "react";
 
 const FriendsWidget = () => {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ const FriendsWidget = () => {
         const bOnline = isOnline(b.id) ? 1 : 0;
         return bOnline - aOnline;
       }),
-    [friends, isOnline]
+    [friends, isOnline],
   );
 
   return (
@@ -41,17 +41,25 @@ const FriendsWidget = () => {
             </Badge>
           )}
         </div>
-        <Button variant="ghost" size="sm" onClick={() => navigate('/friends')}>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/friends")}>
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
 
       {loading ? (
-        <div className="text-sm text-muted-foreground text-center py-4">Loading...</div>
+        <div className="text-sm text-muted-foreground text-center py-4">
+          Loading...
+        </div>
       ) : friends.length === 0 ? (
         <div className="text-center py-4">
-          <p className="text-sm text-muted-foreground mb-3">No friends yet. Invite someone!</p>
-          <Button variant="outline" size="sm" onClick={() => navigate('/friends')}>
+          <p className="text-sm text-muted-foreground mb-3">
+            No friends yet. Invite someone!
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/friends")}
+          >
             <UserPlus className="h-4 w-4 mr-1" /> Add Friends
           </Button>
         </div>
@@ -60,7 +68,9 @@ const FriendsWidget = () => {
           {sortedFriends.slice(0, 4).map((friend) => (
             <button
               key={friend.id}
-              onClick={() => navigate('/friends', { state: { chatWith: friend.id } })}
+              onClick={() =>
+                navigate("/friends", { state: { chatWith: friend.id } })
+              }
               className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors text-left"
             >
               <div className="relative">
@@ -86,7 +96,12 @@ const FriendsWidget = () => {
             </button>
           ))}
           {friends.length > 4 && (
-            <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => navigate('/friends')}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-xs"
+              onClick={() => navigate("/friends")}
+            >
               View all {friends.length} friends
             </Button>
           )}

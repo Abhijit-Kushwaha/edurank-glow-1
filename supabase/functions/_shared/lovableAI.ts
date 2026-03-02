@@ -1,9 +1,9 @@
 /**
  * Lovable AI Gateway Helper
- * 
+ *
  * Uses the Lovable AI Gateway (https://ai.gateway.lovable.dev/v1/chat/completions)
  * with the pre-configured LOVABLE_API_KEY.
- * 
+ *
  * Default model: google/gemini-3-flash-preview
  */
 
@@ -22,7 +22,7 @@ export interface LovableAIOptions {
 
 export async function callLovableAI(
   messages: LovableAIMessage[],
-  options: LovableAIOptions = {}
+  options: LovableAIOptions = {},
 ): Promise<string> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) {
@@ -59,7 +59,9 @@ export async function callLovableAI(
       throw new Error("Rate limit exceeded. Please try again later.");
     }
     if (response.status === 402) {
-      throw new Error("Payment required. Please add funds to your Lovable AI workspace.");
+      throw new Error(
+        "Payment required. Please add funds to your Lovable AI workspace.",
+      );
     }
     if (response.status === 401) {
       throw new Error("Invalid API key or authentication failed.");

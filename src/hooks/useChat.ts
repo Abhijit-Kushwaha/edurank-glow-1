@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface ChatMessage {
   id: string;
@@ -24,17 +24,17 @@ export const useChat = (friendUserId: string | null) => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('messages')
-        .select('*')
+        .from("messages")
+        .select("*")
         .or(
-          `and(sender_id.eq.${user.id},receiver_id.eq.${friendUserId}),and(sender_id.eq.${friendUserId},receiver_id.eq.${user.id})`
+          `and(sender_id.eq.${user.id},receiver_id.eq.${friendUserId}),and(sender_id.eq.${friendUserId},receiver_id.eq.${user.id})`,
         )
-        .order('created_at', { ascending: true })
+        .order("created_at", { ascending: true })
         .limit(100);
 
       if (error) throw error;
 
-      const mapped: ChatMessage[] = (data || []).map(m => ({
+      const mapped: ChatMessage[] = (data || []).map((m) => ({
         id: m.id,
         senderId: m.sender_id,
         receiverId: m.receiver_id,
@@ -48,18 +48,19 @@ export const useChat = (friendUserId: string | null) => {
       setMessages(mapped);
 
       // Mark unread messages as read
-      const unreadIds = data
-        ?.filter(m => m.receiver_id === user.id && !m.is_read)
-        .map(m => m.id) || [];
+      const unreadIds =
+        data
+          ?.filter((m) => m.receiver_id === user.id && !m.is_read)
+          .map((m) => m.id) || [];
 
       if (unreadIds.length > 0) {
         await supabase
-          .from('messages')
+          .from("messages")
           .update({ is_read: true })
-          .in('id', unreadIds);
+          .in("id", unreadIds);
       }
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      console.error("Error fetching messages:", error);
     } finally {
       setLoading(false);
     }
@@ -72,13 +73,13 @@ export const useChat = (friendUserId: string | null) => {
 
     // Subscribe to real-time messages
     const channel = supabase
-      .channel(`chat-${[user.id, friendUserId].sort().join('-')}`)
+      .channel(`chat-${[user.id, friendUserId].sort().join("-")}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
         },
         (payload) => {
           const msg = payload.new as any;
@@ -97,18 +98,18 @@ export const useChat = (friendUserId: string | null) => {
               isRead: msg.is_read,
               createdAt: msg.created_at,
             };
-            setMessages(prev => [...prev, newMsg]);
+            setMessages((prev) => [...prev, newMsg]);
 
             // Auto-mark as read if we're the receiver
             if (msg.receiver_id === user.id) {
               supabase
-                .from('messages')
+                .from("messages")
                 .update({ is_read: true })
-                .eq('id', msg.id)
+                .eq("id", msg.id)
                 .then(() => {});
             }
           }
-        }
+        },
       )
       .subscribe();
 
@@ -119,10 +120,14 @@ export const useChat = (friendUserId: string | null) => {
     };
   }, [user, friendUserId, fetchMessages]);
 
-  const sendMessage = async (content: string, messageType = 'text', sharedContent: any = null) => {
+  const sendMessage = async (
+    content: string,
+    messageType = "text",
+    sharedContent: any = null,
+  ) => {
     if (!user || !friendUserId || (!content.trim() && !sharedContent)) return;
     try {
-      const { error } = await supabase.from('messages').insert({
+      const { error } = await supabase.from("messages").insert({
         sender_id: user.id,
         receiver_id: friendUserId,
         content: content.trim() || null,
@@ -132,7 +137,7 @@ export const useChat = (friendUserId: string | null) => {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error("Error sending message:", error);
       throw error;
     }
   };

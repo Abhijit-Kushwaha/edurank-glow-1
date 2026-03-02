@@ -1,48 +1,66 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useStudyReminders, formatDaysOfWeek, formatTime, StudyReminder } from '@/hooks/useStudyReminders';
-import { Bell, Plus, Trash2, Loader2, Clock, BellOff } from 'lucide-react';
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  useStudyReminders,
+  formatDaysOfWeek,
+  formatTime,
+  StudyReminder,
+} from "@/hooks/useStudyReminders";
+import { Bell, Plus, Trash2, Loader2, Clock, BellOff } from "lucide-react";
 
 const DAYS_OPTIONS = [
-  { value: 1, label: 'Mon' },
-  { value: 2, label: 'Tue' },
-  { value: 3, label: 'Wed' },
-  { value: 4, label: 'Thu' },
-  { value: 5, label: 'Fri' },
-  { value: 6, label: 'Sat' },
-  { value: 0, label: 'Sun' },
+  { value: 1, label: "Mon" },
+  { value: 2, label: "Tue" },
+  { value: 3, label: "Wed" },
+  { value: 4, label: "Thu" },
+  { value: 5, label: "Fri" },
+  { value: 6, label: "Sat" },
+  { value: 0, label: "Sun" },
 ];
 
 export const StudyRemindersCard = () => {
-  const { reminders, loading, createReminder, deleteReminder, toggleReminder } = useStudyReminders();
+  const { reminders, loading, createReminder, deleteReminder, toggleReminder } =
+    useStudyReminders();
   const [open, setOpen] = useState(false);
-  const [newTime, setNewTime] = useState('18:00');
+  const [newTime, setNewTime] = useState("18:00");
   const [newDays, setNewDays] = useState<number[]>([1, 2, 3, 4, 5]);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
   const handleCreate = async () => {
     setSaving(true);
-    const success = await createReminder(newTime, newDays, newMessage || undefined);
+    const success = await createReminder(
+      newTime,
+      newDays,
+      newMessage || undefined,
+    );
     setSaving(false);
     if (success) {
       setOpen(false);
-      setNewTime('18:00');
+      setNewTime("18:00");
       setNewDays([1, 2, 3, 4, 5]);
-      setNewMessage('');
+      setNewMessage("");
     }
   };
 
   const toggleDay = (day: number) => {
-    setNewDays(prev =>
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day].sort()
+    setNewDays((prev) =>
+      prev.includes(day)
+        ? prev.filter((d) => d !== day)
+        : [...prev, day].sort(),
     );
   };
 
@@ -80,20 +98,20 @@ export const StudyRemindersCard = () => {
                   <Input
                     type="time"
                     value={newTime}
-                    onChange={e => setNewTime(e.target.value)}
+                    onChange={(e) => setNewTime(e.target.value)}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Days</Label>
                   <div className="flex flex-wrap gap-2">
-                    {DAYS_OPTIONS.map(day => (
+                    {DAYS_OPTIONS.map((day) => (
                       <label
                         key={day.value}
                         className={`flex items-center justify-center w-10 h-10 rounded-full cursor-pointer transition-colors ${
                           newDays.includes(day.value)
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
                         }`}
                       >
                         <input
@@ -113,7 +131,7 @@ export const StudyRemindersCard = () => {
                   <Input
                     placeholder="Time to study! Keep your streak going."
                     value={newMessage}
-                    onChange={e => setNewMessage(e.target.value)}
+                    onChange={(e) => setNewMessage(e.target.value)}
                   />
                 </div>
 
@@ -139,10 +157,12 @@ export const StudyRemindersCard = () => {
           <div className="text-center py-4">
             <BellOff className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">No reminders set</p>
-            <p className="text-xs text-muted-foreground">Add a reminder to stay on track</p>
+            <p className="text-xs text-muted-foreground">
+              Add a reminder to stay on track
+            </p>
           </div>
         ) : (
-          reminders.map(reminder => (
+          reminders.map((reminder) => (
             <ReminderItem
               key={reminder.id}
               reminder={reminder}
@@ -175,13 +195,17 @@ const ReminderItem = ({ reminder, onToggle, onDelete }: ReminderItemProps) => {
     <div
       className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
         reminder.is_enabled
-          ? 'bg-muted/30 border-border/50'
-          : 'bg-muted/10 border-border/30 opacity-60'
+          ? "bg-muted/30 border-border/50"
+          : "bg-muted/10 border-border/30 opacity-60"
       }`}
     >
       <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-lg ${reminder.is_enabled ? 'bg-primary/10' : 'bg-muted/30'}`}>
-          <Clock className={`h-4 w-4 ${reminder.is_enabled ? 'text-primary' : 'text-muted-foreground'}`} />
+        <div
+          className={`p-2 rounded-lg ${reminder.is_enabled ? "bg-primary/10" : "bg-muted/30"}`}
+        >
+          <Clock
+            className={`h-4 w-4 ${reminder.is_enabled ? "text-primary" : "text-muted-foreground"}`}
+          />
         </div>
         <div>
           <p className="font-medium text-sm text-foreground">
@@ -193,10 +217,7 @@ const ReminderItem = ({ reminder, onToggle, onDelete }: ReminderItemProps) => {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <Switch
-          checked={reminder.is_enabled}
-          onCheckedChange={onToggle}
-        />
+        <Switch checked={reminder.is_enabled} onCheckedChange={onToggle} />
         <Button
           variant="ghost"
           size="icon"
