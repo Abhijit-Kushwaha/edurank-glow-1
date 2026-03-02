@@ -5,25 +5,25 @@ project_id = "tahfemcxtbbixsvsurfq"
 # before function execution, reducing attack surface
 
 [functions.generate-notes]
-verify_jwt = true
+verify_jwt = false
 
 [functions.find-video]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-quiz]
-verify_jwt = true
+verify_jwt = false
 
 [functions.adaptive-question]
-verify_jwt = true
+verify_jwt = false
 
 [functions.analyze-weakness]
-verify_jwt = true
+verify_jwt = false
 
 [functions.fix-weak-areas-quiz]
-verify_jwt = true
+verify_jwt = false
 
 [functions.ai-chat]
-verify_jwt = true
+verify_jwt = false
 
 [functions.ai-notes-gen]
-verify_jwt = true
+verify_jwt = false
