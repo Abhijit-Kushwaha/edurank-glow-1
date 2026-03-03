@@ -12,12 +12,14 @@ import {
   Loader2,
   Trash2,
   Search,
+  Star,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFilters } from "@/contexts/FilterContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useRateLimiter } from "@/hooks/useRateLimiter";
 import WeakTopicCards from "@/components/WeakTopicCards";
@@ -26,6 +28,7 @@ import { StudyRemindersCard } from "@/components/dashboard/StudyRemindersCard";
 import { DailyChallengesCard } from "@/components/dashboard/DailyChallengesCard";
 import { StreakFreezeCard } from "@/components/dashboard/StreakFreezeCard";
 import FriendsWidget from "@/components/friends/FriendsWidget";
+import { FilterBar } from "@/components/dashboard/FilterBar";
 
 interface Todo {
   id: string;
@@ -39,6 +42,7 @@ interface Todo {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const { filters } = useFilters();
   const { canMakeRequest, isRateLimited } = useRateLimiter();
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodoTitle, setNewTodoTitle] = useState("");
@@ -105,12 +109,21 @@ const Dashboard = () => {
       try {
         const { data: videoData, error: videoError } =
           await supabase.functions.invoke("find-video", {
-            body: { topic: newTodoTitle.trim() },
+            body: {
+              topic: newTodoTitle.trim(),
+              filters: {
+                class: filters.class,
+                subject: filters.subject,
+                board: filters.board,
+                language: filters.language,
+              },
+            },
           });
 
         if (!videoError && videoData && !videoData.error) {
           videoId = videoData.videoId;
-          videoDescription = `${videoData.title} by ${videoData.channel} - ${videoData.reason}`;
+          const qualityLabel = videoData.quality_score ? ` (Quality: ${videoData.quality_score}/100)` : "";
+          videoDescription = `${videoData.title} by ${videoData.channel}${qualityLabel}`;
           subtasksData = videoData.subtasks || [];
         }
       } catch (aiError) {
@@ -302,6 +315,9 @@ const Dashboard = () => {
             </h2>
           </div>
 
+          {/* Filter Bar */}
+          <FilterBar />
+
           <div className="space-y-3">
             {todos.length === 0 && !showInput && (
               <div className="glass-card rounded-xl p-8 text-center">
@@ -350,8 +366,8 @@ const Dashboard = () => {
                     )}
                     {todo.video_id && (
                       <span className="text-xs text-primary flex items-center gap-1 mt-2">
-                        <Sparkles className="h-3 w-3" />
-                        AI-recommended video attached
+                        <Star className="h-3 w-3" />
+                        AI quality-scored video attached
                       </span>
                     )}
                   </div>
