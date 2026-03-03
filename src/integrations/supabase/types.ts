@@ -1155,6 +1155,66 @@ export type Database = {
           },
         ]
       }
+      video_cache: {
+        Row: {
+          channel: string
+          created_at: string
+          duration: string | null
+          expires_at: string
+          filters: Json
+          id: string
+          quality_scores: Json
+          recommended_grade: string | null
+          search_key: string
+          strengths: Json | null
+          subtasks_data: Json | null
+          summary: string | null
+          thumbnail: string | null
+          title: string
+          topic: string
+          video_id: string
+          weaknesses: Json | null
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          duration?: string | null
+          expires_at?: string
+          filters?: Json
+          id?: string
+          quality_scores?: Json
+          recommended_grade?: string | null
+          search_key: string
+          strengths?: Json | null
+          subtasks_data?: Json | null
+          summary?: string | null
+          thumbnail?: string | null
+          title: string
+          topic: string
+          video_id: string
+          weaknesses?: Json | null
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          duration?: string | null
+          expires_at?: string
+          filters?: Json
+          id?: string
+          quality_scores?: Json
+          recommended_grade?: string | null
+          search_key?: string
+          strengths?: Json | null
+          subtasks_data?: Json | null
+          summary?: string | null
+          thumbnail?: string | null
+          title?: string
+          topic?: string
+          video_id?: string
+          weaknesses?: Json | null
+        }
+        Relationships: []
+      }
       video_progress: {
         Row: {
           completed: boolean

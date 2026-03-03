@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 export interface Filters {
   class: string | null; // "Class 6" to "Class 12" or "Competitive Exams (JEE/NEET)"
   subject: string | null;
-  board: "CBSE" | "ICSE" | "State Board" | "IB" | "IGCSE" | null;
+  board: "CBSE" | "ICSE" | "UP Board" | "State Board" | "IB" | "IGCSE" | null;
   language: string | null; // e.g., "English", "Hindi", "Tamil"
   videoType:
     | "Animated"
@@ -61,7 +61,7 @@ const SUBJECTS_BY_CLASS: Record<string, string[]> = {
   ],
 };
 
-const BOARDS = ["CBSE", "ICSE", "State Board", "IB", "IGCSE"] as const;
+const BOARDS = ["CBSE", "ICSE", "UP Board", "State Board", "IB", "IGCSE"] as const;
 const LANGUAGES = [
   "English",
   "Hindi",
