@@ -1,155 +1,79 @@
-# BrainBuddy Rebrand + Remove Calling Feature
 
-This plan covers two major changes: (1) removing all video/audio calling functionality while keeping chat, and (2) a complete rebrand from "EduRank" to "BrainBuddy" with a new color system and redesigned UI.
 
----
+## Advanced Filter System + AI-Driven Video Quality Scoring
 
-## Part 1: Remove Calling Functionality
+### Current State
+- `FilterContext` exists with Class/Subject/Board/Language/VideoType/Duration options but is **never used** by any component
+- `find-video` edge function currently ranks videos by **engagement score** (views, likes, popularity) — the exact opposite of what's requested
+- Dashboard's "Add Task" flow sends only `topic` to `find-video` with no filter data
+- No video metadata caching table exists
+- No transcript analysis occurs
 
-### Files to Delete
+### Plan
 
-- `src/hooks/useVideoCall.ts` -- entire WebRTC call hook
-- `src/components/friends/VideoCallDialog.tsx` -- call UI dialog
-- `src/components/friends/IncomingCallDialog.tsx` -- incoming call UI
+#### 1. Database: Add video cache table
 
-### Files to Edit (remove call references)
+Create a `video_cache` table to store AI-evaluated video results and prevent redundant API calls:
+- `id`, `search_key` (hash of topic+filters), `topic`, `filters` (jsonb), `video_id`, `quality_scores` (jsonb with the full scoring breakdown), `title`, `channel`, `thumbnail`, `duration`, `summary`, `strengths` (jsonb), `weaknesses` (jsonb), `recommended_grade`, `created_at`, `expires_at` (TTL for cache, e.g. 7 days)
+- RLS: authenticated users can SELECT; INSERT via edge function using service role
+- Index on `search_key` for fast cache lookups
 
-- **`src/pages/Friends.tsx`** -- Remove `useVideoCall` import/usage, remove Video/Phone buttons from friend list and chat header, remove `VideoCallDialog` and `IncomingCallDialog` renders, remove `callDialogOpen` state and `handleStartCall`/`handleAnswerCall` functions
-- **`package.json`** -- Remove `@100mslive/react-sdk` dependency (no longer needed)
+#### 2. Edge Function: Rewrite `find-video` scoring logic
 
-### What Stays
+Replace the engagement-based ranking with AI-driven educational quality scoring:
 
-- Chat (`ChatWindow`, `useChat`, `ShareContentDialog`) -- fully preserved
-- Friend management (`useFriends`, `FriendSearch`, `InviteFriend`) -- fully preserved
-- Online presence (`usePresence`, `OnlineIndicator`) -- fully preserved
-- `FriendsWidget` on dashboard -- preserved (already chat-only)
+- **Accept filters** from request body: `{ topic, filters: { class, subject, board, language } }`
+- **Cache check first**: Query `video_cache` by `search_key` hash. If fresh result exists, return it immediately
+- **YouTube search**: Build filter-aware search query (e.g. "CBSE Class 10 Physics Newton's Laws Hindi tutorial explained")
+- **Fetch transcripts**: Use YouTube captions API (`/api/timedtext`) for top 5 candidates
+- **AI quality evaluation**: Send each video's title + description + transcript excerpt to Lovable AI with a structured scoring prompt:
+  - Concept clarity (20pts), Depth (15pts), Logical structure (10pts), Accuracy confidence (15pts), Syllabus relevance (15pts), Examples quality (10pts), Subtopic coverage (10pts), Comprehension simplicity (5pts)
+  - Penalize clickbait, filler, shallow content
+  - Reward step-by-step explanations, definitions, real-world examples
+  - Use tool calling to extract structured JSON output
+- **Return top 1 best match** with full quality score breakdown
+- **Cache the result** in `video_cache`
+- Keep subtask breakdown logic but also apply quality scoring to subtask videos
 
----
+#### 3. Frontend: Filter UI on Dashboard
 
-## Part 2: Full Rebrand to BrainBuddy
+Add a collapsible filter bar above the "Add Task" input:
+- Dropdowns for: Class, Subject (dynamic based on class), Board (add "UP Board" to options), Language
+- Use existing `FilterContext` — wire `useFilters()` into Dashboard
+- Pass selected filters to `find-video` when adding a task
+- Show the quality score and grade recommendation on task cards
 
-### Brand Identity
+#### 4. FilterContext Updates
 
-- **Name**: BrainBuddy (everywhere)
-- **Tagline**: "BrainBuddy -- Your AI Friend for Learning and Problem Solving"
-- **Personality**: Friendly, student-focused, AI-powered, clean
+- Add "UP Board" to the boards list (requested in spec alongside CBSE/ICSE)
+- No other structural changes needed — the context is already well-designed
 
-### New Color System
+#### 5. Response Format
 
-| Token            | Value              | Usage                        |
-| ---------------- | ------------------ | ---------------------------- |
-| Primary Blue     | #2563EB            | Buttons, links, accents      |
-| Secondary Purple | #7C3AED            | Secondary actions, gradients |
-| Accent Pink      | #EC4899            | AI buddy highlights only     |
-| Accent Cyan      | #22D3EE            | Progress, hover, animations  |
-| Dark Background  | #0B0F19            | Page background              |
-| Card Surface     | #111827            | Cards, panels                |
-| Text Gray        | #9CA3AF            | Muted text                   |
-| White            | #FFFFFF            | Primary text                 |
-| Primary Gradient | #2563EB to #7C3AED | Hero, CTAs, neon text        |
+The edge function returns:
+```json
+{
+  "video_id": "...",
+  "quality_score": 87,
+  "clarity_score": 18,
+  "depth_score": 13,
+  "accuracy_confidence": 14,
+  "syllabus_match_score": 12,
+  "knowledge_density_score": 8,
+  "summary": "...",
+  "strengths": ["Step-by-step derivation", "Clear diagrams"],
+  "weaknesses": ["Missing practice problems"],
+  "recommended_for_grade": "Class 10",
+  "subtasks": [...]
+}
+```
 
-### Files to Update
+### Technical Details
 
-#### Global Theme (`src/index.css`)
+- **Cache key**: SHA-256 hash of `topic + class + subject + board + language` (normalized lowercase)
+- **Cache TTL**: 7 days — after which re-evaluation occurs
+- **Transcript fetching**: YouTube auto-captions via `https://www.youtube.com/api/timedtext?v={id}&lang={lang}`. If unavailable, score based on title+description only with reduced confidence
+- **Rate limiting**: Existing rate limit (10/hr, 50/day) remains. Cache hits don't count against limits
+- **YouTube API quota**: Reduced from fetching 5 videos per subtask to 3, since we only need top 1 quality match
+- **AI calls**: One batch evaluation call per search (all 5 candidates in one prompt) to minimize API usage
 
-- Replace all CSS custom properties (both `:root` and `.dark`) with the new blue-purple color palette
-- Update neon glow colors from green to blue
-- Update gradient definitions to use blue-to-purple
-- Update scrollbar styling to match new primary
-
-#### Tailwind Config (`tailwind.config.ts`)
-
-- Update keyframe glow colors to match new blue primary
-- No structural changes needed (colors come from CSS vars)
-
-#### HTML Meta (`index.html`)
-
-- Title: "BrainBuddy -- Your AI Friend for Learning and Problem Solving"
-- Update all meta descriptions, OG tags, twitter tags
-- Update author to "BrainBuddy"
-- Update favicon references
-- Update canonical URL reference
-
-#### Logo Component (`src/components/Logo.tsx`)
-
-- Change text from "EduRank" to "BrainBuddy"
-- Update icon composition to feel more friendly/buddy-like (e.g., use `Brain` + `Sparkles` icons)
-
-#### Landing Page (`src/pages/Index.tsx`)
-
-- Headline: "Solve Any Problem with BrainBuddy"
-- Subtext: "Chat, learn, and grow with your AI study partner"
-- CTA: "Start Learning Free"
-- Update feature cards:
-  1. AI Chat -- Instant problem solving
-  2. Smart Notes -- AI-generated study notes
-  3. Interactive Quizzes -- Test and track progress
-- Update footer copyright to BrainBuddy
-- Remove "Watch Demo" button or keep as secondary CTA
-
-#### Auth Page (`src/pages/Auth.tsx`)
-
-- Update feature preview labels at bottom if needed
-- Uses Logo component so name updates automatically
-
-#### About Page (`src/pages/About.tsx`)
-
-- Change "About EduRank" to "About BrainBuddy"
-- Update description text to reflect BrainBuddy identity
-
-#### Profile Page (`src/pages/Profile.tsx`)
-
-- Change "About EduRank" button text to "About BrainBuddy"
-
-#### Study Reminders (`src/hooks/useStudyReminders.ts`)
-
-- Change notification title from "EduRank Study Reminder" to "BrainBuddy Study Reminder"
-
-#### Button Variants (`src/components/ui/button.tsx`)
-
-- Update `neon` variant glow to use new blue-purple gradient (handled via CSS vars, but verify)
-
-#### Friends Page (`src/pages/Friends.tsx`)
-
-- Already uses Logo component, will update automatically after Logo change
-
-### Navigation Structure
-
-The current nav works well. No major structural changes are needed since there is no separate "Video Call" or "Audio Call" page to remove. The calling was embedded in the Friends page only.
-
----
-
-## Technical Details
-
-### Color Conversion (HSL values for CSS custom properties)
-
-The new dark theme values will be derived from the provided hex colors:
-
-- `--background`: ~225 40% 5% (from #0B0F19)
-- `--card`: ~222 30% 10% (from #111827)
-- `--primary`: ~217 91% 53% (from #2563EB)
-- `--secondary`: ~263 70% 58% (from #7C3AED)
-- `--accent` (pink): ~330 81% 60% (from #EC4899)
-- `--muted-foreground`: ~218 11% 65% (from #9CA3AF)
-- Gradient: `linear-gradient(135deg, #2563EB, #7C3AED)`
-
-### Light theme
-
-Will also be updated to use blue/purple as the base palette instead of green, ensuring consistency.
-
-### Animations
-
-- Glow effects transition from green-teal to blue-purple
-- Pulse animations keep the same timing, just new colors
-
-### What is NOT changing
-
-- Database schema (no migration needed)
-- Chat functionality
-- Quiz system
-- Notes system
-- Video player
-- Authentication flow
-- Dashboard layout structure
-- Leaderboard
-- All backend edge functions
