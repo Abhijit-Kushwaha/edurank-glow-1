@@ -2,6 +2,13 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Mail, Users, Sparkles, Heart, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/Logo";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+import Roadmap from "@/assets/BRAIN BUDDY Development Roadmap (1) 1.png";
 
 const teamMembers = [
   { name: "Abhijit Kushwaha", role: "Backend Coder & Integrator" },
@@ -180,11 +187,24 @@ const About = () => {
             </div>
             <h2 className="text-xl font-semibold">Our Roadmap</h2>
           </div>
-          <div className="rounded-xl overflow-hidden border border-border/50">
-            <p className="text-sm text-muted-foreground text-center py-8">
-              Roadmap image coming soon — upload via the profile or admin panel.
-            </p>
-          </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <div className="rounded-xl overflow-hidden border border-border/50 cursor-pointer">
+                <img
+                  src={Roadmap}
+                  alt="Brain Buddy Development Roadmap"
+                  className="w-full"
+                />
+              </div>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl">
+              <img
+                src={Roadmap}
+                alt="Brain Buddy Development Roadmap"
+                className="w-full"
+              />
+            </DialogContent>
+          </Dialog>
         </section>
       </main>
     </div>
