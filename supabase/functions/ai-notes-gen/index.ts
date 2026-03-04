@@ -1,34 +1,25 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit, logRateLimitRequest } from "../_shared/rateLimit.ts";
-import { getCORSHeaders, handleCORSPreflight } from "../_shared/cors.ts";
+import { preflightResponse, withCors, withCorsError } from "../_shared/cors.ts";
 
 const LOVABLE_AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 function detectSubjectType(subject?: string, topic?: string): string {
   const combined = `${subject || ""} ${topic || ""}`.toLowerCase();
-  if (/math|algebra|geometry|calculus|trigonometry|equation/.test(combined))
-    return "numerical";
-  if (/history|civics|geography|political|economics/.test(combined))
-    return "theory-heavy";
+  if (/math|algebra|geometry|calculus|trigonometry|equation/.test(combined)) return "numerical";
+  if (/history|civics|geography|political|economics/.test(combined)) return "theory-heavy";
   if (/physics|chemistry|biology|science/.test(combined)) return "conceptual";
   return "general";
 }
 
 serve(async (req) => {
-  const preflightResponse = handleCORSPreflight(req);
-  if (preflightResponse) return preflightResponse;
-
-  const corsHeaders = getCORSHeaders(req.headers.get("origin"));
+  const preflight = preflightResponse(req);
+  if (preflight) return preflight;
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!authHeader) return withCorsError(req, 401, "Unauthorized");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -36,46 +27,18 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } },
     );
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    if (userError || !user) return withCorsError(req, 401, "Unauthorized");
 
-    // Rate limit check
     const rateLimitResult = await checkRateLimit(supabaseClient, {
-      operation: "ai-notes-gen",
-      userId: user.id,
-      limitsPerHour: 5,
-      limitsPerDay: 20,
+      operation: "ai-notes-gen", userId: user.id, limitsPerHour: 5, limitsPerDay: 20,
     });
-    if (!rateLimitResult.allowed) {
-      return new Response(JSON.stringify({ error: rateLimitResult.message }), {
-        status: 429,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!rateLimitResult.allowed) return withCorsError(req, 429, rateLimitResult.message || "Rate limit exceeded");
 
     const { topic, subject, classLevel } = await req.json();
 
-    if (!topic || typeof topic !== "string" || topic.trim().length === 0) {
-      return new Response(JSON.stringify({ error: "Topic is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (topic.length > 500) {
-      return new Response(JSON.stringify({ error: "Topic too long" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!topic || typeof topic !== "string" || topic.trim().length === 0) return withCorsError(req, 400, "Topic is required");
+    if (topic.length > 500) return withCorsError(req, 400, "Topic too long");
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -83,16 +46,9 @@ serve(async (req) => {
     const subjectType = detectSubjectType(subject, topic);
 
     let subjectHint = "";
-    if (subjectType === "numerical") {
-      subjectHint =
-        "Focus on step-by-step solutions, formulas, and worked examples.";
-    } else if (subjectType === "theory-heavy") {
-      subjectHint =
-        "Focus on timelines, causes & effects, key dates, and important facts.";
-    } else if (subjectType === "conceptual") {
-      subjectHint =
-        "Focus on concepts, diagrams explanation (in text), processes, and scientific principles.";
-    }
+    if (subjectType === "numerical") subjectHint = "Focus on step-by-step solutions, formulas, and worked examples.";
+    else if (subjectType === "theory-heavy") subjectHint = "Focus on timelines, causes & effects, key dates, and important facts.";
+    else if (subjectType === "conceptual") subjectHint = "Focus on concepts, diagrams explanation (in text), processes, and scientific principles.";
 
     const systemPrompt = `You are BrainBuddy Notes Engine — an ultra-fast, exam-focused notes generator for students.
 
@@ -131,56 +87,30 @@ Topic: "${topic.trim()}"${subject ? `\nSubject: ${subject}` : ""}${classLevel ? 
 
     const response = await fetch(LOVABLE_AI_GATEWAY, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
+        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
         temperature: 0.5,
         max_tokens: 3000,
       }),
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required" }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      if (response.status === 429) return withCorsError(req, 429, "Rate limit exceeded");
+      if (response.status === 402) return withCorsError(req, 402, "Payment required");
       throw new Error(`AI gateway error: ${response.status}`);
     }
 
     const data = await response.json();
     const notes = data.choices?.[0]?.message?.content || "";
-
     if (!notes) throw new Error("No notes generated");
 
-    // Log successful request
     await logRateLimitRequest(supabaseClient, user.id, "ai-notes-gen", true);
 
-    return new Response(JSON.stringify({ notes }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return withCors(req, { json: { notes } });
   } catch (error) {
     console.error("ai-notes-gen error:", error);
-    return new Response(
-      JSON.stringify({ error: "An error occurred generating notes" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
-    );
+    return withCorsError(req, 500, "An error occurred generating notes");
   }
 });
