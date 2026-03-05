@@ -391,7 +391,7 @@ const Notes = () => {
                     className={`flex gap-3 p-4 glass-card rounded-xl hover:neon-glow transition-all duration-300 ${
                       weakTopic
                         ? "border-l-4 border-destructive bg-destructive/5"
-                        e
+                        : ""
                     }`}
                   >
                     <div
