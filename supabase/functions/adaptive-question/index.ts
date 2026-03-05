@@ -108,6 +108,6 @@ serve(async (req) => {
     return withCors(req, { json: { question, difficulty: newDifficulty } });
   } catch (error) {
     console.error("Error in adaptive-question function:", error);
-    return withCorsError(req, 500, error instanceof Error ? error.message : "Unknown error");
+    return withCorsError(req, 500, "An internal error occurred");
   }
 });

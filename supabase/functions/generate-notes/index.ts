@@ -149,6 +149,6 @@ serve(async (req) => {
     return withCors(req, { json: { notes: generatedNotes, saved: true, noteId: savedNote.id } });
   } catch (error) {
     console.error("Error in generate-notes function:", error);
-    return withCorsError(req, 500, error instanceof Error ? error.message : "Unknown error");
+    return withCorsError(req, 500, "An internal error occurred");
   }
 });

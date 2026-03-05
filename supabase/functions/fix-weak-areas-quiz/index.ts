@@ -78,6 +78,6 @@ serve(async (req) => {
     return withCors(req, { json: { questions } });
   } catch (error) {
     console.error("Error in fix-weak-areas-quiz:", error);
-    return withCorsError(req, 500, error instanceof Error ? error.message : "Unknown error");
+    return withCorsError(req, 500, "An internal error occurred");
   }
 });

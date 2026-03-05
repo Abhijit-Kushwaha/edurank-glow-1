@@ -285,6 +285,6 @@ serve(async (req) => {
     return withCors(req, { json: { success: true, weakTopics, recommendationsAdded: recommendations.length } });
   } catch (error) {
     console.error("Error in analyze-weakness function:", error);
-    return withCorsError(req, 500, error instanceof Error ? error.message : "Unknown error");
+    return withCorsError(req, 500, "An internal error occurred");
   }
 });
