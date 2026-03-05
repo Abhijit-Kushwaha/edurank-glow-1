@@ -16,7 +16,7 @@ export default function StudentOverview() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm text-muted-foreground">Streak</CardTitle>
-            <Flame className="h-4 w-4 text-orange-400" />
+            <Flame className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent><div className="text-3xl font-bold">{profile?.streak || 0}</div></CardContent>
         </Card>
