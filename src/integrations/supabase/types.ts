@@ -1396,6 +1396,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_streak_protection: {
+        Args: { p_amount?: number; p_user_id: string }
+        Returns: boolean
+      }
       assign_daily_challenges: {
         Args: { p_user_id: string }
         Returns: {
@@ -1464,6 +1468,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      use_streak_protection: { Args: { p_user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
