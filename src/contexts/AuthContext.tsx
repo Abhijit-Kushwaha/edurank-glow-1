@@ -12,6 +12,8 @@ interface Profile {
   id: string;
   user_id: string;
   name: string | null;
+  full_name: string | null;
+  email: string | null;
   avatar_url: string | null;
   total_xp: number;
   xp_multiplier: number;
@@ -19,6 +21,15 @@ interface Profile {
   leaderboard_visibility: string;
   profile_highlights: unknown;
   unlocked_modes: unknown;
+  role: string;
+  org_id: string | null;
+  department_id: string | null;
+  is_independent: boolean;
+  status: string;
+  streak: number;
+  xp: number;
+  rank: string;
+  level: number;
 }
 
 interface AuthContextType {
