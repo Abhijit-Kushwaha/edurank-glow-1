@@ -51,15 +51,14 @@ export const useStreakFreeze = () => {
         return false;
       }
 
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({
-          streak_protections: profile.streak_protections - 1,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user.id);
+      const { data: result, error: rpcError } = await supabase
+        .rpc("use_streak_protection", { p_user_id: user.id });
 
-      if (updateError) throw updateError;
+      if (rpcError) throw rpcError;
+      if (!result) {
+        toast.error("Failed to use streak protection");
+        return false;
+      }
 
       setStreakProtections(profile.streak_protections - 1);
       toast.success("Streak freeze activated! Your streak is protected.");
@@ -88,15 +87,14 @@ export const useStreakFreeze = () => {
 
         const newAmount = (profile?.streak_protections || 0) + amount;
 
-        const { error: updateError } = await supabase
-          .from("profiles")
-          .update({
-            streak_protections: newAmount,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("user_id", user.id);
+        const { data: result, error: rpcError } = await supabase
+          .rpc("add_streak_protection", { p_user_id: user.id, p_amount: amount });
 
-        if (updateError) throw updateError;
+        if (rpcError) throw rpcError;
+        if (!result) {
+          toast.error("Failed to add streak protection");
+          return false;
+        }
 
         setStreakProtections(newAmount);
         toast.success(

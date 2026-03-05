@@ -268,7 +268,7 @@ const Quiz = () => {
     if (!user || !quizId) return;
 
     const score = calculateScore();
-    const percentage = (score / questions.length) * 100;
+    const percentage = Math.round(((score / questions.length) * 100) * 10) / 10;
     const earned = calculateCoinsEarned();
     setCoinsEarned(earned);
 
