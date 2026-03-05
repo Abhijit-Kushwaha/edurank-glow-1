@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 
 import Roadmap from "@/assets/BRAIN BUDDY Development Roadmap (1) 1.png";
+import AbhijitImage from "@/assets/Core Team pic/Abhijit Kushwaha.jpg";
 
 const teamMembers = [
   { name: "Abhijit Kushwaha", role: "Backend Coder & Integrator" },
@@ -69,13 +70,21 @@ const About = () => {
                 className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-primary font-semibold">
-                      {member.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </span>
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                    {member.name === "Abhijit Kushwaha" ? (
+                      <img
+                        src={AbhijitImage}
+                        alt="Abhijit Kushwaha"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-primary font-semibold">
+                        {member.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </span>
+                    )}
                   </div>
                   <div>
                     <p className="font-medium">{member.name}</p>
