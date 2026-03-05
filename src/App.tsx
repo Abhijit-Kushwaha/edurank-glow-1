@@ -25,6 +25,7 @@ import AIChat from "./pages/AIChat";
 import AINotes from "./pages/AINotes";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import QuizProcessingPage from "./pages/QuizProcessing";
 
 const queryClient = new QueryClient();
 
@@ -93,6 +94,14 @@ const App = () => (
                 element={
                   <ProtectedWithLayout>
                     <Notes />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/quiz/processing"
+                element={
+                  <ProtectedWithLayout>
+                    <QuizProcessingPage />
                   </ProtectedWithLayout>
                 }
               />
