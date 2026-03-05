@@ -1,8 +1,5 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  Download,
   Share2,
   CheckCircle,
   Sparkles,
@@ -11,6 +8,7 @@ import {
   AlertCircle,
   AlertTriangle,
   Brain,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,6 +17,8 @@ import Logo from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import MicroQuizPopup from "@/components/MicroQuizPopup";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface ParsedNotes {
   title: string;
@@ -216,16 +216,54 @@ const Notes = () => {
   };
 
   const handleDownload = () => {
-    const blob = new Blob([rawNotes], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${todoTitle || "notes"}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success("Notes downloaded!");
+    const input = document.getElementById("notes-content");
+    if (input) {
+      toast.info("Generating PDF...");
+      html2canvas(input, {
+        onclone: (document) => {
+          document.getElementById("notes-content")!.style.color = "black";
+        },
+      }).then((canvas) => {
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const ratio = canvasWidth / canvasHeight;
+        const imgHeight = pdfWidth / ratio;
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
+          heightLeft -= pdfHeight;
+        }
+
+        pdf.addPage();
+        pdf.setFontSize(10);
+        pdf.text(
+          "© 2026 BrainBuddy. All rights reserved.",
+          pdfWidth / 2,
+          pdfHeight - 20,
+          { align: "center" },
+        );
+        pdf.text(
+          "https://brainbuddy-glow.vercel.app/",
+          pdfWidth / 2,
+          pdfHeight - 15,
+          { align: "center" },
+        );
+
+        pdf.save("brainbuddy_notes.pdf");
+        toast.success("PDF Downloaded!");
+      });
+    }
   };
 
   const handleShare = () => {
@@ -278,7 +316,7 @@ const Notes = () => {
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleDownload}>
               <Download className="h-4 w-4 mr-1" />
-              Save
+              Download
             </Button>
             <Button variant="outline" size="sm" onClick={handleShare}>
               <Share2 className="h-4 w-4 mr-1" />
@@ -288,7 +326,10 @@ const Notes = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-3xl">
+      <main
+        id="notes-content"
+        className="container mx-auto px-4 py-6 max-w-3xl"
+      >
         {/* Weak Topics Alert */}
         {weakTopics.length > 0 && (
           <div className="mb-6 p-4 glass-card rounded-xl border border-destructive/30 bg-destructive/5 animate-fade-in">
@@ -350,7 +391,7 @@ const Notes = () => {
                     className={`flex gap-3 p-4 glass-card rounded-xl hover:neon-glow transition-all duration-300 ${
                       weakTopic
                         ? "border-l-4 border-destructive bg-destructive/5"
-                        : ""
+                        e
                     }`}
                   >
                     <div
@@ -411,7 +452,9 @@ const Notes = () => {
                 >
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <h3
-                      className={`text-lg font-semibold ${weakTopic ? "text-destructive" : "neon-text"}`}
+                      className={`text-lg font-semibold ${
+                        weakTopic ? "text-destructive" : "neon-text"
+                      }`}
                     >
                       {section.title}
                     </h3>
