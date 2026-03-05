@@ -87,15 +87,14 @@ export const useStreakFreeze = () => {
 
         const newAmount = (profile?.streak_protections || 0) + amount;
 
-        const { error: updateError } = await supabase
-          .from("profiles")
-          .update({
-            streak_protections: newAmount,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("user_id", user.id);
+        const { data: result, error: rpcError } = await supabase
+          .rpc("add_streak_protection", { p_user_id: user.id, p_amount: amount });
 
-        if (updateError) throw updateError;
+        if (rpcError) throw rpcError;
+        if (!result) {
+          toast.error("Failed to add streak protection");
+          return false;
+        }
 
         setStreakProtections(newAmount);
         toast.success(
