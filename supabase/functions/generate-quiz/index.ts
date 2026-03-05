@@ -155,6 +155,6 @@ serve(async (req) => {
     return withCors(req, { json: { quiz: questions, quizId: savedQuiz.id, saved: true } });
   } catch (error) {
     console.error("Error in generate-quiz function:", error);
-    return withCorsError(req, 500, error instanceof Error ? error.message : "Unknown error");
+    return withCorsError(req, 500, "An internal error occurred");
   }
 });

@@ -86,7 +86,10 @@ ${colorConfig
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    if (!color) return null;
+    // Sanitize: only allow hex, rgb/rgba, hsl/hsla, oklch, CSS keywords
+    const isSafe = /^(#[0-9A-Fa-f]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)|oklch\([^)]+\)|[a-zA-Z]+)$/.test(color.trim());
+    return isSafe ? `  --color-${key}: ${color};` : null;
   })
   .join("\n")}
 }

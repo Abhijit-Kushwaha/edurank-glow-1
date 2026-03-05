@@ -212,7 +212,10 @@ export const useFriends = () => {
   const generateInviteCode = async (): Promise<string | null> => {
     if (!user) return null;
     try {
-      const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      const array = new Uint8Array(8);
+      crypto.getRandomValues(array);
+      const code = Array.from(array).map(b => chars[b % chars.length]).join('');
       const expiresAt = new Date(
         Date.now() + 7 * 24 * 60 * 60 * 1000,
       ).toISOString();
