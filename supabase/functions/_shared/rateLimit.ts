@@ -111,12 +111,13 @@ export async function checkRateLimit(
     };
   } catch (error) {
     console.error("Unexpected error in rate limit check:", error);
-    // Fail open to prevent service degradation
+    // Fail closed to prevent abuse during outages
     return {
-      allowed: true,
-      remaining: config.limitsPerHour,
-      resetAtHour: new Date(now.getTime() + 60 * 60 * 1000),
+      allowed: false,
+      remaining: 0,
+      resetAtHour: new Date(now.getTime() + 60 * 1000),
       resetAtDay: new Date(now.getTime() + 24 * 60 * 60 * 1000),
+      message: "Rate limit check temporarily unavailable. Please try again shortly.",
     };
   }
 }

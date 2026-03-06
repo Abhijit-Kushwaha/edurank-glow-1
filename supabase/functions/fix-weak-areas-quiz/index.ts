@@ -74,13 +74,31 @@ serve(async (req) => {
 
     const { topics, notes, questionsPerTopic = 2 } = await req.json();
     if (!topics || !Array.isArray(topics) || topics.length === 0) return withCorsError(req, 400, "No topics provided");
+    if (topics.length > 20) return withCorsError(req, 400, "Too many topics");
 
     const typedTopics = topics as TopicInput[];
+
+    // Validate each topic name for injection
+    for (const topic of typedTopics) {
+      if (typeof topic.name !== "string" || topic.name.length > 200) {
+        return withCorsError(req, 400, "Invalid topic name");
+      }
+      const nameCheck = sanitizeInput(topic.name, 200);
+      if (!nameCheck.isValid) return withCorsError(req, 400, nameCheck.error || "Invalid topic name");
+      if (typeof topic.weaknessScore !== "number" || topic.weaknessScore < 0 || topic.weaknessScore > 100) {
+        return withCorsError(req, 400, "Invalid weakness score");
+      }
+    }
+
     const sortedTopics = [...typedTopics].sort((a, b) => b.weaknessScore - a.weaknessScore);
     const topicsDescription = sortedTopics.map((t) => `- ${t.name} (weakness score: ${Math.round(t.weaknessScore)}%)`).join("\n");
 
     let contentContext = "";
-    if (notes) contentContext = `\n\nHere is study material related to these topics:\n\n${notes.substring(0, 6000)}\n`;
+    if (notes) {
+      const notesCheck = sanitizeInput(notes, 6000);
+      if (!notesCheck.isValid) return withCorsError(req, 400, notesCheck.error || "Invalid notes content");
+      contentContext = `\n\nHere is study material related to these topics:\n\n${notesCheck.sanitized}\n`;
+    }
 
     const totalQuestions = Math.min(sortedTopics.length * questionsPerTopic, 10);
 
