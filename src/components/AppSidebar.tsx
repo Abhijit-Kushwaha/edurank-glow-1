@@ -12,6 +12,7 @@ import {
   LogOut,
   Sparkles,
   FileText,
+  Swords,
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,6 +41,7 @@ const mainNavItems = [
 ];
 
 const socialItems = [
+  { title: "Battle Arena", url: "/battle-arena", icon: Swords },
   { title: "Friends", url: "/friends", icon: Users },
   { title: "Leaderboard", url: "/leaderboard", icon: Trophy },
 ];

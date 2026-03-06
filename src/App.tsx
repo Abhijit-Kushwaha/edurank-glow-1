@@ -26,6 +26,8 @@ import AINotes from "./pages/AINotes";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import QuizProcessingPage from "./pages/QuizProcessing";
+import BattleArena from "./pages/BattleArena";
+import BattleLobby from "./pages/BattleLobby";
 
 const queryClient = new QueryClient();
 
@@ -158,6 +160,22 @@ const App = () => (
                 element={
                   <ProtectedWithLayout>
                     <Friends />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/battle-arena"
+                element={
+                  <ProtectedWithLayout>
+                    <BattleArena />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/battle/:battleId"
+                element={
+                  <ProtectedWithLayout>
+                    <BattleLobby />
                   </ProtectedWithLayout>
                 }
               />
