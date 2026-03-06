@@ -46,13 +46,13 @@ export async function checkRateLimit(
 
     if (hourlyError) {
       console.error("Error checking hourly rate limit:", hourlyError);
-      // Fail open - allow request but log the error
+      // Fail closed - deny request when rate limit cannot be verified
       return {
-        allowed: true,
-        remaining: config.limitsPerHour,
-        resetAtHour: new Date(now.getTime() + 60 * 60 * 1000),
+        allowed: false,
+        remaining: 0,
+        resetAtHour: new Date(now.getTime() + 60 * 1000),
         resetAtDay: new Date(now.getTime() + 24 * 60 * 60 * 1000),
-        message: "Rate limit check failed (allowing request)",
+        message: "Rate limit check temporarily unavailable. Please try again shortly.",
       };
     }
 
