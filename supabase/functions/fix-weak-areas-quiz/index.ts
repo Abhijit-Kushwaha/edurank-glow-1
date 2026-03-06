@@ -7,6 +7,30 @@ interface TopicInput { name: string; weaknessScore: number; }
 
 const LOVABLE_AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
+const FORBIDDEN_PATTERNS = [
+  /ignore\s+(all\s+)?previous\s+instructions/i,
+  /disregard\s+(all\s+)?previous/i,
+  /you\s+are\s+now\s+(a|an)/i,
+  /system\s*:\s*/i,
+  /\bpretend\s+(you|to)\b/i,
+  /act\s+as\s+(a|an)/i,
+  /forget\s+(all\s+)?(your|previous)/i,
+  /new\s+instructions?\s*:/i,
+  /override\s+(all\s+)?instructions/i,
+  /jailbreak/i,
+];
+
+function sanitizeInput(input: string, maxLength: number): { isValid: boolean; sanitized: string; error?: string } {
+  if (typeof input !== "string") return { isValid: false, sanitized: "", error: "Input must be a string" };
+  const trimmed = input.trim().substring(0, maxLength);
+  for (const pattern of FORBIDDEN_PATTERNS) {
+    if (pattern.test(trimmed)) {
+      return { isValid: false, sanitized: "", error: "Input contains prohibited content" };
+    }
+  }
+  return { isValid: true, sanitized: trimmed };
+}
+
 async function callLovableAI(messages: { role: string; content: string }[]): Promise<string> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -50,13 +74,31 @@ serve(async (req) => {
 
     const { topics, notes, questionsPerTopic = 2 } = await req.json();
     if (!topics || !Array.isArray(topics) || topics.length === 0) return withCorsError(req, 400, "No topics provided");
+    if (topics.length > 20) return withCorsError(req, 400, "Too many topics");
 
     const typedTopics = topics as TopicInput[];
+
+    // Validate each topic name for injection
+    for (const topic of typedTopics) {
+      if (typeof topic.name !== "string" || topic.name.length > 200) {
+        return withCorsError(req, 400, "Invalid topic name");
+      }
+      const nameCheck = sanitizeInput(topic.name, 200);
+      if (!nameCheck.isValid) return withCorsError(req, 400, nameCheck.error || "Invalid topic name");
+      if (typeof topic.weaknessScore !== "number" || topic.weaknessScore < 0 || topic.weaknessScore > 100) {
+        return withCorsError(req, 400, "Invalid weakness score");
+      }
+    }
+
     const sortedTopics = [...typedTopics].sort((a, b) => b.weaknessScore - a.weaknessScore);
     const topicsDescription = sortedTopics.map((t) => `- ${t.name} (weakness score: ${Math.round(t.weaknessScore)}%)`).join("\n");
 
     let contentContext = "";
-    if (notes) contentContext = `\n\nHere is study material related to these topics:\n\n${notes.substring(0, 6000)}\n`;
+    if (notes) {
+      const notesCheck = sanitizeInput(notes, 6000);
+      if (!notesCheck.isValid) return withCorsError(req, 400, notesCheck.error || "Invalid notes content");
+      contentContext = `\n\nHere is study material related to these topics:\n\n${notesCheck.sanitized}\n`;
+    }
 
     const totalQuestions = Math.min(sortedTopics.length * questionsPerTopic, 10);
 
