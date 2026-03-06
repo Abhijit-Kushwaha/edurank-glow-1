@@ -109,6 +109,276 @@ export type Database = {
         }
         Relationships: []
       }
+      battle_answers: {
+        Row: {
+          battle_id: string
+          created_at: string
+          id: string
+          is_correct: boolean
+          points_earned: number
+          question_id: string
+          selected_answer: number | null
+          streak_count: number
+          time_taken_seconds: number
+          user_id: string
+        }
+        Insert: {
+          battle_id: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          points_earned?: number
+          question_id: string
+          selected_answer?: number | null
+          streak_count?: number
+          time_taken_seconds?: number
+          user_id: string
+        }
+        Update: {
+          battle_id?: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          points_earned?: number
+          question_id?: string
+          selected_answer?: number | null
+          streak_count?: number
+          time_taken_seconds?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battle_answers_battle_id_fkey"
+            columns: ["battle_id"]
+            isOneToOne: false
+            referencedRelation: "battles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "battle_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "battle_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      battle_leaderboard: {
+        Row: {
+          best_win_streak: number
+          brain_points: number
+          created_at: string
+          daily_points: number
+          display_name: string
+          id: string
+          last_battle_date: string | null
+          total_battles: number
+          total_losses: number
+          total_wins: number
+          updated_at: string
+          user_id: string
+          weekly_points: number
+          win_streak: number
+        }
+        Insert: {
+          best_win_streak?: number
+          brain_points?: number
+          created_at?: string
+          daily_points?: number
+          display_name?: string
+          id?: string
+          last_battle_date?: string | null
+          total_battles?: number
+          total_losses?: number
+          total_wins?: number
+          updated_at?: string
+          user_id: string
+          weekly_points?: number
+          win_streak?: number
+        }
+        Update: {
+          best_win_streak?: number
+          brain_points?: number
+          created_at?: string
+          daily_points?: number
+          display_name?: string
+          id?: string
+          last_battle_date?: string | null
+          total_battles?: number
+          total_losses?: number
+          total_wins?: number
+          updated_at?: string
+          user_id?: string
+          weekly_points?: number
+          win_streak?: number
+        }
+        Relationships: []
+      }
+      battle_players: {
+        Row: {
+          battle_id: string
+          display_name: string
+          id: string
+          is_ready: boolean
+          joined_at: string
+          power_ups: Json
+          score: number
+          user_id: string
+        }
+        Insert: {
+          battle_id: string
+          display_name?: string
+          id?: string
+          is_ready?: boolean
+          joined_at?: string
+          power_ups?: Json
+          score?: number
+          user_id: string
+        }
+        Update: {
+          battle_id?: string
+          display_name?: string
+          id?: string
+          is_ready?: boolean
+          joined_at?: string
+          power_ups?: Json
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battle_players_battle_id_fkey"
+            columns: ["battle_id"]
+            isOneToOne: false
+            referencedRelation: "battles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      battle_questions: {
+        Row: {
+          battle_id: string
+          correct_answer: number
+          created_at: string
+          difficulty: string
+          id: string
+          options: Json
+          order_index: number
+          question_text: string
+          time_limit: number
+        }
+        Insert: {
+          battle_id: string
+          correct_answer: number
+          created_at?: string
+          difficulty?: string
+          id?: string
+          options?: Json
+          order_index?: number
+          question_text: string
+          time_limit?: number
+        }
+        Update: {
+          battle_id?: string
+          correct_answer?: number
+          created_at?: string
+          difficulty?: string
+          id?: string
+          options?: Json
+          order_index?: number
+          question_text?: string
+          time_limit?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battle_questions_battle_id_fkey"
+            columns: ["battle_id"]
+            isOneToOne: false
+            referencedRelation: "battles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      battles: {
+        Row: {
+          battle_code: string
+          created_at: string
+          creator_id: string
+          current_question: number
+          difficulty: string
+          ended_at: string | null
+          id: string
+          num_questions: number
+          started_at: string | null
+          status: string
+          subject: string
+          winner_id: string | null
+        }
+        Insert: {
+          battle_code: string
+          created_at?: string
+          creator_id: string
+          current_question?: number
+          difficulty?: string
+          ended_at?: string | null
+          id?: string
+          num_questions?: number
+          started_at?: string | null
+          status?: string
+          subject: string
+          winner_id?: string | null
+        }
+        Update: {
+          battle_code?: string
+          created_at?: string
+          creator_id?: string
+          current_question?: number
+          difficulty?: string
+          ended_at?: string | null
+          id?: string
+          num_questions?: number
+          started_at?: string | null
+          status?: string
+          subject?: string
+          winner_id?: string | null
+        }
+        Relationships: []
+      }
+      brain_points_log: {
+        Row: {
+          amount: number
+          battle_id: string | null
+          created_at: string
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          battle_id?: string | null
+          created_at?: string
+          id?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          battle_id?: string | null
+          created_at?: string
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brain_points_log_battle_id_fkey"
+            columns: ["battle_id"]
+            isOneToOne: false
+            referencedRelation: "battles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       call_signals: {
         Row: {
           callee_id: string
