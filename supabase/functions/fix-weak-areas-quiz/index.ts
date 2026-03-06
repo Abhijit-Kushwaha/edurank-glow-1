@@ -7,6 +7,30 @@ interface TopicInput { name: string; weaknessScore: number; }
 
 const LOVABLE_AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
+const FORBIDDEN_PATTERNS = [
+  /ignore\s+(all\s+)?previous\s+instructions/i,
+  /disregard\s+(all\s+)?previous/i,
+  /you\s+are\s+now\s+(a|an)/i,
+  /system\s*:\s*/i,
+  /\bpretend\s+(you|to)\b/i,
+  /act\s+as\s+(a|an)/i,
+  /forget\s+(all\s+)?(your|previous)/i,
+  /new\s+instructions?\s*:/i,
+  /override\s+(all\s+)?instructions/i,
+  /jailbreak/i,
+];
+
+function sanitizeInput(input: string, maxLength: number): { isValid: boolean; sanitized: string; error?: string } {
+  if (typeof input !== "string") return { isValid: false, sanitized: "", error: "Input must be a string" };
+  const trimmed = input.trim().substring(0, maxLength);
+  for (const pattern of FORBIDDEN_PATTERNS) {
+    if (pattern.test(trimmed)) {
+      return { isValid: false, sanitized: "", error: "Input contains prohibited content" };
+    }
+  }
+  return { isValid: true, sanitized: trimmed };
+}
+
 async function callLovableAI(messages: { role: string; content: string }[]): Promise<string> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
