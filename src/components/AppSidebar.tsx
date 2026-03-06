@@ -12,6 +12,7 @@ import {
   LogOut,
   Sparkles,
   FileText,
+  Swords,
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
