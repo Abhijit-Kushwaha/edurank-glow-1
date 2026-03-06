@@ -163,6 +163,22 @@ const App = () => (
                   </ProtectedWithLayout>
                 }
               />
+              <Route
+                path="/battle-arena"
+                element={
+                  <ProtectedWithLayout>
+                    <BattleArena />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/battle/:battleId"
+                element={
+                  <ProtectedWithLayout>
+                    <BattleLobby />
+                  </ProtectedWithLayout>
+                }
+              />
               <Route path="/about" element={<About />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

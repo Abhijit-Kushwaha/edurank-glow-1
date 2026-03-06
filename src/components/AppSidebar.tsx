@@ -41,6 +41,7 @@ const mainNavItems = [
 ];
 
 const socialItems = [
+  { title: "Battle Arena", url: "/battle-arena", icon: Swords },
   { title: "Friends", url: "/friends", icon: Users },
   { title: "Leaderboard", url: "/leaderboard", icon: Trophy },
 ];
