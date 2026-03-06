@@ -22,11 +22,12 @@ export const useStreakFreeze = () => {
         .from("profiles")
         .select("streak_protections")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      setStreakProtections(profile?.streak_protections || 0);
-      return profile?.streak_protections || 0;
+      if (!profile) return 0;
+      setStreakProtections(profile.streak_protections || 0);
+      return profile.streak_protections || 0;
     } catch (error) {
       console.error("Error fetching streak protections:", error);
       return 0;
@@ -42,7 +43,7 @@ export const useStreakFreeze = () => {
         .from("profiles")
         .select("streak_protections")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (fetchError) throw fetchError;
 
@@ -81,11 +82,12 @@ export const useStreakFreeze = () => {
           .from("profiles")
           .select("streak_protections")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         if (fetchError) throw fetchError;
+        if (!profile) return false;
 
-        const newAmount = (profile?.streak_protections || 0) + amount;
+        const newAmount = (profile.streak_protections || 0) + amount;
 
         const { data: result, error: rpcError } = await supabase
           .rpc("add_streak_protection", { p_user_id: user.id, p_amount: amount });
