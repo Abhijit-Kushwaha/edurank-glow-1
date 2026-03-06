@@ -11,6 +11,7 @@ import {
 import Roadmap from "@/assets/BRAIN BUDDY Development Roadmap (1) 1.png";
 import AbhijitImage from "@/assets/Core Team pic/Abhijit Kushwaha.jpg";
 import AbhinavImage from "@/assets/Core Team pic/Abhinav Bajpai.jpg";
+import DewashishImage from "@/assets/Core Team pic/Dewashish Kesharwani.png";
 
 const teamMembers = [
   { name: "Abhijit Kushwaha", role: "Backend Coder & Integrator" },
@@ -102,6 +103,23 @@ const About = () => {
                           <img
                             src={AbhinavImage}
                             alt="Abhinav Bajpai"
+                            className="w-full"
+                          />
+                        </DialogContent>
+                      </Dialog>
+                    ) : member.name === "Dewashish Kesharwani" ? (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <img
+                            src={DewashishImage}
+                            alt="Dewashish Kesharwani"
+                            className="w-full h-full object-cover cursor-pointer"
+                          />
+                        </DialogTrigger>
+                        <DialogContent>
+                          <img
+                            src={DewashishImage}
+                            alt="Dewashish Kesharwani"
                             className="w-full"
                           />
                         </DialogContent>
