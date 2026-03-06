@@ -13,6 +13,7 @@ import {
   Sparkles,
   FileText,
   Swords,
+  MessageSquare,
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
@@ -44,6 +45,11 @@ const socialItems = [
   { title: "Battle Arena", url: "/battle-arena", icon: Swords },
   { title: "Friends", url: "/friends", icon: Users },
   { title: "Leaderboard", url: "/leaderboard", icon: Trophy },
+  {
+    title: "Feedback",
+    url: "https://forms.office.com/r/3X7KS8fJFY",
+    icon: MessageSquare,
+  },
 ];
 
 const accountItems = [
@@ -61,7 +67,11 @@ export function AppSidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   const handleNav = (url: string) => {
-    navigate(url);
+    if (url.startsWith("http")) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      navigate(url);
+    }
     if (isMobile) setOpenMobile(false);
   };
 
