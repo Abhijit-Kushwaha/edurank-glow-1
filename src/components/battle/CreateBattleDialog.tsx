@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -73,6 +73,9 @@ export default function CreateBattleDialog({ onCreateBattle, loading }: CreateBa
             <Zap className="h-5 w-5 text-primary" />
             Create Battle Arena
           </DialogTitle>
+          <DialogDescription>
+            Configure your battle settings including source, difficulty level, and number of questions.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 py-4">

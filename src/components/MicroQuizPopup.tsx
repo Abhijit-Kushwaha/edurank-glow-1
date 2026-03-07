@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -132,6 +133,9 @@ const MicroQuizPopup = ({
             <Brain className="h-5 w-5 text-primary" />
             Quick Quiz: {topicName}
           </DialogTitle>
+          <DialogDescription>
+            Test your knowledge with a quick micro-quiz on {topicName}.
+          </DialogDescription>
         </DialogHeader>
 
         {loading && (

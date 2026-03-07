@@ -5,8 +5,10 @@ import Logo from "@/components/Logo";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 import Roadmap from "@/assets/BRAIN BUDDY Development Roadmap (1) 1.png";
 import AbhijitImage from "@/assets/Core Team pic/Abhijit Kushwaha.jpg";
@@ -83,6 +85,9 @@ const About = () => {
                           />
                         </DialogTrigger>
                         <DialogContent>
+                          <VisuallyHidden>
+                            <DialogDescription>Profile photo of Abhijit Kushwaha</DialogDescription>
+                          </VisuallyHidden>
                           <img
                             src={AbhijitImage}
                             alt="Abhijit Kushwaha"
@@ -100,6 +105,9 @@ const About = () => {
                           />
                         </DialogTrigger>
                         <DialogContent>
+                          <VisuallyHidden>
+                            <DialogDescription>Profile photo of Abhinav Bajpai</DialogDescription>
+                          </VisuallyHidden>
                           <img
                             src={AbhinavImage}
                             alt="Abhinav Bajpai"
@@ -117,6 +125,9 @@ const About = () => {
                           />
                         </DialogTrigger>
                         <DialogContent>
+                          <VisuallyHidden>
+                            <DialogDescription>Profile photo of Dewashish Kesharwani</DialogDescription>
+                          </VisuallyHidden>
                           <img
                             src={DewashishImage}
                             alt="Dewashish Kesharwani"
@@ -254,6 +265,9 @@ const About = () => {
               </div>
             </DialogTrigger>
             <DialogContent className="max-w-4xl">
+              <VisuallyHidden>
+                <DialogDescription>Brain Buddy Development Roadmap showing project timeline and features</DialogDescription>
+              </VisuallyHidden>
               <img
                 src={Roadmap}
                 alt="Brain Buddy Development Roadmap"

@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -36,6 +37,7 @@ const VideoPlayerDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl w-[95vw] p-0 gap-0 overflow-hidden">
+        <DialogDescription className="sr-only">Video player for {videoTitle || 'video'}</DialogDescription>
         <DialogHeader className="p-4 pb-2">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">

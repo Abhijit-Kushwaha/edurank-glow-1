@@ -3,6 +3,7 @@ import { Trophy, BookOpen, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -56,6 +57,9 @@ const ShareContentDialog = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Share Study Content</DialogTitle>
+          <DialogDescription>
+            Select quiz results or notes to share with your friends.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex gap-2 mb-4">

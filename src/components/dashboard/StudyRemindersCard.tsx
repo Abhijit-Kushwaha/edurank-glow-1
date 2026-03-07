@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -91,6 +92,9 @@ export const StudyRemindersCard = () => {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Add Study Reminder</DialogTitle>
+                <DialogDescription>
+                  Set a custom time and days for your study reminders to keep you on track.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 pt-4">
                 <div className="space-y-2">
