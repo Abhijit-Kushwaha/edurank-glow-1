@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -11,6 +12,7 @@ import { CheckCircle, XCircle, Sparkles, Brain, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 interface MicroQuizQuestion {
   question: string;
@@ -132,6 +134,11 @@ const MicroQuizPopup = ({
             <Brain className="h-5 w-5 text-primary" />
             Quick Quiz: {topicName}
           </DialogTitle>
+          <DialogDescription asChild>
+            <VisuallyHidden>
+              A quick quiz to test your knowledge on {topicName}.
+            </VisuallyHidden>
+          </DialogDescription>
         </DialogHeader>
 
         {loading && (

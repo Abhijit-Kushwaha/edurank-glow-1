@@ -9,7 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -91,6 +93,11 @@ export const StudyRemindersCard = () => {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Add Study Reminder</DialogTitle>
+                <DialogDescription asChild>
+                  <VisuallyHidden>
+                    Set a new reminder to help you stay on track with your studies.
+                  </VisuallyHidden>
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 pt-4">
                 <div className="space-y-2">

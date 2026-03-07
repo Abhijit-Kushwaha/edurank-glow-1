@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, UserPlus } from "lucide-react";
@@ -36,6 +37,11 @@ export default function JoinBattleDialog({ onJoinBattle, loading }: JoinBattleDi
             <UserPlus className="h-5 w-5 text-primary" />
             Join Battle
           </DialogTitle>
+          <DialogDescription asChild>
+            <VisuallyHidden>
+              Enter the battle code provided by your friend to join the arena.
+            </VisuallyHidden>
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <Input

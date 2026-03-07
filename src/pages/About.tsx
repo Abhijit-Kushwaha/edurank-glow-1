@@ -5,8 +5,10 @@ import Logo from "@/components/Logo";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 import Roadmap from "@/assets/BRAIN BUDDY Development Roadmap (1) 1.png";
 import AbhijitImage from "@/assets/Core Team pic/Abhijit Kushwaha.jpg";
@@ -83,6 +85,11 @@ const About = () => {
                           />
                         </DialogTrigger>
                         <DialogContent>
+                          <DialogDescription asChild>
+                            <VisuallyHidden>
+                              Abhijit Kushwaha's profile picture
+                            </VisuallyHidden>
+                          </DialogDescription>
                           <img
                             src={AbhijitImage}
                             alt="Abhijit Kushwaha"
@@ -100,6 +107,11 @@ const About = () => {
                           />
                         </DialogTrigger>
                         <DialogContent>
+                          <DialogDescription asChild>
+                            <VisuallyHidden>
+                              Abhinav Bajpai's profile picture
+                            </VisuallyHidden>
+                          </DialogDescription>
                           <img
                             src={AbhinavImage}
                             alt="Abhinav Bajpai"
@@ -117,6 +129,11 @@ const About = () => {
                           />
                         </DialogTrigger>
                         <DialogContent>
+                          <DialogDescription asChild>
+                            <VisuallyHidden>
+                              Dewashish Kesharwani's profile picture
+                            </VisuallyHidden>
+                          </DialogDescription>
                           <img
                             src={DewashishImage}
                             alt="Dewashish Kesharwani"
@@ -254,6 +271,11 @@ const About = () => {
               </div>
             </DialogTrigger>
             <DialogContent className="max-w-4xl">
+              <DialogDescription asChild>
+                <VisuallyHidden>
+                  Brain Buddy Development Roadmap
+                </VisuallyHidden>
+              </DialogDescription>
               <img
                 src={Roadmap}
                 alt="Brain Buddy Development Roadmap"

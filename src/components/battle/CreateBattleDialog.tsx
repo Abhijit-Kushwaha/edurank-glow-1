@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -73,6 +74,11 @@ export default function CreateBattleDialog({ onCreateBattle, loading }: CreateBa
             <Zap className="h-5 w-5 text-primary" />
             Create Battle Arena
           </DialogTitle>
+          <DialogDescription asChild>
+            <VisuallyHidden>
+              Configure the settings for your new battle arena. Choose a subject, difficulty, and the number of questions.
+            </VisuallyHidden>
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 py-4">
