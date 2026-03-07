@@ -55,7 +55,12 @@ export default function BattleArena() {
   }, []);
 
   const handleCreateBattle = async (config: any) => {
-    const battle = await createBattle(config);
+    const battle = await createBattle({
+      subject: config.subject,
+      difficulty: config.difficulty,
+      numQuestions: config.numQuestions,
+      source: config.source,
+    });
     if (battle) {
       navigate(`/battle/${battle.id}`);
     }
