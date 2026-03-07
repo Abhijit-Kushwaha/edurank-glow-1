@@ -36,9 +36,9 @@ serve(async (req) => {
       });
     }
 
-    const { subject, difficulty, numQuestions, battleId } = await req.json();
+    const { subject, difficulty, numQuestions, battleId, source } = await req.json();
 
-    if (!subject || !difficulty || !numQuestions || !battleId) {
+    if (!difficulty || !numQuestions || !battleId) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -59,14 +59,32 @@ serve(async (req) => {
       });
     }
 
-    const sanitizedSubject = subject.replace(/[<>"\x00-\x1f]/g, "").slice(0, 50);
     const validDifficulties = ["easy", "medium", "hard", "adaptive"];
     const safeDifficulty = validDifficulties.includes(difficulty) ? difficulty : "medium";
     const safeNum = Math.min(Math.max(Number(numQuestions) || 5, 3), 15);
 
-    const systemPrompt = `You are a quiz question generator for students. Generate exactly ${safeNum} multiple-choice questions about ${sanitizedSubject} at ${safeDifficulty} difficulty level. Each question must have exactly 4 options with one correct answer.`;
+    // Build context based on source type
+    let sourceContext = "";
+    const sourceType = source?.type || "custom_topic";
 
-    const userPrompt = `Generate ${safeNum} quiz questions about "${sanitizedSubject}" at "${safeDifficulty}" difficulty. Return a JSON array where each element has: question_text (string), options (array of 4 strings), correct_answer (0-3 index), difficulty ("easy"/"medium"/"hard"). Only return the JSON array, no other text.`;
+    if (sourceType === "my_notes" && source?.noteContent) {
+      const noteContent = String(source.noteContent).slice(0, 3000);
+      sourceContext = `Generate questions STRICTLY based on these study notes:\n\n${noteContent}\n\nExtract key concepts and create questions testing understanding of the material.`;
+    } else if (sourceType === "my_videos" && source?.videoTitle) {
+      const videoTitle = String(source.videoTitle).slice(0, 200);
+      sourceContext = `Generate questions based on the educational video titled "${videoTitle}". Create questions about the key concepts that would typically be covered in this video topic.`;
+    } else if (sourceType === "ai_mixed") {
+      sourceContext = `Generate a diverse mix of educational questions from various popular academic topics including science, math, history, technology, and general knowledge. Make it interesting and varied.`;
+    } else {
+      const sanitizedSubject = (subject || "General Knowledge").replace(/[<>"\x00-\x1f]/g, "").slice(0, 50);
+      sourceContext = `Generate questions about "${sanitizedSubject}".`;
+    }
+
+    const systemPrompt = `You are a quiz question generator for students. Generate exactly ${safeNum} multiple-choice questions at ${safeDifficulty} difficulty level. Each question must have exactly 4 options with one correct answer.`;
+
+    const userPrompt = `${sourceContext}
+
+Generate ${safeNum} quiz questions at "${safeDifficulty}" difficulty. Return a JSON array where each element has: question_text (string), options (array of 4 strings), correct_answer (0-3 index), difficulty ("easy"/"medium"/"hard"). Only return the JSON array, no other text.`;
 
     const aiResponse = await callLovableAI(
       [

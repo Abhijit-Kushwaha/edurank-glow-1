@@ -5,8 +5,8 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Swords, Loader2, Zap } from "lucide-react";
 import { motion } from "framer-motion";
+import BattleSourceSelector, { type BattleSource } from "./BattleSourceSelector";
 
-const subjects = ["Math", "Physics", "Chemistry", "Biology", "Mixed"];
 const difficulties = [
   { value: "easy", label: "Easy", emoji: "🟢" },
   { value: "medium", label: "Medium", emoji: "🟡" },
@@ -16,18 +16,44 @@ const difficulties = [
 const questionCounts = [5, 7, 10];
 
 interface CreateBattleDialogProps {
-  onCreateBattle: (config: { subject: string; difficulty: string; numQuestions: number }) => Promise<any>;
+  onCreateBattle: (config: {
+    subject: string;
+    difficulty: string;
+    numQuestions: number;
+    source: BattleSource;
+  }) => Promise<any>;
   loading: boolean;
 }
 
 export default function CreateBattleDialog({ onCreateBattle, loading }: CreateBattleDialogProps) {
   const [open, setOpen] = useState(false);
-  const [subject, setSubject] = useState("Math");
+  const [source, setSource] = useState<BattleSource>({ type: "custom_topic" });
   const [difficulty, setDifficulty] = useState("medium");
   const [numQuestions, setNumQuestions] = useState(5);
 
+  const getSubjectLabel = () => {
+    switch (source.type) {
+      case "custom_topic": return source.customTopic || "Custom Topic";
+      case "my_notes": return "Notes Battle";
+      case "my_videos": return "Video Battle";
+      case "ai_mixed": return "AI Mixed";
+    }
+  };
+
+  const isValid = () => {
+    if (source.type === "custom_topic" && !source.customTopic?.trim()) return false;
+    if (source.type === "my_notes" && !source.noteId) return false;
+    if (source.type === "my_videos" && !source.videoId) return false;
+    return true;
+  };
+
   const handleCreate = async () => {
-    const result = await onCreateBattle({ subject, difficulty, numQuestions });
+    const result = await onCreateBattle({
+      subject: getSubjectLabel(),
+      difficulty,
+      numQuestions,
+      source,
+    });
     if (result) setOpen(false);
   };
 
@@ -41,7 +67,7 @@ export default function CreateBattleDialog({ onCreateBattle, loading }: CreateBa
           </Button>
         </motion.div>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Zap className="h-5 w-5 text-primary" />
@@ -49,24 +75,9 @@ export default function CreateBattleDialog({ onCreateBattle, loading }: CreateBa
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* Subject */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">Subject</Label>
-            <div className="grid grid-cols-3 gap-2">
-              {subjects.map((s) => (
-                <Button
-                  key={s}
-                  variant={subject === s ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSubject(s)}
-                  className="text-xs"
-                >
-                  {s}
-                </Button>
-              ))}
-            </div>
-          </div>
+        <div className="space-y-5 py-4">
+          {/* Battle Source */}
+          <BattleSourceSelector value={source} onChange={setSource} />
 
           {/* Difficulty */}
           <div className="space-y-2">
@@ -103,7 +114,7 @@ export default function CreateBattleDialog({ onCreateBattle, loading }: CreateBa
 
           <Button
             onClick={handleCreate}
-            disabled={loading}
+            disabled={loading || !isValid()}
             className="w-full gradient-bg text-primary-foreground font-bold py-3"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Swords className="h-4 w-4 mr-2" />}
