@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import type { BattleSource } from "@/components/battle/BattleSourceSelector";
 
 function generateBattleCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -14,6 +15,7 @@ export interface BattleConfig {
   subject: string;
   difficulty: string;
   numQuestions: number;
+  source?: BattleSource;
 }
 
 export function useBattle() {
@@ -46,13 +48,14 @@ export function useBattle() {
         display_name: profile?.name || "Player",
       });
 
-      // Generate questions via edge function
+      // Generate questions via edge function with source data
       const { error: fnError } = await supabase.functions.invoke("generate-battle-questions", {
         body: {
           subject: config.subject,
           difficulty: config.difficulty,
           numQuestions: config.numQuestions,
           battleId: battle.id,
+          source: config.source || { type: "custom_topic" },
         },
       });
 
@@ -86,7 +89,6 @@ export function useBattle() {
         return null;
       }
 
-      // Check if already joined
       const { data: existing } = await supabase
         .from("battle_players")
         .select("id")
@@ -165,8 +167,6 @@ export function useBattle() {
 
   const awardBrainPoints = useCallback(async (amount: number, reason: string, battleId?: string) => {
     if (!user) return;
-    // Brain points are now awarded server-side via submit-battle-answer
-    // This function is kept for API compatibility but is a no-op
     console.log("Brain points award requested (handled server-side):", { amount, reason, battleId });
   }, [user]);
 

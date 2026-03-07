@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,12 +9,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Copy, Check, Loader2, Swords, Users, ArrowLeft } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import BattleQuestion from "@/components/battle/BattleQuestion";
 import BattleScoreboard from "@/components/battle/BattleScoreboard";
 import PowerUpBar from "@/components/battle/PowerUpBar";
 import BattleResultsPanel from "@/components/battle/BattleResultsPanel";
+import BattleStartAnimation from "@/components/battle/BattleStartAnimation";
+import BattleReactions, { type FloatingReaction } from "@/components/battle/BattleReactions";
+import ScoreAnimation from "@/components/battle/ScoreAnimation";
 
 export default function BattleLobby() {
   const { battleId } = useParams<{ battleId: string }>();
@@ -32,6 +35,14 @@ export default function BattleLobby() {
   const [doubleActive, setDoubleActive] = useState(false);
   const [brainPointsEarned, setBrainPointsEarned] = useState(0);
 
+  // New state for animations
+  const [showStartAnimation, setShowStartAnimation] = useState(false);
+  const [battleStarted, setBattleStarted] = useState(false);
+  const [floatingReactions, setFloatingReactions] = useState<FloatingReaction[]>([]);
+  const [scoreAnim, setScoreAnim] = useState<{ show: boolean; isCorrect: boolean; points: number; streak: number }>({
+    show: false, isCorrect: false, points: 0, streak: 0,
+  });
+
   const isCreator = battle?.creator_id === user?.id;
 
   // Fetch questions when battle becomes active
@@ -48,6 +59,18 @@ export default function BattleLobby() {
     fetchQuestions();
   }, [battleId, battle?.status]);
 
+  // Show start animation when battle becomes active
+  useEffect(() => {
+    if (battle?.status === "active" && !battleStarted && players.length >= 2) {
+      setShowStartAnimation(true);
+    }
+  }, [battle?.status, battleStarted, players.length]);
+
+  const handleAnimationComplete = useCallback(() => {
+    setShowStartAnimation(false);
+    setBattleStarted(true);
+  }, []);
+
   // Sync current question from battle state
   useEffect(() => {
     if (battle?.current_question !== undefined) {
@@ -62,6 +85,35 @@ export default function BattleLobby() {
     const total = myAnswers.reduce((sum, a) => sum + a.points_earned, 0);
     setMyScore(total);
   }, [answers, user]);
+
+  // Realtime reactions channel
+  useEffect(() => {
+    if (!battleId) return;
+    const channel = supabase.channel(`battle-reactions-${battleId}`);
+    channel.on("broadcast", { event: "reaction" }, (payload) => {
+      const r: FloatingReaction = {
+        id: `${Date.now()}-${Math.random()}`,
+        content: payload.payload.content,
+        isEmoji: payload.payload.isEmoji,
+        senderName: payload.payload.senderName,
+      };
+      setFloatingReactions((prev) => [...prev.slice(-4), r]);
+      setTimeout(() => {
+        setFloatingReactions((prev) => prev.filter((x) => x.id !== r.id));
+      }, 3000);
+    }).subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [battleId]);
+
+  const handleSendReaction = useCallback((content: string, isEmoji: boolean) => {
+    if (!battleId || !user) return;
+    const me = players.find(p => p.user_id === user.id);
+    supabase.channel(`battle-reactions-${battleId}`).send({
+      type: "broadcast",
+      event: "reaction",
+      payload: { content, isEmoji, senderName: me?.display_name || "Player" },
+    });
+  }, [battleId, user, players]);
 
   const handleCopy = () => {
     if (!battle) return;
@@ -89,11 +141,11 @@ export default function BattleLobby() {
     let newStreak = streak;
 
     if (isCorrect) {
-      points += 10; // Accuracy
-      if (timeTaken <= 3) points += 5; // Speed bonus
-      if (q.difficulty === "hard") points += 10; // Hard bonus
+      points += 10;
+      if (timeTaken <= 3) points += 5;
+      if (q.difficulty === "hard") points += 10;
       newStreak += 1;
-      if (newStreak >= 3) points += 5; // Streak bonus
+      if (newStreak >= 3) points += 5;
       if (doubleActive) points *= 2;
       setStreak(newStreak);
     } else {
@@ -103,15 +155,16 @@ export default function BattleLobby() {
 
     if (doubleActive) setDoubleActive(false);
 
+    // Show score animation
+    setScoreAnim({ show: true, isCorrect, points, streak: newStreak });
+    setTimeout(() => setScoreAnim(prev => ({ ...prev, show: false })), 2000);
+
     const totalScore = myScore + points;
     await submitAnswer(battleId, q.id, selectedAnswer, isCorrect, timeTaken, newStreak, totalScore);
 
-    // Check if this was the last question
     const nextIndex = currentQIndex + 1;
     if (nextIndex >= questions.length) {
-      // End battle
       setTimeout(async () => {
-        // Determine winner
         const updatedPlayers = players.map((p) => {
           if (p.user_id === user.id) return { ...p, score: totalScore };
           return p;
@@ -121,17 +174,15 @@ export default function BattleLobby() {
 
         await endBattle(battleId, winnerId);
 
-        // Award brain points
         const isWinner = winnerId === user.id;
-        let bp = 20; // Daily battle
-        if (isWinner) bp += 50; // Win
-        if (totalScore === questions.length * 10 + questions.length * 5) bp += 30; // Perfect-ish
+        let bp = 20;
+        if (isWinner) bp += 50;
+        if (totalScore === questions.length * 10 + questions.length * 5) bp += 30;
 
         await awardBrainPoints(bp, isWinner ? "battle_win" : "battle_participation", battleId);
         setBrainPointsEarned(bp);
       }, 2000);
     } else if (isCreator) {
-      // Advance to next question after delay
       setTimeout(() => {
         advanceQuestion(battleId, nextIndex);
       }, 2000);
@@ -147,10 +198,8 @@ export default function BattleLobby() {
       toast.success("⚡ Double Points activated!");
     } else if (type === "time_freeze") {
       toast.success("❄️ Time Freeze activated!");
-      // Timer pause is handled via isPaused prop
     } else if (type === "hint_vision") {
       toast.success("👁️ Hint Vision activated!");
-      // Would remove 2 wrong options - simplified for now
     }
   };
 
@@ -159,6 +208,19 @@ export default function BattleLobby() {
       <div className="flex items-center justify-center min-h-[50vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  // Start Animation overlay
+  if (showStartAnimation && players.length >= 2) {
+    return (
+      <AnimatePresence>
+        <BattleStartAnimation
+          player1Name={players[0]?.display_name || "Player 1"}
+          player2Name={players[1]?.display_name || "Player 2"}
+          onComplete={handleAnimationComplete}
+        />
+      </AnimatePresence>
     );
   }
 
@@ -171,6 +233,7 @@ export default function BattleLobby() {
           currentUserId={user?.id || ""}
           subject={battle.subject}
           brainPointsEarned={brainPointsEarned}
+          battleId={battleId || ""}
           onGoBack={() => navigate("/battle-arena")}
         />
       </div>
@@ -178,7 +241,7 @@ export default function BattleLobby() {
   }
 
   // ACTIVE state
-  if (battle.status === "active" && questions.length > 0 && currentQIndex < questions.length) {
+  if (battle.status === "active" && questions.length > 0 && currentQIndex < questions.length && battleStarted) {
     const q = questions[currentQIndex];
     return (
       <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4">
@@ -200,6 +263,20 @@ export default function BattleLobby() {
           questionIndex={currentQIndex}
           totalQuestions={questions.length}
           onAnswer={handleAnswer}
+        />
+
+        {/* Reactions */}
+        <BattleReactions
+          onSendReaction={handleSendReaction}
+          floatingReactions={floatingReactions}
+        />
+
+        {/* Score Animation */}
+        <ScoreAnimation
+          show={scoreAnim.show}
+          isCorrect={scoreAnim.isCorrect}
+          points={scoreAnim.points}
+          streakCount={scoreAnim.streak}
         />
       </div>
     );
