@@ -5,9 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -58,11 +56,6 @@ const ShareContentDialog = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Share Study Content</DialogTitle>
-          <DialogDescription asChild>
-            <VisuallyHidden>
-              Share your quiz results or study notes with your friends.
-            </VisuallyHidden>
-          </DialogDescription>
         </DialogHeader>
 
         <div className="flex gap-2 mb-4">

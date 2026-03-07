@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   User,
@@ -50,7 +50,7 @@ const Profile = () => {
     if (user) {
       fetchCredits();
     }
-  }, [user, fetchCredits]);
+  }, [user]);
 
   useEffect(() => {
     if (profile?.avatar_url) {
@@ -58,7 +58,7 @@ const Profile = () => {
     }
   }, [profile]);
 
-  const handleAvatarUpload = useCallback(async (
+  const handleAvatarUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
@@ -109,9 +109,9 @@ const Profile = () => {
     } finally {
       setUploading(false);
     }
-  }, [user]);
+  };
 
-  const fetchCredits = useCallback(async () => {
+  const fetchCredits = async () => {
     try {
       // Use the check_and_reset_credits function which handles monthly reset
       const { data, error } = await supabase.rpc("check_and_reset_credits", {
@@ -146,7 +146,7 @@ const Profile = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  };
 
   const usedPercent =
     TOTAL_MONTHLY_CREDITS > 0

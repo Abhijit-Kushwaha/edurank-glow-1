@@ -1,11 +1,9 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, X } from "lucide-react";
 import YouTube, { YouTubeProps } from "react-youtube";
@@ -44,9 +42,6 @@ const VideoPlayerDialog = ({
               <DialogTitle className="text-lg font-semibold line-clamp-2">
                 {videoTitle || "Video"}
               </DialogTitle>
-              <DialogDescription asChild>
-                <VisuallyHidden>Embedded YouTube video player.</VisuallyHidden>
-              </DialogDescription>
               {videoChannel && (
                 <p className="text-sm text-muted-foreground mt-1">
                   {videoChannel}
