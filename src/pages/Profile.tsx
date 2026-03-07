@@ -50,7 +50,7 @@ const Profile = () => {
     if (user) {
       fetchCredits();
     }
-  }, [user]);
+  }, [user, fetchCredits]);
 
   useEffect(() => {
     if (profile?.avatar_url) {
@@ -111,7 +111,7 @@ const Profile = () => {
     }
   }, [user]);
 
-  const fetchCredits = async () => {
+  const fetchCredits = useCallback(async () => {
     try {
       // Use the check_and_reset_credits function which handles monthly reset
       const { data, error } = await supabase.rpc("check_and_reset_credits", {
@@ -146,7 +146,7 @@ const Profile = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const usedPercent =
     TOTAL_MONTHLY_CREDITS > 0
