@@ -1,1 +1,7 @@
 project_id = "tahfemcxtbbixsvsurfq"
+
+[functions.submit-battle-answer]
+verify_jwt = false
+
+[functions.submit-quiz-result]
+verify_jwt = false

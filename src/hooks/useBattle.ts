@@ -116,29 +116,26 @@ export function useBattle() {
     battleId: string,
     questionId: string,
     selectedAnswer: number,
-    isCorrect: boolean,
+    _isCorrect: boolean,
     timeTaken: number,
     streakCount: number,
-    pointsEarned: number,
+    _pointsEarned: number,
   ) => {
-    if (!user) return;
-    await supabase.from("battle_answers").insert({
-      battle_id: battleId,
-      question_id: questionId,
-      user_id: user.id,
-      selected_answer: selectedAnswer,
-      is_correct: isCorrect,
-      time_taken_seconds: timeTaken,
-      points_earned: pointsEarned,
-      streak_count: streakCount,
-    });
-
-    // Update player score
-    await supabase
-      .from("battle_players")
-      .update({ score: pointsEarned })
-      .eq("battle_id", battleId)
-      .eq("user_id", user.id);
+    if (!user) return null;
+    try {
+      const { data, error } = await supabase.functions.invoke("submit-battle-answer", {
+        body: { battleId, questionId, selectedAnswer, timeTaken, streakCount },
+      });
+      if (error) {
+        console.error("Submit answer error:", error);
+        toast.error("Failed to submit answer");
+        return null;
+      }
+      return data;
+    } catch (e: any) {
+      console.error("Submit answer error:", e);
+      return null;
+    }
   }, [user]);
 
   const startBattle = useCallback(async (battleId: string) => {
@@ -168,36 +165,10 @@ export function useBattle() {
 
   const awardBrainPoints = useCallback(async (amount: number, reason: string, battleId?: string) => {
     if (!user) return;
-    await supabase.from("brain_points_log").insert({
-      user_id: user.id,
-      amount,
-      reason,
-      battle_id: battleId || null,
-    });
-
-    // Upsert leaderboard
-    const { data: existing } = await supabase
-      .from("battle_leaderboard")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (existing) {
-      await supabase
-        .from("battle_leaderboard")
-        .update({
-          brain_points: existing.brain_points + amount,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user.id);
-    } else {
-      await supabase.from("battle_leaderboard").insert({
-        user_id: user.id,
-        display_name: profile?.name || "Player",
-        brain_points: amount,
-      });
-    }
-  }, [user, profile]);
+    // Brain points are now awarded server-side via submit-battle-answer
+    // This function is kept for API compatibility but is a no-op
+    console.log("Brain points award requested (handled server-side):", { amount, reason, battleId });
+  }, [user]);
 
   return {
     loading,

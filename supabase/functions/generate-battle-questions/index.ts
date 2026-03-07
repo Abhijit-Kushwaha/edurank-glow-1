@@ -140,11 +140,12 @@ serve(async (req) => {
       JSON.stringify({ success: true, count: questionsToInsert.length }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (e) {
+  } catch (e: unknown) {
     console.error("Error:", e);
-    const status = e.message?.includes("Rate limit") ? 429 : e.message?.includes("Payment") ? 402 : 500;
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    const status = msg.includes("Rate limit") ? 429 : msg.includes("Payment") ? 402 : 500;
     return new Response(
-      JSON.stringify({ error: e.message || "Unknown error" }),
+      JSON.stringify({ error: msg }),
       { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
