@@ -116,29 +116,26 @@ export function useBattle() {
     battleId: string,
     questionId: string,
     selectedAnswer: number,
-    isCorrect: boolean,
+    _isCorrect: boolean,
     timeTaken: number,
     streakCount: number,
-    pointsEarned: number,
+    _pointsEarned: number,
   ) => {
-    if (!user) return;
-    await supabase.from("battle_answers").insert({
-      battle_id: battleId,
-      question_id: questionId,
-      user_id: user.id,
-      selected_answer: selectedAnswer,
-      is_correct: isCorrect,
-      time_taken_seconds: timeTaken,
-      points_earned: pointsEarned,
-      streak_count: streakCount,
-    });
-
-    // Update player score
-    await supabase
-      .from("battle_players")
-      .update({ score: pointsEarned })
-      .eq("battle_id", battleId)
-      .eq("user_id", user.id);
+    if (!user) return null;
+    try {
+      const { data, error } = await supabase.functions.invoke("submit-battle-answer", {
+        body: { battleId, questionId, selectedAnswer, timeTaken, streakCount },
+      });
+      if (error) {
+        console.error("Submit answer error:", error);
+        toast.error("Failed to submit answer");
+        return null;
+      }
+      return data;
+    } catch (e: any) {
+      console.error("Submit answer error:", e);
+      return null;
+    }
   }, [user]);
 
   const startBattle = useCallback(async (battleId: string) => {
