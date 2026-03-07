@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -251,7 +251,7 @@ const Quiz = () => {
     }
   };
 
-  const calculateCoinsEarned = () => {
+  const calculateCoinsEarned = useCallback(() => {
     let coins = 0;
     answers.forEach((answer, index) => {
       if (answer === questions[index]?.correctAnswer) {
@@ -262,9 +262,9 @@ const Quiz = () => {
       }
     });
     return coins;
-  };
+  }, [answers, questions]);
 
-  const saveResults = async () => {
+  const saveResults = useCallback(async () => {
     if (!user || !quizId) return;
 
     try {
@@ -325,7 +325,7 @@ const Quiz = () => {
     } catch (error) {
       console.error("Error saving results:", error);
     }
-  };
+  }, [user, quizId, savedQuizId, answers, questions, videoId, questionTimings]);
 
   const calculateScore = () => {
     let correct = 0;

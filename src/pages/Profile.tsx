@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   User,
@@ -58,7 +58,7 @@ const Profile = () => {
     }
   }, [profile]);
 
-  const handleAvatarUpload = async (
+  const handleAvatarUpload = useCallback(async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
@@ -109,7 +109,7 @@ const Profile = () => {
     } finally {
       setUploading(false);
     }
-  };
+  }, [user]);
 
   const fetchCredits = async () => {
     try {
