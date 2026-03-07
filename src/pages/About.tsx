@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Mail, Users, Sparkles, Heart, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,10 @@ const teamMembers = [
 
 const About = () => {
   const navigate = useNavigate();
+  const [abhiDialogOpen, setAbhiDialogOpen] = useState(false);
+  const [abhinavDialogOpen, setAbhinavDialogOpen] = useState(false);
+  const [dewashishDialogOpen, setDewashishDialogOpen] = useState(false);
+  const [roadmapDialogOpen, setRoadmapDialogOpen] = useState(false);
 
   return (
     <div className="min-h-screen pb-8">
@@ -76,7 +81,7 @@ const About = () => {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                     {member.name === "Abhijit Kushwaha" ? (
-                      <Dialog>
+                      <Dialog open={abhiDialogOpen} onOpenChange={setAbhiDialogOpen}>
                         <DialogTrigger asChild>
                           <img
                             src={AbhijitImage}
@@ -96,7 +101,7 @@ const About = () => {
                         </DialogContent>
                       </Dialog>
                     ) : member.name === "Abhinav Bajpai" ? (
-                      <Dialog>
+                      <Dialog open={abhinavDialogOpen} onOpenChange={setAbhinavDialogOpen}>
                         <DialogTrigger asChild>
                           <img
                             src={AbhinavImage}
@@ -116,7 +121,7 @@ const About = () => {
                         </DialogContent>
                       </Dialog>
                     ) : member.name === "Dewashish Kesharwani" ? (
-                      <Dialog>
+                      <Dialog open={dewashishDialogOpen} onOpenChange={setDewashishDialogOpen}>
                         <DialogTrigger asChild>
                           <img
                             src={DewashishImage}
@@ -254,7 +259,7 @@ const About = () => {
             </div>
             <h2 className="text-xl font-semibold">Our Roadmap</h2>
           </div>
-          <Dialog>
+          <Dialog open={roadmapDialogOpen} onOpenChange={setRoadmapDialogOpen}>
             <DialogTrigger asChild>
               <div className="rounded-xl overflow-hidden border border-border/50 cursor-pointer">
                 <img
