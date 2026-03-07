@@ -7,22 +7,8 @@ function isValidEmail(email: string): boolean {
   return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
 }
 
-// Simple in-memory rate limiter for unauthenticated endpoint
-const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const MAX_REQUESTS_PER_HOUR = 3;
-
-function checkForgotPasswordRateLimit(key: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(key);
-  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
-    rateLimitMap.set(key, { count: 1, windowStart: now });
-    return true;
-  }
-  if (entry.count >= MAX_REQUESTS_PER_HOUR) return false;
-  entry.count++;
-  return true;
-}
 
 serve(async (req) => {
   const preflight = preflightResponse(req);
@@ -35,11 +21,7 @@ serve(async (req) => {
     const email = body?.email;
     if (!isValidEmail(email)) return withCorsError(req, 400, "Invalid email");
 
-    // Rate limit by email to prevent inbox flooding
     const normalizedEmail = email.trim().toLowerCase();
-    if (!checkForgotPasswordRateLimit(normalizedEmail)) {
-      return withCorsError(req, 429, "Too many requests. Please try again later.");
-    }
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
     const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -48,8 +30,36 @@ serve(async (req) => {
       return withCorsError(req, 500, "An internal error occurred");
     }
 
-    const supabaseClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-    const { error } = await supabaseClient.auth.resetPasswordForEmail({ email: normalizedEmail } as any);
+    const serviceClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+    // Database-backed rate limiting (survives cold starts)
+    const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
+    const { count, error: rlError } = await serviceClient
+      .from("rate_limit_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("operation", "forgot-password")
+      .eq("ip_address", normalizedEmail)
+      .gte("created_at", windowStart);
+
+    if (rlError) {
+      console.error("Rate limit check error:", rlError);
+      // Fail closed
+      return withCorsError(req, 429, "Too many requests. Please try again later.");
+    }
+
+    if ((count ?? 0) >= MAX_REQUESTS_PER_HOUR) {
+      return withCorsError(req, 429, "Too many requests. Please try again later.");
+    }
+
+    // Log the request for rate limiting (use ip_address field to store email key since no user_id)
+    await serviceClient.from("rate_limit_logs").insert({
+      user_id: "00000000-0000-0000-0000-000000000000",
+      operation: "forgot-password",
+      ip_address: normalizedEmail,
+      success: true,
+    });
+
+    const { error } = await serviceClient.auth.resetPasswordForEmail({ email: normalizedEmail } as any);
 
     if (error) {
       console.error("Error sending reset email:", error);
