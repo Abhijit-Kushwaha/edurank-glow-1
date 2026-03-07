@@ -14,6 +14,7 @@ interface BattleQuestionProps {
   totalQuestions: number;
   onAnswer: (selectedAnswer: number, timeTaken: number) => void;
   isPaused?: boolean;
+  disabled?: boolean;
 }
 
 const optionLabels = ["A", "B", "C", "D"];
@@ -27,13 +28,14 @@ export default function BattleQuestion({
   totalQuestions,
   onAnswer,
   isPaused = false,
+  disabled = false,
 }: BattleQuestionProps) {
   const [selected, setSelected] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [startTime] = useState(Date.now());
 
   const handleSelect = (index: number) => {
-    if (selected !== null) return;
+    if (selected !== null || disabled) return;
     const timeTaken = (Date.now() - startTime) / 1000;
     setSelected(index);
     setShowResult(true);
@@ -44,7 +46,7 @@ export default function BattleQuestion({
   };
 
   const handleTimeUp = () => {
-    if (selected !== null) return;
+    if (selected !== null || disabled) return;
     setSelected(-1);
     setShowResult(true);
     setTimeout(() => {

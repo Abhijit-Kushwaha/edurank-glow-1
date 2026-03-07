@@ -42,6 +42,7 @@ export default function BattleLobby() {
   const [scoreAnim, setScoreAnim] = useState<{ show: boolean; isCorrect: boolean; points: number; streak: number }>({
     show: false, isCorrect: false, points: 0, streak: 0,
   });
+  const [submitting, setSubmitting] = useState(false);
 
   const isCreator = battle?.creator_id === user?.id;
 
@@ -132,9 +133,18 @@ export default function BattleLobby() {
   };
 
   const handleAnswer = async (selectedAnswer: number, timeTaken: number) => {
-    if (!battleId || !user || !questions[currentQIndex]) return;
+    if (!battleId || !user || !questions[currentQIndex] || submitting) return;
 
     const q = questions[currentQIndex];
+
+    // Check if already answered
+    const alreadyAnswered = answers.some(a => a.question_id === q.id && a.user_id === user.id);
+    if (alreadyAnswered) {
+      console.log("Already answered this question");
+      return;
+    }
+
+    setSubmitting(true);
     const isCorrect = selectedAnswer === q.correct_answer;
 
     let points = 0;
@@ -160,7 +170,13 @@ export default function BattleLobby() {
     setTimeout(() => setScoreAnim(prev => ({ ...prev, show: false })), 2000);
 
     const totalScore = myScore + points;
-    await submitAnswer(battleId, q.id, selectedAnswer, isCorrect, timeTaken, newStreak, totalScore);
+    const result = await submitAnswer(battleId, q.id, selectedAnswer, isCorrect, timeTaken, newStreak, totalScore);
+    setSubmitting(false);
+
+    if (!result) {
+      // Submission failed, allow retry
+      return;
+    }
 
     const nextIndex = currentQIndex + 1;
     if (nextIndex >= questions.length) {
@@ -263,6 +279,7 @@ export default function BattleLobby() {
           questionIndex={currentQIndex}
           totalQuestions={questions.length}
           onAnswer={handleAnswer}
+          disabled={submitting}
         />
 
         {/* Reactions */}
