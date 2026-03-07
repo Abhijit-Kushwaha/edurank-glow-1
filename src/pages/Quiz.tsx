@@ -267,29 +267,27 @@ const Quiz = () => {
   const saveResults = async () => {
     if (!user || !quizId) return;
 
-    const score = calculateScore();
-    const percentage = Math.round(((score / questions.length) * 100) * 10) / 10;
-    const earned = calculateCoinsEarned();
-    setCoinsEarned(earned);
-
     try {
-      // Include difficulty metadata in answers for the coin trigger
-      const answersWithMeta = answers.map((answer, index) => ({
-        selected: answer,
-        correct: questions[index]?.correctAnswer,
-        difficulty: questions[index]?.difficulty || "medium",
-        isCorrect: answer === questions[index]?.correctAnswer,
-      }));
-
-      await supabase.from("quiz_results").insert({
-        user_id: user.id,
-        todo_id: quizId,
-        score: percentage,
-        correct_answers: score,
-        total_questions: questions.length,
-        answers: answersWithMeta,
-        difficulty: questions[0]?.difficulty || "medium",
+      // Submit answers to server-side verification endpoint
+      const { data, error } = await supabase.functions.invoke("submit-quiz-result", {
+        body: {
+          quizId: savedQuizId,
+          todoId: quizId,
+          answers: answers,
+          difficulty: questions[0]?.difficulty || "medium",
+        },
       });
+
+      if (error) {
+        console.error("Server quiz submission error:", error);
+        toast.error("Failed to save results");
+        return;
+      }
+
+      const score = data?.correctCount || 0;
+      const percentage = data?.score || 0;
+      const earned = calculateCoinsEarned();
+      setCoinsEarned(earned);
 
       // Analyze weakness after saving results
       if (videoId && savedQuizId) {
@@ -301,7 +299,7 @@ const Quiz = () => {
         }));
 
         try {
-          const { data, error } = await supabase.functions.invoke(
+          const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
             "analyze-weakness",
             {
               body: {
@@ -313,10 +311,10 @@ const Quiz = () => {
             },
           );
 
-          if (error) {
-            console.error("Weakness analysis error:", error);
-          } else if (data?.weakTopics?.length > 0) {
-            toast.info(`Found ${data.weakTopics.length} topic(s) to improve`, {
+          if (analysisError) {
+            console.error("Weakness analysis error:", analysisError);
+          } else if (analysisData?.weakTopics?.length > 0) {
+            toast.info(`Found ${analysisData.weakTopics.length} topic(s) to improve`, {
               icon: <AlertCircle className="h-4 w-4 text-primary" />,
             });
           }
