@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, RotateCcw, Brain, Sparkles, Loader2, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, RotateCcw, Brain, Sparkles, Loader2, Trash2, ChevronLeft, ChevronRight, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 import BattleLoadingOverlay from "@/components/battle/BattleLoadingOverlay";
 
@@ -25,7 +26,6 @@ interface Flashcard {
 }
 
 function calculateNextReview(quality: number, card: Flashcard) {
-  // SM-2 algorithm
   let ef = card.ease_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
   ef = Math.max(1.3, ef);
   let interval = card.interval_days;
@@ -60,6 +60,8 @@ export default function Flashcards() {
   const [newBack, setNewBack] = useState("");
   const [newSubject, setNewSubject] = useState("");
   const [tab, setTab] = useState("review");
+  const [reviewedCount, setReviewedCount] = useState(0);
+  const [totalDue, setTotalDue] = useState(0);
 
   const fetchCards = useCallback(async () => {
     if (!user) return;
@@ -71,12 +73,52 @@ export default function Flashcards() {
     if (data) {
       setCards(data as unknown as Flashcard[]);
       const now = new Date().toISOString();
-      setDueCards((data as unknown as Flashcard[]).filter(c => c.next_review_at <= now));
+      const due = (data as unknown as Flashcard[]).filter(c => c.next_review_at <= now);
+      setDueCards(due);
+      setTotalDue(due.length);
+      setReviewedCount(0);
     }
     setLoading(false);
   }, [user]);
 
   useEffect(() => { fetchCards(); }, [fetchCards]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (tab !== "review" || dueCards.length === 0) return;
+      // Ignore if user is typing in an input
+      if ((e.target as HTMLElement)?.tagName === "INPUT" || (e.target as HTMLElement)?.tagName === "TEXTAREA") return;
+
+      switch (e.key) {
+        case " ":
+        case "Enter":
+          e.preventDefault();
+          setFlipped(f => !f);
+          break;
+        case "ArrowLeft":
+          if (currentIndex > 0) { setCurrentIndex(i => i - 1); setFlipped(false); }
+          break;
+        case "ArrowRight":
+          if (currentIndex < dueCards.length - 1) { setCurrentIndex(i => i + 1); setFlipped(false); }
+          break;
+        case "1":
+          if (flipped) handleRate(1);
+          break;
+        case "2":
+          if (flipped) handleRate(3);
+          break;
+        case "3":
+          if (flipped) handleRate(4);
+          break;
+        case "4":
+          if (flipped) handleRate(5);
+          break;
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [tab, dueCards.length, currentIndex, flipped]);
 
   const handleAddCard = async () => {
     if (!user || !newFront.trim() || !newBack.trim()) return;
@@ -133,6 +175,7 @@ export default function Flashcards() {
     setDueCards(remaining);
     setCurrentIndex(Math.min(currentIndex, remaining.length - 1));
     setFlipped(false);
+    setReviewedCount(prev => prev + 1);
     if (remaining.length === 0) toast.success("🎉 All cards reviewed!");
   };
 
@@ -144,6 +187,7 @@ export default function Flashcards() {
 
   const currentCard = dueCards[currentIndex];
   const subjects = [...new Set(cards.map(c => c.subject))];
+  const reviewProgress = totalDue > 0 ? (reviewedCount / totalDue) * 100 : 0;
 
   if (loading) {
     return (
@@ -164,9 +208,9 @@ export default function Flashcards() {
         <h1 className="text-2xl font-bold">Flashcards</h1>
         <p className="text-sm text-muted-foreground">Spaced repetition for long-term memory</p>
         <div className="flex gap-2 justify-center flex-wrap">
-          <Badge variant="outline">{cards.length} total</Badge>
-          <Badge className="bg-orange-500/20 text-orange-400">{dueCards.length} due</Badge>
-          <Badge variant="outline">{subjects.length} subjects</Badge>
+          <span><Badge variant="outline">{cards.length} total</Badge></span>
+          <span><Badge className="bg-orange-500/20 text-orange-400">{dueCards.length} due</Badge></span>
+          <span><Badge variant="outline">{subjects.length} subjects</Badge></span>
         </div>
       </div>
 
@@ -178,20 +222,37 @@ export default function Flashcards() {
         </TabsList>
 
         <TabsContent value="review" className="space-y-4 mt-4">
+          {/* Session progress bar */}
+          {totalDue > 0 && (
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Session progress</span>
+                <span>{reviewedCount}/{totalDue} reviewed</span>
+              </div>
+              <Progress value={reviewProgress} className="h-2" />
+            </div>
+          )}
+
           {dueCards.length === 0 ? (
             <Card className="border-primary/20">
               <CardContent className="p-8 text-center space-y-3">
                 <RotateCcw className="h-12 w-12 mx-auto text-muted-foreground" />
-                <h3 className="text-lg font-semibold">No cards due!</h3>
-                <p className="text-sm text-muted-foreground">All caught up. Create new cards or come back later.</p>
+                <h3 className="text-lg font-semibold">
+                  {reviewedCount > 0 ? "Session Complete! 🎉" : "No cards due!"}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {reviewedCount > 0
+                    ? `You reviewed ${reviewedCount} card${reviewedCount !== 1 ? "s" : ""} this session. Great work!`
+                    : "All caught up. Create new cards or come back later."}
+                </p>
               </CardContent>
             </Card>
           ) : (
             <>
               <p className="text-xs text-center text-muted-foreground">
-                Card {currentIndex + 1} of {dueCards.length} · Tap to flip
+                Card {currentIndex + 1} of {dueCards.length} · Tap or press Space to flip
               </p>
-              <div className="perspective-1000 cursor-pointer" onClick={() => setFlipped(!flipped)} style={{ perspective: "1000px" }}>
+              <div className="cursor-pointer" onClick={() => setFlipped(!flipped)} style={{ perspective: "1000px" }}>
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={`${currentCard?.id}-${flipped}`}
@@ -217,18 +278,41 @@ export default function Flashcards() {
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
                   <p className="text-xs text-center text-muted-foreground">How well did you know this?</p>
                   <div className="grid grid-cols-4 gap-2">
-                    <Button variant="outline" className="border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={() => handleRate(1)}>Again</Button>
-                    <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" onClick={() => handleRate(3)}>Hard</Button>
-                    <Button variant="outline" className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10" onClick={() => handleRate(4)}>Good</Button>
-                    <Button variant="outline" className="border-green-500/30 text-green-400 hover:bg-green-500/10" onClick={() => handleRate(5)}>Easy</Button>
+                    <Button variant="outline" className="border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={() => handleRate(1)}>
+                      <span className="flex flex-col items-center gap-0.5">
+                        <span>Again</span>
+                        <kbd className="text-[9px] opacity-50">1</kbd>
+                      </span>
+                    </Button>
+                    <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" onClick={() => handleRate(3)}>
+                      <span className="flex flex-col items-center gap-0.5">
+                        <span>Hard</span>
+                        <kbd className="text-[9px] opacity-50">2</kbd>
+                      </span>
+                    </Button>
+                    <Button variant="outline" className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10" onClick={() => handleRate(4)}>
+                      <span className="flex flex-col items-center gap-0.5">
+                        <span>Good</span>
+                        <kbd className="text-[9px] opacity-50">3</kbd>
+                      </span>
+                    </Button>
+                    <Button variant="outline" className="border-green-500/30 text-green-400 hover:bg-green-500/10" onClick={() => handleRate(5)}>
+                      <span className="flex flex-col items-center gap-0.5">
+                        <span>Easy</span>
+                        <kbd className="text-[9px] opacity-50">4</kbd>
+                      </span>
+                    </Button>
                   </div>
                 </motion.div>
               )}
 
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <Button variant="ghost" size="sm" disabled={currentIndex === 0} onClick={() => { setCurrentIndex(i => i - 1); setFlipped(false); }}>
                   <ChevronLeft className="h-4 w-4 mr-1" /> Prev
                 </Button>
+                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <Keyboard className="h-3 w-3" /> Space: flip · ←→: navigate · 1-4: rate
+                </span>
                 <Button variant="ghost" size="sm" disabled={currentIndex >= dueCards.length - 1} onClick={() => { setCurrentIndex(i => i + 1); setFlipped(false); }}>
                   Next <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>

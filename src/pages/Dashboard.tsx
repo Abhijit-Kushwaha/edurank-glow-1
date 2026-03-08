@@ -13,6 +13,9 @@ import {
   Trash2,
   Search,
   Star,
+  Sun,
+  Moon,
+  Sunset,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -39,6 +42,22 @@ interface Todo {
   description: string | null;
 }
 
+function getGreeting(): { text: string; icon: typeof Sun } {
+  const hour = new Date().getHours();
+  if (hour < 12) return { text: "Good Morning", icon: Sun };
+  if (hour < 17) return { text: "Good Afternoon", icon: Sunset };
+  return { text: "Good Evening", icon: Moon };
+}
+
+function getMotivationalMessage(progress: number): string {
+  if (progress === 0) return "Let's get started! Add your first task 🚀";
+  if (progress < 25) return "Great start! Keep the momentum going 💪";
+  if (progress < 50) return "You're making solid progress! 📈";
+  if (progress < 75) return "Over halfway there! You're on fire 🔥";
+  if (progress < 100) return "Almost done! Finish strong 🏆";
+  return "All tasks completed! You're a star ⭐";
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
@@ -54,6 +73,8 @@ const Dashboard = () => {
 
   const completedCount = todos.filter((t) => t.completed).length;
   const progress = todos.length > 0 ? (completedCount / todos.length) * 100 : 0;
+  const greeting = getGreeting();
+  const GreetingIcon = greeting.icon;
 
   const displayName =
     profile?.name ||
@@ -88,16 +109,12 @@ const Dashboard = () => {
     e.preventDefault();
     if (!newTodoTitle.trim() || !user) return;
 
-    // Check rate limit and credits before proceeding
     const canProceed = await canMakeRequest();
-    if (!canProceed) {
-      return;
-    }
+    if (!canProceed) return;
 
     setAdding(true);
 
     try {
-      // First, use AI to find the best video for this topic
       toast.info("Finding the best video for your topic...", {
         icon: <Search className="h-4 w-4 text-primary animate-pulse" />,
       });
@@ -128,7 +145,6 @@ const Dashboard = () => {
         }
       } catch (aiError) {
         console.error("AI video search failed:", aiError);
-        // Continue without video if AI fails
       }
 
       const { data, error } = await supabase
@@ -144,12 +160,9 @@ const Dashboard = () => {
 
       if (error) throw error;
 
-      // Save subtasks and their videos to the database
       if (data && subtasksData.length > 0) {
         for (let i = 0; i < subtasksData.length; i++) {
           const subtask = subtasksData[i];
-
-          // Insert subtask
           const { data: subtaskRow, error: subtaskError } = await supabase
             .from("subtasks")
             .insert({
@@ -161,33 +174,21 @@ const Dashboard = () => {
             .select()
             .single();
 
-          if (subtaskError) {
-            console.error("Error saving subtask:", subtaskError);
-            continue;
-          }
+          if (subtaskError) { console.error("Error saving subtask:", subtaskError); continue; }
 
-          // Insert videos for this subtask
           if (subtaskRow && subtask.videos?.length > 0) {
-            const videosToInsert = subtask.videos.map(
-              (video: any, idx: number) => ({
-                subtask_id: subtaskRow.id,
-                user_id: user.id,
-                video_id: video.videoId,
-                title: video.title,
-                channel: video.channel,
-                engagement_score: video.engagementScore,
-                reason: video.reason,
-                order_index: idx,
-              }),
-            );
-
-            const { error: videosError } = await supabase
-              .from("subtask_videos")
-              .insert(videosToInsert);
-
-            if (videosError) {
-              console.error("Error saving subtask videos:", videosError);
-            }
+            const videosToInsert = subtask.videos.map((video: any, idx: number) => ({
+              subtask_id: subtaskRow.id,
+              user_id: user.id,
+              video_id: video.videoId,
+              title: video.title,
+              channel: video.channel,
+              engagement_score: video.engagementScore,
+              reason: video.reason,
+              order_index: idx,
+            }));
+            const { error: videosError } = await supabase.from("subtask_videos").insert(videosToInsert);
+            if (videosError) console.error("Error saving subtask videos:", videosError);
           }
         }
       }
@@ -247,9 +248,7 @@ const Dashboard = () => {
     setDeletingId(id);
     try {
       const { error } = await supabase.from("todos").delete().eq("id", id);
-
       if (error) throw error;
-
       setTodos(todos.filter((t) => t.id !== id));
       toast.success("Task deleted");
     } catch (error) {
@@ -271,6 +270,19 @@ const Dashboard = () => {
   return (
     <div className="pb-24">
       <div className="container mx-auto px-4 py-6 space-y-8">
+        {/* Greeting */}
+        <section className="animate-fade-in">
+          <div className="flex items-center gap-3 mb-1">
+            <GreetingIcon className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl md:text-3xl font-bold">
+              {greeting.text}, <span className="bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">{displayName}</span>
+            </h1>
+          </div>
+          <p className="text-sm text-muted-foreground ml-9">
+            {getMotivationalMessage(progress)}
+          </p>
+        </section>
+
         {/* Progress Section */}
         <section className="glass-card rounded-2xl p-6 animate-fade-in">
           <div className="flex items-center justify-between mb-4">
@@ -315,16 +327,13 @@ const Dashboard = () => {
             </h2>
           </div>
 
-          {/* Filter Bar */}
           <FilterBar />
 
           <div className="space-y-3">
             {todos.length === 0 && !showInput && (
               <div className="glass-card rounded-xl p-8 text-center">
                 <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-2">
-                  No study tasks yet.
-                </p>
+                <p className="text-muted-foreground mb-2">No study tasks yet.</p>
                 <p className="text-sm text-muted-foreground">
                   Add a topic and AI will find the best video for you!
                 </p>
@@ -352,9 +361,7 @@ const Dashboard = () => {
                   <div className="flex-1 min-w-0">
                     <span
                       className={`block font-medium ${
-                        todo.completed
-                          ? "line-through text-muted-foreground"
-                          : ""
+                        todo.completed ? "line-through text-muted-foreground" : ""
                       }`}
                     >
                       {todo.title}
@@ -373,21 +380,13 @@ const Dashboard = () => {
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
                     {todo.video_id && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/video/${todo.id}`)}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/video/${todo.id}`)}>
                         <Play className="h-4 w-4 mr-1" />
                         Watch
                       </Button>
                     )}
                     {todo.completed && (
-                      <Button
-                        variant="success"
-                        size="sm"
-                        onClick={() => navigate(`/quiz/${todo.id}`)}
-                      >
+                      <Button variant="success" size="sm" onClick={() => navigate(`/quiz/${todo.id}`)}>
                         <Trophy className="h-4 w-4 mr-1" />
                         Quiz
                       </Button>
@@ -411,10 +410,7 @@ const Dashboard = () => {
             ))}
 
             {showInput && (
-              <form
-                onSubmit={handleAddTodo}
-                className="glass-card rounded-xl p-4 space-y-3"
-              >
+              <form onSubmit={handleAddTodo} className="glass-card rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                   <Sparkles className="h-4 w-4 text-primary" />
                   AI will find the best video for your topic
@@ -426,11 +422,7 @@ const Dashboard = () => {
                   autoFocus
                 />
                 <div className="flex gap-2">
-                  <Button
-                    type="submit"
-                    variant="neon"
-                    disabled={adding || !newTodoTitle.trim()}
-                  >
+                  <Button type="submit" variant="neon" disabled={adding || !newTodoTitle.trim()}>
                     {adding ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -440,12 +432,7 @@ const Dashboard = () => {
                       "Add Task"
                     )}
                   </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setShowInput(false)}
-                    disabled={adding}
-                  >
+                  <Button type="button" variant="ghost" onClick={() => setShowInput(false)} disabled={adding}>
                     Cancel
                   </Button>
                 </div>
