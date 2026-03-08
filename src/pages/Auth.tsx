@@ -248,7 +248,7 @@ const Auth = () => {
               console.error("Org join error:", orgError);
             }
           } else if (orgRole === "teacher" && orgName.trim() && !orgCode.trim()) {
-            // Teacher creating a new org (no code entered)
+            // Teacher creating a new org — promote to super_admin
             try {
               const { data: orgData } = await supabase
                 .from("organisations")
@@ -259,13 +259,10 @@ const Auth = () => {
               if (orgData) {
                 const { data: { user: currentUser } } = await supabase.auth.getUser();
                 if (currentUser) {
-                  await supabase.rpc("join_org_by_code", {
+                  await supabase.rpc("promote_org_creator", {
                     p_user_id: currentUser.id,
-                    p_code: (orgData as any).invite_code,
-                    p_role: "teacher",
+                    p_org_id: orgData.id,
                   });
-                  // Set as admin since they created it
-                  // Use a direct update via service - handled by the org creation flow
                 }
               }
             } catch (orgError) {
