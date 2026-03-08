@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import StudentProgressDialog from "./StudentProgressDialog";
+import CreditManager from "./CreditManager";
 
 interface OrgMember {
   user_id: string;
@@ -128,12 +129,20 @@ export default function MemberManager({ orgId }: MemberManagerProps) {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          <Users className="h-5 w-5 text-primary" />
-          Members
-        </h2>
-        <p className="text-sm text-muted-foreground">Manage organization members and their roles</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            Members
+          </h2>
+          <p className="text-sm text-muted-foreground">Manage organization members and their roles</p>
+        </div>
+        {canManageRoles && (
+          <CreditManager
+            members={members.map(m => ({ user_id: m.user_id, name: m.name, role: m.role }))}
+            onCreditsChanged={() => fetchMembers()}
+          />
+        )}
       </div>
 
       {/* Stats */}
