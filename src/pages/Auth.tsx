@@ -369,17 +369,22 @@ const Auth = () => {
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
+                    id="fullName"
+                    name="fullName"
                     type="text"
                     placeholder="Full Name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="pl-10"
+                    autoComplete="name"
                     required={!isLogin}
                   />
                 </div>
                 <div className="relative">
                   <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
+                    id="username"
+                    name="username"
                     type="text"
                     placeholder="Username (unique)"
                     value={username}
@@ -387,6 +392,7 @@ const Auth = () => {
                       setUsername(e.target.value.replace(/\s/g, ""))
                     }
                     className="pl-10 pr-10"
+                    autoComplete="username"
                     required={!isLogin}
                   />
                   {username.trim() && (
@@ -409,7 +415,7 @@ const Auth = () => {
 
                 {/* Organization / Role Selection */}
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">I am a...</label>
+                  <label htmlFor="orgRole" className="text-xs font-medium text-muted-foreground mb-1.5 block">I am a...</label>
                   <Select value={orgRole} onValueChange={(v: "student" | "teacher" | "admin" | "independent") => { setOrgRole(v); setOrgCode(""); setOrgName(""); setOrgCodeValid(null); setOrgCodeOrgName(""); }}>
                     <SelectTrigger>
                       <SelectValue />
@@ -428,11 +434,14 @@ const Auth = () => {
                     <div className="relative">
                       <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                       <Input
+                        id="orgCode"
+                        name="orgCode"
                         type="text"
                         placeholder="Organization Code (e.g. A1B2C3D4)"
                         value={orgCode}
                         onChange={(e) => setOrgCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8))}
                         className="pl-10 pr-10 uppercase tracking-widest font-mono"
+                        autoComplete="off"
                         maxLength={8}
                       />
                       {orgCode.trim() && (
@@ -466,11 +475,14 @@ const Auth = () => {
                   <div className="relative">
                     <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input
+                      id="orgName"
+                      name="orgName"
                       type="text"
                       placeholder="Organization Name (e.g. Sunrise Academy)"
                       value={orgName}
                       onChange={(e) => setOrgName(e.target.value)}
                       className="pl-10"
+                      autoComplete="organization"
                     />
                     <p className="text-[10px] text-muted-foreground mt-1">You'll become the Super Admin of this new organization</p>
                   </div>
@@ -481,11 +493,14 @@ const Auth = () => {
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
+                id="email"
+                name="email"
                 type="email"
                 placeholder="Email Address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="pl-10"
+                autoComplete="email"
                 required
               />
             </div>
@@ -493,11 +508,14 @@ const Auth = () => {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
+                id="password"
+                name="password"
                 type="password"
                 placeholder="Password (min 6 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="pl-10"
+                autoComplete={isLogin ? "current-password" : "new-password"}
                 minLength={6}
                 required
               />
