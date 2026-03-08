@@ -232,8 +232,23 @@ const Auth = () => {
           }
           resetTurnstile();
         } else {
-          // If teacher, create org and assign role after signup
-          if (orgRole === "teacher" && orgName.trim()) {
+          // Handle org joining/creation after signup
+          if ((orgRole === "student" || orgRole === "teacher") && orgCode.trim() && orgCodeValid) {
+            try {
+              const { data: { user: currentUser } } = await supabase.auth.getUser();
+              if (currentUser) {
+                const roleToAssign = orgRole === "teacher" ? "teacher" : "student";
+                await supabase.rpc("join_org_by_code", {
+                  p_user_id: currentUser.id,
+                  p_code: orgCode.trim(),
+                  p_role: roleToAssign,
+                });
+              }
+            } catch (orgError) {
+              console.error("Org join error:", orgError);
+            }
+          } else if (orgRole === "teacher" && orgName.trim() && !orgCode.trim()) {
+            // Teacher creating a new org (no code entered)
             try {
               const { data: orgData } = await supabase
                 .from("organisations")
@@ -242,13 +257,15 @@ const Auth = () => {
                 .single();
               
               if (orgData) {
-                // Update profile with org_id and role
                 const { data: { user: currentUser } } = await supabase.auth.getUser();
                 if (currentUser) {
-                  await supabase
-                    .from("profiles")
-                    .update({ org_id: orgData.id, role: "admin" })
-                    .eq("user_id", currentUser.id);
+                  await supabase.rpc("join_org_by_code", {
+                    p_user_id: currentUser.id,
+                    p_code: (orgData as any).invite_code,
+                    p_role: "teacher",
+                  });
+                  // Set as admin since they created it
+                  // Use a direct update via service - handled by the org creation flow
                 }
               }
             } catch (orgError) {
