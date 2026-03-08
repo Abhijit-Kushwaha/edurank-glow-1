@@ -17,6 +17,7 @@ export interface BattleConfig {
   numQuestions: number;
   source?: BattleSource;
   maxPlayers?: number;
+  orgId?: string;
 }
 
 export function useBattle() {
