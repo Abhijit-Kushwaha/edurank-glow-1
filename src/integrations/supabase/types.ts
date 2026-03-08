@@ -409,6 +409,134 @@ export type Database = {
         }
         Relationships: []
       }
+      channel_messages: {
+        Row: {
+          attachments: Json | null
+          channel_id: string
+          content: string | null
+          created_at: string
+          deleted_at: string | null
+          edited_at: string | null
+          id: string
+          is_pinned: boolean
+          message_type: string
+          reply_to: string | null
+          sender_id: string
+        }
+        Insert: {
+          attachments?: Json | null
+          channel_id: string
+          content?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          is_pinned?: boolean
+          message_type?: string
+          reply_to?: string | null
+          sender_id: string
+        }
+        Update: {
+          attachments?: Json | null
+          channel_id?: string
+          content?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          is_pinned?: boolean
+          message_type?: string
+          reply_to?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_messages_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "channel_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channels: {
+        Row: {
+          channel_type: string
+          classroom_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_archived: boolean
+          name: string
+          org_id: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          channel_type?: string
+          classroom_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_archived?: boolean
+          name: string
+          org_id: string
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          channel_type?: string
+          classroom_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_archived?: boolean
+          name?: string
+          org_id?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channels_classroom_id_fkey"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channels_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channels_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classroom_members: {
         Row: {
           classroom_id: string
@@ -675,6 +803,57 @@ export type Database = {
             columns: ["prerequisite_content_id"]
             isOneToOne: false
             referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_roles: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string
+          id: string
+          is_default: boolean
+          name: string
+          org_id: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_default?: boolean
+          name: string
+          org_id: string
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          org_id?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_roles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_roles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
         ]
@@ -960,6 +1139,90 @@ export type Database = {
           },
         ]
       }
+      knowledge_pages: {
+        Row: {
+          classroom_id: string | null
+          content: Json
+          cover_image: string | null
+          created_at: string
+          created_by: string
+          icon: string | null
+          id: string
+          is_published: boolean
+          last_edited_by: string | null
+          org_id: string
+          parent_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          classroom_id?: string | null
+          content?: Json
+          cover_image?: string | null
+          created_at?: string
+          created_by: string
+          icon?: string | null
+          id?: string
+          is_published?: boolean
+          last_edited_by?: string | null
+          org_id: string
+          parent_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          classroom_id?: string | null
+          content?: Json
+          cover_image?: string | null
+          created_at?: string
+          created_by?: string
+          icon?: string | null
+          id?: string
+          is_published?: boolean
+          last_edited_by?: string | null
+          org_id?: string
+          parent_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_pages_classroom_id_fkey"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_pages_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_pages_last_edited_by_fkey"
+            columns: ["last_edited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_pages_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_pages_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leaderboard_stats: {
         Row: {
           average_score: number
@@ -1239,6 +1502,52 @@ export type Database = {
             columns: ["deleted_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      member_custom_roles: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+          member_id: string
+          role_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          member_id: string
+          role_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          member_id?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_custom_roles_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_custom_roles_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "classroom_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_custom_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "custom_roles"
             referencedColumns: ["id"]
           },
         ]
@@ -1836,6 +2145,38 @@ export type Database = {
             columns: ["topic_id"]
             isOneToOne: false
             referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_permissions: {
+        Row: {
+          created_at: string
+          granted: boolean
+          id: string
+          permission: string
+          role_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted?: boolean
+          id?: string
+          permission: string
+          role_id: string
+        }
+        Update: {
+          created_at?: string
+          granted?: boolean
+          id?: string
+          permission?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "custom_roles"
             referencedColumns: ["id"]
           },
         ]
