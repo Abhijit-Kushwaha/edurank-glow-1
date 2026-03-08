@@ -415,7 +415,7 @@ const Auth = () => {
 
                 {/* Organization / Role Selection */}
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">I am a...</label>
+                  <label htmlFor="orgRole" className="text-xs font-medium text-muted-foreground mb-1.5 block">I am a...</label>
                   <Select value={orgRole} onValueChange={(v: "student" | "teacher" | "admin" | "independent") => { setOrgRole(v); setOrgCode(""); setOrgName(""); setOrgCodeValid(null); setOrgCodeOrgName(""); }}>
                     <SelectTrigger>
                       <SelectValue />
