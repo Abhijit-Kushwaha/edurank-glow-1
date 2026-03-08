@@ -55,6 +55,10 @@ serve(async (req) => {
     });
     if (!rateLimitResult.allowed) return withCorsError(req, 429, rateLimitResult.message || "Rate limit exceeded");
 
+    // Consume credits
+    const creditResult = await consumeCredits(user.id, CREDIT_COSTS["ai-chat"]);
+    if (!creditResult.success) return withCorsError(req, 402, creditResult.error || "Insufficient credits");
+
     const { messages, userContext } = await req.json();
     const validation = validateMessages(messages);
     if (!validation.isValid) return withCorsError(req, 400, validation.error || "Invalid input");

@@ -36,6 +36,9 @@ serve(async (req) => {
     });
     if (!rateLimitResult.allowed) return withCorsError(req, 429, rateLimitResult.message || "Rate limit exceeded");
 
+    const creditResult = await consumeCredits(user.id, CREDIT_COSTS["ai-notes-gen"]);
+    if (!creditResult.success) return withCorsError(req, 402, creditResult.error || "Insufficient credits");
+
     const { topic, subject, classLevel } = await req.json();
 
     if (!topic || typeof topic !== "string" || topic.trim().length === 0) return withCorsError(req, 400, "Topic is required");

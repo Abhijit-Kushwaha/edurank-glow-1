@@ -257,6 +257,9 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) return withCorsError(req, 401, "Unauthorized");
 
+    const creditResult = await consumeCredits(user.id, CREDIT_COSTS["find-video"]);
+    if (!creditResult.success) return withCorsError(req, 402, creditResult.error || "Insufficient credits");
+
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""

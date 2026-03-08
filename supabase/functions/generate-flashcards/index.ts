@@ -26,6 +26,10 @@ Deno.serve(async (req) => {
       return withCorsError(req, 401, "Unauthorized");
     }
 
+    const userId = claimsData.claims.sub as string;
+    const creditResult = await consumeCredits(userId, CREDIT_COSTS["generate-flashcards"]);
+    if (!creditResult.success) return withCorsError(req, 402, creditResult.error || "Insufficient credits");
+
     const { subject, count = 10 } = await req.json();
 
     if (!subject || typeof subject !== "string" || subject.length > 200) {
