@@ -19,7 +19,7 @@ export async function consumeCredits(
   await serviceClient
     .from("user_credits")
     .upsert(
-      { user_id: userId, credits_remaining: 50, credits_used: 0 },
+      { user_id: userId, credits_remaining: 100, credits_used: 0 },
       { onConflict: "user_id", ignoreDuplicates: true },
     );
 
