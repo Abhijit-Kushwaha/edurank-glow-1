@@ -508,11 +508,14 @@ const Auth = () => {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
+                id="password"
+                name="password"
                 type="password"
                 placeholder="Password (min 6 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="pl-10"
+                autoComplete={isLogin ? "current-password" : "new-password"}
                 minLength={6}
                 required
               />
