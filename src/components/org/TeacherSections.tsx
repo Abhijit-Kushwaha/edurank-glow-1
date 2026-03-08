@@ -619,6 +619,10 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
                 <Switch checked={quizForm.show_answers_after} onCheckedChange={v => setQuizForm(p => ({ ...p, show_answers_after: v }))} />
                 <Label className="text-xs">Show Answers After</Label>
               </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={quizForm.lock_screen} onCheckedChange={v => setQuizForm(p => ({ ...p, lock_screen: v }))} />
+                <Label className="text-xs flex items-center gap-1">🔒 Lock Screen (Anti-cheat)</Label>
+              </div>
             </div>
 
             {/* Question Creation Tabs */}
