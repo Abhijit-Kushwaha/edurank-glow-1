@@ -185,16 +185,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const loginWithGoogle = async (): Promise<{ error?: string }> => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
       });
 
-      if (error) {
-        console.error("Google login error:", error);
-        return { error: error.message };
+      if (result.error) {
+        console.error("Google login error:", result.error);
+        return { error: result.error.message || "Google login failed." };
       }
 
       return {};
