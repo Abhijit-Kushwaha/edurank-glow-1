@@ -30,6 +30,7 @@ import BattleArena from "./pages/BattleArena";
 import BattleLobby from "./pages/BattleLobby";
 import Flashcards from "./pages/Flashcards";
 import PomodoroTimer from "./pages/PomodoroTimer";
+import Achievements from "./pages/Achievements";
 
 const queryClient = new QueryClient();
 
