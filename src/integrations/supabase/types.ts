@@ -2015,6 +2015,53 @@ export type Database = {
           },
         ]
       }
+      org_join_requests: {
+        Row: {
+          created_at: string
+          id: string
+          org_id: string
+          requested_role: string
+          reviewed_at: string | null
+          reviewer_id: string | null
+          reviewer_note: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          org_id: string
+          requested_role?: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          reviewer_note?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          org_id?: string
+          requested_role?: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          reviewer_note?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_join_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_member_credits: {
         Row: {
           id: string
@@ -4142,6 +4189,14 @@ export type Database = {
       promote_org_creator: {
         Args: { p_org_id: string; p_user_id: string }
         Returns: boolean
+      }
+      request_join_org: {
+        Args: { p_code: string; p_role?: string }
+        Returns: Json
+      }
+      review_join_request: {
+        Args: { p_action: string; p_note?: string; p_request_id: string }
+        Returns: Json
       }
       set_member_role: {
         Args: { p_new_role: string; p_target_user_id: string }
