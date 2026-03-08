@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Users, Shield, GraduationCap, UserCog, Crown, Eye, Share2, Search, ChevronDown, UserPlus, Loader2 } from "lucide-react";
+import { Users, Shield, GraduationCap, UserCog, Crown, Eye, Share2, Search, ChevronDown, UserPlus, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -149,6 +149,21 @@ export default function MemberManager({ orgId }: MemberManagerProps) {
       toast.error(err.message || "Failed to change role");
     } finally {
       setPromoting(false);
+    }
+  };
+
+  const handleRemoveMember = async (member: OrgMember) => {
+    if (!confirm(`Remove ${member.name || member.email} from the organization? They will become an independent user.`)) return;
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ org_id: null, role: "student", is_independent: true, updated_at: new Date().toISOString() })
+        .eq("user_id", member.user_id);
+      if (error) throw error;
+      toast.success(`${member.name || "Member"} removed from organization`);
+      fetchMembers();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to remove member");
     }
   };
 
@@ -310,6 +325,17 @@ export default function MemberManager({ orgId }: MemberManagerProps) {
                     title="Change role"
                   >
                     <ChevronDown className="h-4 w-4" />
+                  </Button>
+                )}
+                {callerRole === "super_admin" && member.user_id !== profile?.user_id && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => handleRemoveMember(member)}
+                    title="Remove from organization"
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
               </div>
