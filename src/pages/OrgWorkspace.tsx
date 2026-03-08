@@ -17,6 +17,8 @@ import RoleManager from "@/components/org/RoleManager";
 import KnowledgeWorkspace from "@/components/org/KnowledgeWorkspace";
 import OrgAnalytics from "@/components/org/OrgAnalytics";
 import MemberManager from "@/components/org/MemberManager";
+import TeacherSections from "@/components/org/TeacherSections";
+import TimetableManager from "@/components/org/TimetableManager";
 
 const channelIcons: Record<string, typeof Hash> = {
   text: Hash,
