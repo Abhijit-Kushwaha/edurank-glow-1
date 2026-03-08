@@ -14,6 +14,8 @@ import {
   FileText,
   Swords,
   MessageSquare,
+  Layers,
+  Timer,
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,6 +39,8 @@ const mainNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "BrainBuddy AI", url: "/ai-chat", icon: Brain },
   { title: "AI Notes", url: "/ai-notes", icon: FileText },
+  { title: "Flashcards", url: "/flashcards", icon: Layers },
+  { title: "Pomodoro Timer", url: "/pomodoro", icon: Timer },
   { title: "Video Search", url: "/dashboard", icon: Play },
   { title: "Analysis", url: "/analysis", icon: TrendingUp },
 ];

@@ -28,6 +28,8 @@ import ResetPassword from "./pages/ResetPassword";
 import QuizProcessingPage from "./pages/QuizProcessing";
 import BattleArena from "./pages/BattleArena";
 import BattleLobby from "./pages/BattleLobby";
+import Flashcards from "./pages/Flashcards";
+import PomodoroTimer from "./pages/PomodoroTimer";
 
 const queryClient = new QueryClient();
 
@@ -176,6 +178,22 @@ const App = () => (
                 element={
                   <ProtectedWithLayout>
                     <BattleLobby />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/flashcards"
+                element={
+                  <ProtectedWithLayout>
+                    <Flashcards />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/pomodoro"
+                element={
+                  <ProtectedWithLayout>
+                    <PomodoroTimer />
                   </ProtectedWithLayout>
                 }
               />
