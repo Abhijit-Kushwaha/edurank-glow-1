@@ -165,7 +165,7 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
         description: quizForm.description || null,
         difficulty: quizForm.difficulty,
         time_limit_mins: quizForm.time_limit_mins,
-        section_id: quizForm.section_id || null,
+        section_id: quizForm.section_id === "all" ? null : quizForm.section_id,
         max_attempts: quizForm.max_attempts,
         questions: quizQuestions,
         is_published: publish,
