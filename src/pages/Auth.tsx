@@ -137,6 +137,12 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!turnstileToken) {
+      toast.error("Please complete the security verification");
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
