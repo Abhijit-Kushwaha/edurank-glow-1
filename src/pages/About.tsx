@@ -16,6 +16,7 @@ import AbhijitImage from "@/assets/Core Team pic/Abhijit Kushwaha.jpg";
 import AbhinavImage from "@/assets/Core Team pic/Abhinav Bajpai.jpg";
 import DewashishImage from "@/assets/Core Team pic/Dewashish Kesharwani.png";
 import PrinceImage from "@/assets/Core Team pic/Prince Kumar Verma.jpg";
+import VidyagyanSpecialThanksImage from "@/assets/Vidyagyan-special-thanks.png";
 
 const teamMembers = [
   { name: "Abhijit Kushwaha", role: "Backend Coder & Integrator" },
