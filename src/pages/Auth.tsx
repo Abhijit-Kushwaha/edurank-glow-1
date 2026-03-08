@@ -463,7 +463,7 @@ const Auth = () => {
                       <p className="text-xs text-destructive">Invalid code. Ask your admin for the correct organization code.</p>
                     )}
                     <p className="text-[10px] text-muted-foreground">
-                      Enter the code provided by your admin to join their organization.
+                      Enter the invite code from your admin. Your role (Student, Teacher, or Admin) is determined by the code.
                     </p>
                   </div>
                 )}
