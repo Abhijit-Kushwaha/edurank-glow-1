@@ -112,7 +112,7 @@ const Auth = () => {
   }, []);
   // Validate org code with debounce
   useEffect(() => {
-    if (!orgCode.trim() || isLogin || orgRole === "independent") {
+    if (!orgCode.trim() || isLogin || orgRole !== "student") {
       setOrgCodeValid(null);
       setOrgCodeOrgName("");
       return;
