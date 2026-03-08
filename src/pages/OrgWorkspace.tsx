@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Hash, Megaphone, HelpCircle, BookOpen, Shield, FileText, BarChart3, Plus, Users, Swords, Copy, Check, GraduationCap, Calendar, Layers, ClipboardList } from "lucide-react";
+import { Building2, Hash, Megaphone, HelpCircle, BookOpen, Shield, FileText, BarChart3, Plus, Users, Swords, Copy, Check, GraduationCap, Calendar, Layers, ClipboardList, UserPlus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,6 +21,9 @@ import TeacherSections from "@/components/org/TeacherSections";
 import TimetableManager from "@/components/org/TimetableManager";
 import BatchManager from "@/components/org/BatchManager";
 import MarksManager from "@/components/org/MarksManager";
+import JoinRequestsManager from "@/components/org/JoinRequestsManager";
+import SuperAdminPanel from "@/components/org/SuperAdminPanel";
+import JoinOrgCard from "@/components/org/JoinOrgCard";
 
 const channelIcons: Record<string, typeof Hash> = {
   text: Hash,
