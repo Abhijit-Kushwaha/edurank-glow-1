@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.generate-timetable]
 verify_jwt = false
+
+[functions.analyze-student-marks]
+verify_jwt = false
