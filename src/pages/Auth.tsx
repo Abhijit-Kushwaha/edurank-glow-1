@@ -247,14 +247,12 @@ const Auth = () => {
             try {
               const { data: { user: currentUser } } = await supabase.auth.getUser();
               if (currentUser) {
-                const roleToAssign = orgRole === "teacher" ? "teacher" : "student";
                 const { data: reqResult } = await supabase.rpc("request_join_org", {
                   p_code: orgCode.trim(),
-                  p_role: roleToAssign,
                 });
                 const res = reqResult as any;
                 if (res?.success) {
-                  toast.info(`Join request sent to ${res.org_name}. You'll be notified when approved.`);
+                  toast.info(`Join request sent to ${res.org_name} as ${res.role}. You'll be notified when approved.`);
                 } else {
                   console.error("Join request error:", res?.error);
                 }
