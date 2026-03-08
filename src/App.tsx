@@ -216,6 +216,14 @@ const App = () => (
                   </ProtectedWithLayout>
                 }
               />
+              <Route
+                path="/org-battle-arena"
+                element={
+                  <ProtectedWithLayout>
+                    <OrgBattleArena />
+                  </ProtectedWithLayout>
+                }
+              />
               <Route path="/about" element={<About />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

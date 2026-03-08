@@ -49,6 +49,7 @@ const mainNavItems = [
 const socialItems = [
   { title: "Organization", url: "/org", icon: Building2 },
   { title: "Battle Arena", url: "/battle-arena", icon: Swords },
+  { title: "Org Battles", url: "/org-battle-arena", icon: Shield },
   { title: "Friends", url: "/friends", icon: Users },
   { title: "Leaderboard", url: "/leaderboard", icon: Trophy },
   {
