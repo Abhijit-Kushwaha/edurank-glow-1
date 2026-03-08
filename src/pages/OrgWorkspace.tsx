@@ -16,6 +16,7 @@ import ChannelCreateDialog from "@/components/org/ChannelCreateDialog";
 import RoleManager from "@/components/org/RoleManager";
 import KnowledgeWorkspace from "@/components/org/KnowledgeWorkspace";
 import OrgAnalytics from "@/components/org/OrgAnalytics";
+import MemberManager from "@/components/org/MemberManager";
 
 const channelIcons: Record<string, typeof Hash> = {
   text: Hash,
