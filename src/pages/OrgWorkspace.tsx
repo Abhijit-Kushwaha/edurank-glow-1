@@ -251,7 +251,9 @@ export default function OrgWorkspace() {
             { id: "roles", label: "Roles & Permissions", icon: Shield },
             { id: "analytics", label: "Analytics", icon: BarChart3 },
             { id: "members", label: "Members", icon: Users },
+            { id: "join-requests", label: "Join Requests", icon: UserPlus },
             { id: "battles", label: "Battle Arena", icon: Swords },
+            ...(profile?.role === "super_admin" ? [{ id: "admin-settings", label: "Admin Settings", icon: Settings }] : []),
           ].map(item => (
             <button
               key={item.id}
