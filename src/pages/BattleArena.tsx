@@ -142,6 +142,7 @@ export default function BattleArena() {
                   status={b.status}
                   battleCode={b.battle_code}
                   playerCount={playerCounts[b.id] || 0}
+                  maxPlayers={b.max_players || 2}
                   onJoin={handleJoinById}
                 />
               ))}
