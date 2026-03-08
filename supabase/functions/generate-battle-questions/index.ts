@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callLovableAI } from "../_shared/lovableAI.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
+import { consumeCredits, CREDIT_COSTS } from "../_shared/credits.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
