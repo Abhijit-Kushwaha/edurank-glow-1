@@ -345,6 +345,11 @@ const Auth = () => {
               />
             </div>
 
+            {/* Cloudflare Turnstile Widget */}
+            <div className="flex justify-center">
+              <div ref={turnstileRef} />
+            </div>
+
             <Button
               type="submit"
               variant="neon"
