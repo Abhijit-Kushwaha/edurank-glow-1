@@ -173,7 +173,7 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
       if (error) throw error;
       toast.success(publish ? "Quiz published!" : "Quiz saved as draft!");
       setShowQuizDialog(false);
-      setQuizForm({ title: "", subject: "", description: "", difficulty: "medium", time_limit_mins: 30, section_id: "", max_attempts: 1 });
+      setQuizForm({ title: "", subject: "", description: "", difficulty: "medium", time_limit_mins: 30, section_id: "all", max_attempts: 1 });
       setQuizQuestions([]);
       fetchData();
     } catch (err: any) {
