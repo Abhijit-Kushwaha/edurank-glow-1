@@ -324,6 +324,48 @@ const Auth = () => {
                     This username is already taken
                   </p>
                 )}
+
+                {/* Organization / Role Selection */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">I am a...</label>
+                  <Select value={orgRole} onValueChange={(v: "student" | "teacher" | "independent") => setOrgRole(v)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="independent">Independent Student</SelectItem>
+                      <SelectItem value="student">Student (joining an organization)</SelectItem>
+                      <SelectItem value="teacher">Teacher / Admin (creating an organization)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {orgRole === "teacher" && (
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Organization Name (e.g. Sunrise Academy)"
+                      value={orgName}
+                      onChange={(e) => setOrgName(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                )}
+
+                {orgRole === "student" && (
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Organization Invite Code (optional)"
+                      value={orgName}
+                      onChange={(e) => setOrgName(e.target.value)}
+                      className="pl-10"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">You can also join later from your dashboard</p>
+                  </div>
+                )}
               </>
             )}
 
