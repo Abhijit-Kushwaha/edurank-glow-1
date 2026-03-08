@@ -424,10 +424,9 @@ const Auth = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="independent">Independent Student</SelectItem>
-                      <SelectItem value="student">Student (joining an organization)</SelectItem>
-                      <SelectItem value="teacher">Teacher (joining an organization)</SelectItem>
-                      <SelectItem value="admin">Admin (creating a new organization)</SelectItem>
+                      <SelectItem value="independent">Independent Student (no organization)</SelectItem>
+                      <SelectItem value="student">Joining an Organization (with invite code)</SelectItem>
+                      <SelectItem value="admin">Creating a New Organization</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
