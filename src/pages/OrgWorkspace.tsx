@@ -60,7 +60,7 @@ export default function OrgWorkspace() {
 
       const orgId = result.org_id;
 
-      // 3. Create default channels
+      // Create default channels
       const profileRes = await supabase.from("profiles").select("id").eq("user_id", user.id).single();
       if (profileRes.data) {
         const defaultChannels = [
@@ -73,7 +73,7 @@ export default function OrgWorkspace() {
         await (supabase as any).from("channels").insert(
           defaultChannels.map(ch => ({
             ...ch,
-            org_id: orgData.id,
+            org_id: orgId,
             created_by: profileRes.data.id,
           }))
         );
