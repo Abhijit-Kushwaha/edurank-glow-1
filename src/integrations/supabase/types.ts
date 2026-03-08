@@ -4035,6 +4035,7 @@ export type Database = {
         Args: { amount?: number; uid: string }
         Returns: boolean
       }
+      create_organisation: { Args: { p_name: string }; Returns: Json }
       generate_org_invite_code: { Args: never; Returns: string }
       get_my_org_credits: { Args: never; Returns: Json }
       get_org_members_with_stats: {

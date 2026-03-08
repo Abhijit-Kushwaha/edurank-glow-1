@@ -248,22 +248,14 @@ const Auth = () => {
               console.error("Org join error:", orgError);
             }
           } else if (orgRole === "teacher" && orgName.trim() && !orgCode.trim()) {
-            // Teacher creating a new org — promote to super_admin
+            // Teacher creating a new org via secure RPC
             try {
-              const { data: orgData } = await supabase
-                .from("organisations")
-                .insert({ name: orgName.trim() })
-                .select()
-                .single();
-              
-              if (orgData) {
-                const { data: { user: currentUser } } = await supabase.auth.getUser();
-                if (currentUser) {
-                  await supabase.rpc("promote_org_creator", {
-                    p_user_id: currentUser.id,
-                    p_org_id: orgData.id,
-                  });
-                }
+              const { data: rawResult, error: rpcError } = await supabase.rpc("create_organisation", {
+                p_name: orgName.trim(),
+              });
+              const result = rawResult as any;
+              if (rpcError || !result?.success) {
+                console.error("Org creation error:", result?.error || rpcError?.message);
               }
             } catch (orgError) {
               console.error("Org creation error:", orgError);
