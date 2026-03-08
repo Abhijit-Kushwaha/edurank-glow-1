@@ -225,6 +225,13 @@ const App = () => (
                   </ProtectedWithLayout>
                 }
               />
+              <Route
+                path="/org/quiz/:quizId"
+                element={
+                  <ProtectedWithLayout>
+                    <TakeOrgQuiz />
+                  </ProtectedWithLayout>
+                }
               <Route path="/about" element={<About />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
