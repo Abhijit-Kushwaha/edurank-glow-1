@@ -412,6 +412,7 @@ export type Database = {
           id: string
           max_players: number
           num_questions: number
+          org_id: string | null
           started_at: string | null
           status: string
           subject: string
@@ -427,6 +428,7 @@ export type Database = {
           id?: string
           max_players?: number
           num_questions?: number
+          org_id?: string | null
           started_at?: string | null
           status?: string
           subject: string
@@ -442,12 +444,21 @@ export type Database = {
           id?: string
           max_players?: number
           num_questions?: number
+          org_id?: string | null
           started_at?: string | null
           status?: string
           subject?: string
           winner_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "battles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       brain_points_log: {
         Row: {
@@ -1903,6 +1914,65 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_battle_leaderboard: {
+        Row: {
+          best_win_streak: number
+          brain_points: number
+          created_at: string
+          display_name: string
+          id: string
+          last_battle_date: string | null
+          org_id: string
+          total_battles: number
+          total_losses: number
+          total_wins: number
+          updated_at: string
+          user_id: string
+          weekly_points: number
+          win_streak: number
+        }
+        Insert: {
+          best_win_streak?: number
+          brain_points?: number
+          created_at?: string
+          display_name?: string
+          id?: string
+          last_battle_date?: string | null
+          org_id: string
+          total_battles?: number
+          total_losses?: number
+          total_wins?: number
+          updated_at?: string
+          user_id: string
+          weekly_points?: number
+          win_streak?: number
+        }
+        Update: {
+          best_win_streak?: number
+          brain_points?: number
+          created_at?: string
+          display_name?: string
+          id?: string
+          last_battle_date?: string | null
+          org_id?: string
+          total_battles?: number
+          total_losses?: number
+          total_wins?: number
+          updated_at?: string
+          user_id?: string
+          weekly_points?: number
+          win_streak?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_battle_leaderboard_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
         ]
