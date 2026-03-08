@@ -1677,6 +1677,7 @@ export type Database = {
           domain: string | null
           grading_lock_days: number
           id: string
+          invite_code: string
           invite_mode: string
           late_penalty_percent_per_day: number
           late_submission_policy: string
@@ -1697,6 +1698,7 @@ export type Database = {
           domain?: string | null
           grading_lock_days?: number
           id?: string
+          invite_code?: string
           invite_mode?: string
           late_penalty_percent_per_day?: number
           late_submission_policy?: string
@@ -1717,6 +1719,7 @@ export type Database = {
           domain?: string | null
           grading_lock_days?: number
           id?: string
+          invite_code?: string
           invite_mode?: string
           late_penalty_percent_per_day?: number
           late_submission_policy?: string
@@ -3132,10 +3135,15 @@ export type Database = {
         Args: { amount?: number; uid: string }
         Returns: boolean
       }
+      generate_org_invite_code: { Args: never; Returns: string }
       get_profile_id: { Args: { uid: string }; Returns: string }
       get_user_org_id: { Args: { uid: string }; Returns: string }
       get_user_role: { Args: { uid: string }; Returns: string }
       get_week_start: { Args: { d?: string }; Returns: string }
+      join_org_by_code: {
+        Args: { p_code: string; p_role?: string; p_user_id: string }
+        Returns: Json
+      }
       update_achievement_progress: {
         Args: {
           p_achievement_id: string
@@ -3147,6 +3155,7 @@ export type Database = {
         Returns: undefined
       }
       use_streak_protection: { Args: { p_user_id: string }; Returns: boolean }
+      validate_org_code: { Args: { p_code: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never

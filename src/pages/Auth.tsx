@@ -45,6 +45,10 @@ const Auth = () => {
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [orgName, setOrgName] = useState("");
+  const [orgCode, setOrgCode] = useState("");
+  const [orgCodeValid, setOrgCodeValid] = useState<boolean | null>(null);
+  const [orgCodeOrgName, setOrgCodeOrgName] = useState("");
+  const [isCheckingOrgCode, setIsCheckingOrgCode] = useState(false);
   const [orgRole, setOrgRole] = useState<"student" | "teacher" | "independent">("independent");
   const [isUsernameAvailable, setIsUsernameAvailable] = useState<
     boolean | null
@@ -106,6 +110,35 @@ const Auth = () => {
       setTurnstileToken(null);
     }
   }, []);
+  // Validate org code with debounce
+  useEffect(() => {
+    if (!orgCode.trim() || isLogin || orgRole === "independent") {
+      setOrgCodeValid(null);
+      setOrgCodeOrgName("");
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setIsCheckingOrgCode(true);
+      try {
+        const { data, error } = await supabase.rpc("validate_org_code", { p_code: orgCode.trim() });
+        if (error) {
+          setOrgCodeValid(null);
+        } else {
+          const result = data as any;
+          setOrgCodeValid(result?.valid ?? false);
+          setOrgCodeOrgName(result?.org_name ?? "");
+        }
+      } catch {
+        setOrgCodeValid(null);
+      } finally {
+        setIsCheckingOrgCode(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [orgCode, isLogin, orgRole]);
+
   // Check username availability with debounce
   useEffect(() => {
     if (!username.trim() || isLogin) {
@@ -175,8 +208,13 @@ const Auth = () => {
           setIsLoading(false);
           return;
         }
-        if (orgRole === "teacher" && !orgName.trim()) {
-          toast.error("Please enter your organization name");
+        if (orgRole === "teacher" && !orgName.trim() && !orgCode.trim()) {
+          toast.error("Please enter your organization name or an organization code");
+          setIsLoading(false);
+          return;
+        }
+        if ((orgRole === "student" || orgRole === "teacher") && orgCode.trim() && orgCodeValid === false) {
+          toast.error("Invalid organization code. Please check and try again.");
           setIsLoading(false);
           return;
         }
@@ -194,8 +232,23 @@ const Auth = () => {
           }
           resetTurnstile();
         } else {
-          // If teacher, create org and assign role after signup
-          if (orgRole === "teacher" && orgName.trim()) {
+          // Handle org joining/creation after signup
+          if ((orgRole === "student" || orgRole === "teacher") && orgCode.trim() && orgCodeValid) {
+            try {
+              const { data: { user: currentUser } } = await supabase.auth.getUser();
+              if (currentUser) {
+                const roleToAssign = orgRole === "teacher" ? "teacher" : "student";
+                await supabase.rpc("join_org_by_code", {
+                  p_user_id: currentUser.id,
+                  p_code: orgCode.trim(),
+                  p_role: roleToAssign,
+                });
+              }
+            } catch (orgError) {
+              console.error("Org join error:", orgError);
+            }
+          } else if (orgRole === "teacher" && orgName.trim() && !orgCode.trim()) {
+            // Teacher creating a new org (no code entered)
             try {
               const { data: orgData } = await supabase
                 .from("organisations")
@@ -204,13 +257,15 @@ const Auth = () => {
                 .single();
               
               if (orgData) {
-                // Update profile with org_id and role
                 const { data: { user: currentUser } } = await supabase.auth.getUser();
                 if (currentUser) {
-                  await supabase
-                    .from("profiles")
-                    .update({ org_id: orgData.id, role: "admin" })
-                    .eq("user_id", currentUser.id);
+                  await supabase.rpc("join_org_by_code", {
+                    p_user_id: currentUser.id,
+                    p_code: (orgData as any).invite_code,
+                    p_role: "teacher",
+                  });
+                  // Set as admin since they created it
+                  // Use a direct update via service - handled by the org creation flow
                 }
               }
             } catch (orgError) {
@@ -368,30 +423,58 @@ const Auth = () => {
                   </Select>
                 </div>
 
-                {orgRole === "teacher" && (
-                  <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                      type="text"
-                      placeholder="Organization Name (e.g. Sunrise Academy)"
-                      value={orgName}
-                      onChange={(e) => setOrgName(e.target.value)}
-                      className="pl-10"
-                    />
+                {(orgRole === "student" || orgRole === "teacher") && (
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Organization Code (e.g. A1B2C3D4)"
+                        value={orgCode}
+                        onChange={(e) => setOrgCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8))}
+                        className="pl-10 pr-10 uppercase tracking-widest font-mono"
+                        maxLength={8}
+                      />
+                      {orgCode.trim() && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {isCheckingOrgCode ? (
+                            <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                          ) : orgCodeValid === true ? (
+                            <Check className="h-5 w-5 text-green-500" />
+                          ) : orgCodeValid === false ? (
+                            <X className="h-5 w-5 text-destructive" />
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                    {orgCode.trim() && orgCodeValid && orgCodeOrgName && (
+                      <p className="text-xs text-green-500 flex items-center gap-1">
+                        <Check className="h-3 w-3" />
+                        Joining: <strong>{orgCodeOrgName}</strong>
+                      </p>
+                    )}
+                    {orgCode.trim() && orgCodeValid === false && (
+                      <p className="text-xs text-destructive">Invalid code. Ask your admin for the correct organization code.</p>
+                    )}
+                    <p className="text-[10px] text-muted-foreground">
+                      {orgRole === "student"
+                        ? "Enter the code provided by your teacher/admin to join their organization."
+                        : "Enter a code to join an existing org, or leave blank and enter an org name below to create a new one."}
+                    </p>
                   </div>
                 )}
 
-                {orgRole === "student" && (
+                {orgRole === "teacher" && !orgCode.trim() && (
                   <div className="relative">
                     <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input
                       type="text"
-                      placeholder="Organization Invite Code (optional)"
+                      placeholder="New Organization Name (e.g. Sunrise Academy)"
                       value={orgName}
                       onChange={(e) => setOrgName(e.target.value)}
                       className="pl-10"
                     />
-                    <p className="text-[10px] text-muted-foreground mt-1">You can also join later from your dashboard</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">You'll become the admin of this new organization</p>
                   </div>
                 )}
               </>

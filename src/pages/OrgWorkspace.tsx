@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Hash, Megaphone, HelpCircle, BookOpen, Shield, FileText, BarChart3, Plus, Users, Swords } from "lucide-react";
+import { Building2, Hash, Megaphone, HelpCircle, BookOpen, Shield, FileText, BarChart3, Plus, Users, Swords, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -191,6 +191,21 @@ export default function OrgWorkspace() {
             <h2 className="font-bold text-sm truncate">{org?.name || "Organization"}</h2>
           </div>
           <Badge variant="outline" className="mt-1 text-[10px]">{org?.plan || "free"}</Badge>
+          {(org as any)?.invite_code && (
+            <div className="mt-2">
+              <p className="text-[10px] text-muted-foreground">Invite Code</p>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText((org as any).invite_code);
+                  toast.success("Invite code copied!");
+                }}
+                className="flex items-center gap-1 text-xs font-mono bg-muted/50 px-2 py-0.5 rounded hover:bg-muted transition-colors"
+              >
+                {(org as any).invite_code}
+                <Copy className="h-3 w-3 text-muted-foreground" />
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-auto p-2 space-y-1">
