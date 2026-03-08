@@ -66,6 +66,7 @@ export function useOrganization() {
   const [roles, setRoles] = useState<CustomRole[]>([]);
   const [pages, setPages] = useState<KnowledgePage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchKey, setFetchKey] = useState(0);
 
   // Profile has org_id but it may not be in the Profile interface, access via any
   const orgId = (profile as any)?.org_id as string | undefined;
@@ -93,7 +94,9 @@ export function useOrganization() {
     };
 
     fetchData();
-  }, [orgId]);
+  }, [orgId, fetchKey]);
+
+  const refetch = useCallback(() => setFetchKey(k => k + 1), []);
 
   const createChannel = useCallback(async (name: string, type: string, description?: string) => {
     if (!orgId || !profile) return null;
@@ -147,6 +150,7 @@ export function useOrganization() {
     createChannel,
     createRole,
     createPage,
+    refetch,
     isOrgMember: !!orgId,
   };
 }

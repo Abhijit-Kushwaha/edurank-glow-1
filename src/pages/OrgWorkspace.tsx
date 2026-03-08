@@ -1,11 +1,16 @@
 import { useState } from "react";
 import { useOrganization } from "@/hooks/useOrganization";
-import { Building2, Hash, Megaphone, HelpCircle, BookOpen, Shield, FileText, BarChart3, Plus, Settings, Users, Swords } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Building2, Hash, Megaphone, HelpCircle, BookOpen, Shield, FileText, BarChart3, Plus, Users, Swords } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import ChannelView from "@/components/org/ChannelView";
 import ChannelCreateDialog from "@/components/org/ChannelCreateDialog";
 import RoleManager from "@/components/org/RoleManager";
@@ -21,10 +26,79 @@ const channelIcons: Record<string, typeof Hash> = {
 };
 
 export default function OrgWorkspace() {
-  const { org, channels, roles, pages, loading, isOrgMember, createChannel, createRole, createPage } = useOrganization();
+  const { org, channels, roles, pages, loading, isOrgMember, createChannel, createRole, createPage, refetch } = useOrganization();
+  const { user } = useAuth();
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
   const [showCreateChannel, setShowCreateChannel] = useState(false);
   const [activeTab, setActiveTab] = useState("channels");
+
+  // Create org dialog state
+  const [showCreateOrg, setShowCreateOrg] = useState(false);
+  const [orgName, setOrgName] = useState("");
+  const [orgDescription, setOrgDescription] = useState("");
+  const [creatingOrg, setCreatingOrg] = useState(false);
+
+  const handleCreateOrg = async () => {
+    if (!orgName.trim() || !user) return;
+    setCreatingOrg(true);
+    try {
+      // 1. Create the organisation
+      const { data: orgData, error: orgError } = await supabase
+        .from("organisations")
+        .insert({ name: orgName.trim() })
+        .select()
+        .single();
+
+      if (orgError) {
+        toast.error("Failed to create organization: " + orgError.message);
+        setCreatingOrg(false);
+        return;
+      }
+
+      // 2. Update profile to link to org and set role to admin
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ org_id: orgData.id, role: "admin" })
+        .eq("user_id", user.id);
+
+      if (profileError) {
+        toast.error("Organization created but failed to link your profile: " + profileError.message);
+        setCreatingOrg(false);
+        return;
+      }
+
+      // 3. Create default channels
+      const profileRes = await supabase.from("profiles").select("id").eq("user_id", user.id).single();
+      if (profileRes.data) {
+        const defaultChannels = [
+          { name: "announcements", channel_type: "announcements", description: "Important announcements", position: 0 },
+          { name: "general", channel_type: "general", description: "General discussion", position: 1 },
+          { name: "doubt-solving", channel_type: "doubt-solving", description: "Ask and solve doubts", position: 2 },
+          { name: "resources", channel_type: "resources", description: "Study resources and materials", position: 3 },
+        ];
+
+        await (supabase as any).from("channels").insert(
+          defaultChannels.map(ch => ({
+            ...ch,
+            org_id: orgData.id,
+            created_by: profileRes.data.id,
+          }))
+        );
+      }
+
+      toast.success(`"${orgName.trim()}" created! You are now the admin.`);
+      setShowCreateOrg(false);
+      setOrgName("");
+      setOrgDescription("");
+      // Reload to pick up updated profile with org_id
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong");
+    } finally {
+      setCreatingOrg(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -39,17 +113,71 @@ export default function OrgWorkspace() {
 
   if (!isOrgMember) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-6">
-        <Building2 className="h-16 w-16 text-muted-foreground" />
-        <h2 className="text-2xl font-bold">No Organization</h2>
-        <p className="text-muted-foreground text-center max-w-md">
-          You're not part of any organization yet. Ask your teacher or admin for an invite link, or create your own organization.
-        </p>
-        <Button className="mt-2">
-          <Plus className="h-4 w-4 mr-2" />
-          Create Organization
-        </Button>
-      </div>
+      <>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-6">
+          <Building2 className="h-16 w-16 text-muted-foreground" />
+          <h2 className="text-2xl font-bold">No Organization</h2>
+          <p className="text-muted-foreground text-center max-w-md">
+            You're not part of any organization yet. Ask your teacher or admin for an invite link, or create your own organization.
+          </p>
+          <Button className="mt-2" onClick={() => setShowCreateOrg(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Organization
+          </Button>
+        </div>
+
+        <Dialog open={showCreateOrg} onOpenChange={setShowCreateOrg}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-primary" />
+                Create Organization
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Organization Name <span className="text-destructive">*</span></Label>
+                <Input
+                  value={orgName}
+                  onChange={e => setOrgName(e.target.value)}
+                  placeholder="e.g. Sunrise Academy, Physics Study Group"
+                  maxLength={100}
+                />
+              </div>
+              <div>
+                <Label>Description (optional)</Label>
+                <Textarea
+                  value={orgDescription}
+                  onChange={e => setOrgDescription(e.target.value)}
+                  placeholder="What is this organization about?"
+                  rows={3}
+                />
+              </div>
+              <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground space-y-1">
+                <p className="font-medium text-foreground">As the creator, you will:</p>
+                <ul className="list-disc list-inside space-y-0.5 text-xs">
+                  <li>Become the <strong>Admin</strong> of the organization</li>
+                  <li>Get default channels (Announcements, General, Doubt Solving, Resources)</li>
+                  <li>Be able to invite members, create classes, and manage roles</li>
+                </ul>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowCreateOrg(false)}>Cancel</Button>
+              <Button onClick={handleCreateOrg} disabled={!orgName.trim() || creatingOrg}>
+                {creatingOrg ? (
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Creating...
+                  </div>
+                ) : (
+                  "Create Organization"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 
