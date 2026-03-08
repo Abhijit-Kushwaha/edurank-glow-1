@@ -31,6 +31,7 @@ import BattleLobby from "./pages/BattleLobby";
 import Flashcards from "./pages/Flashcards";
 import PomodoroTimer from "./pages/PomodoroTimer";
 import Achievements from "./pages/Achievements";
+import OrgWorkspace from "./pages/OrgWorkspace";
 
 const queryClient = new QueryClient();
 
@@ -203,6 +204,14 @@ const App = () => (
                 element={
                   <ProtectedWithLayout>
                     <Achievements />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/org"
+                element={
+                  <ProtectedWithLayout>
+                    <OrgWorkspace />
                   </ProtectedWithLayout>
                 }
               />

@@ -16,6 +16,7 @@ import {
   MessageSquare,
   Layers,
   Timer,
+  Building2,
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
@@ -46,6 +47,7 @@ const mainNavItems = [
 ];
 
 const socialItems = [
+  { title: "Organization", url: "/org", icon: Building2 },
   { title: "Battle Arena", url: "/battle-arena", icon: Swords },
   { title: "Friends", url: "/friends", icon: Users },
   { title: "Leaderboard", url: "/leaderboard", icon: Trophy },
