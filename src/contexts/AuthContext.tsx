@@ -259,6 +259,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         signup,
         loginWithGoogle,
         logout,
+        verifyTurnstile,
       }}
     >
       {children}
