@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/~oauth/initiate",
+      "destination": "https://oauth.lovable.app/~oauth/initiate"
+    },
+    {
+      "source": "/~oauth/callback",
+      "destination": "https://oauth.lovable.app/~oauth/callback"
+    },
+    {
       "source": "/~oauth/:path*",
       "destination": "https://oauth.lovable.app/~oauth/:path*"
     },

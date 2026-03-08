@@ -30,9 +30,32 @@ export default function PomodoroTimer() {
   const [totalFocusMins, setTotalFocusMins] = useState(0);
   const [subject, setSubject] = useState("");
   const [soundOn, setSoundOn] = useState(true);
+  const [tickSound, setTickSound] = useState(true);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const tickAudioCtxRef = useRef<AudioContext | null>(null);
+
+  // Tick-tick sound effect
+  const playTick = useCallback(() => {
+    if (!tickSound || !soundOn) return;
+    try {
+      if (!tickAudioCtxRef.current) {
+        tickAudioCtxRef.current = new AudioContext();
+      }
+      const ctx = tickAudioCtxRef.current;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 1200;
+      osc.type = "square";
+      gain.gain.setValueAtTime(0.05, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.05);
+    } catch {}
+  }, [tickSound, soundOn]);
 
   // Today's stats
   const [todayStats, setTodayStats] = useState({ sessions: 0, minutes: 0 });
