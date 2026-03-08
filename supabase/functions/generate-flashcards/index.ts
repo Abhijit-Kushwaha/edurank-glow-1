@@ -1,35 +1,33 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "../_shared/cors.ts";
+import { preflightResponse, withCors, withCorsError } from "../_shared/cors.ts";
 import { callLovableAI } from "../_shared/lovableAI.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = preflightResponse(req);
+  if (preflight) return preflight;
 
   try {
     const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return withCorsError(req, 401, "Unauthorized");
+    }
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader ?? "" } } }
+      { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return withCorsError(req, 401, "Unauthorized");
     }
 
     const { subject, count = 10 } = await req.json();
 
     if (!subject || typeof subject !== "string" || subject.length > 200) {
-      return new Response(JSON.stringify({ error: "Invalid subject" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return withCorsError(req, 400, "Invalid subject");
     }
 
     const safeSubject = subject.replace(/[<>"]/g, "").slice(0, 200);
@@ -48,7 +46,6 @@ Example format:
 
     const response = await callLovableAI(prompt, { temperature: 0.7 });
 
-    // Parse JSON from response
     const jsonMatch = response.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
       throw new Error("Failed to parse flashcards from AI response");
@@ -56,14 +53,9 @@ Example format:
 
     const flashcards = JSON.parse(jsonMatch[0]);
 
-    return new Response(JSON.stringify({ flashcards }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return withCors(req, { json: { flashcards } });
   } catch (error) {
     console.error("Generate flashcards error:", error);
-    return new Response(JSON.stringify({ error: "Failed to generate flashcards" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return withCorsError(req, 500, "Failed to generate flashcards");
   }
 });
