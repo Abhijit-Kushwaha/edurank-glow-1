@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Trophy, Swords, ArrowLeft, Star, Zap, Target, Flame, Crown } from "lucide-react";
+import { Trophy, Swords, ArrowLeft, Star, Zap, Target, Flame, Crown, Trash2, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import BattleAnalysis from "./BattleAnalysis";
@@ -19,7 +19,10 @@ interface BattleResultsPanelProps {
   subject: string;
   brainPointsEarned: number;
   battleId: string;
+  isCreator: boolean;
   onGoBack: () => void;
+  onDeleteBattle: () => void;
+  deleting: boolean;
 }
 
 export default function BattleResultsPanel({
@@ -28,7 +31,10 @@ export default function BattleResultsPanel({
   subject,
   brainPointsEarned,
   battleId,
+  isCreator,
   onGoBack,
+  onDeleteBattle,
+  deleting,
 }: BattleResultsPanelProps) {
   const sorted = [...players].sort((a, b) => b.score - a.score);
   const winner = sorted[0];
@@ -165,9 +171,28 @@ export default function BattleResultsPanel({
       {/* AI Battle Analysis */}
       <BattleAnalysis battleId={battleId} userId={currentUserId} subject={subject} />
 
-      <Button onClick={onGoBack} variant="outline" className="w-full gap-2">
-        <ArrowLeft className="h-4 w-4" /> Back to Battle Arena
-      </Button>
+      <div className="space-y-2">
+        <Button onClick={onGoBack} variant="outline" className="w-full gap-2">
+          <ArrowLeft className="h-4 w-4" /> Back to Battle Arena
+        </Button>
+
+        {/* Host-only delete button */}
+        {isCreator && (
+          <Button
+            onClick={onDeleteBattle}
+            disabled={deleting}
+            variant="outline"
+            className="w-full gap-2 border-destructive/50 text-destructive hover:bg-destructive/10"
+          >
+            {deleting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+            {deleting ? "Deleting..." : "Delete This Battle"}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

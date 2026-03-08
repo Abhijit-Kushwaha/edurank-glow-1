@@ -18,12 +18,13 @@ import BattleResultsPanel from "@/components/battle/BattleResultsPanel";
 import BattleStartAnimation from "@/components/battle/BattleStartAnimation";
 import BattleReactions, { type FloatingReaction } from "@/components/battle/BattleReactions";
 import ScoreAnimation from "@/components/battle/ScoreAnimation";
+import BattleLoadingOverlay from "@/components/battle/BattleLoadingOverlay";
 
 export default function BattleLobby() {
   const { battleId } = useParams<{ battleId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { startBattle, advanceQuestion, endBattle, submitAnswer, awardBrainPoints } = useBattle();
+  const { startBattle, advanceQuestion, endBattle, submitAnswer, awardBrainPoints, deleteBattle } = useBattle();
   const { battle, players, answers } = useBattleRealtime(battleId || null);
 
   const [questions, setQuestions] = useState<any[]>([]);
@@ -35,7 +36,7 @@ export default function BattleLobby() {
   const [doubleActive, setDoubleActive] = useState(false);
   const [brainPointsEarned, setBrainPointsEarned] = useState(0);
 
-  // New state for animations
+  // Animation states
   const [showStartAnimation, setShowStartAnimation] = useState(false);
   const [battleStarted, setBattleStarted] = useState(false);
   const [floatingReactions, setFloatingReactions] = useState<FloatingReaction[]>([]);
@@ -43,8 +44,12 @@ export default function BattleLobby() {
     show: false, isCorrect: false, points: 0, streak: 0,
   });
   const [submitting, setSubmitting] = useState(false);
+  const [startingBattle, setStartingBattle] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [hasAnsweredCurrent, setHasAnsweredCurrent] = useState(false);
 
   const isCreator = battle?.creator_id === user?.id;
+  const maxPlayers = (battle as any)?.max_players || 2;
 
   // Fetch questions when battle becomes active
   useEffect(() => {
@@ -76,6 +81,7 @@ export default function BattleLobby() {
   useEffect(() => {
     if (battle?.current_question !== undefined) {
       setCurrentQIndex(battle.current_question);
+      setHasAnsweredCurrent(false); // Reset answer state for new question
     }
   }, [battle?.current_question]);
 
@@ -86,6 +92,43 @@ export default function BattleLobby() {
     const total = myAnswers.reduce((sum, a) => sum + a.points_earned, 0);
     setMyScore(total);
   }, [answers, user]);
+
+  // Track if current user has answered the current question
+  useEffect(() => {
+    if (!user || !questions[currentQIndex]) return;
+    const currentQ = questions[currentQIndex];
+    const answered = answers.some(a => a.question_id === currentQ.id && a.user_id === user.id);
+    setHasAnsweredCurrent(answered);
+  }, [answers, currentQIndex, questions, user]);
+
+  // Auto-advance: when ALL players have answered the current question, move to next
+  useEffect(() => {
+    if (!battleId || !isCreator || !battleStarted || questions.length === 0) return;
+    const currentQ = questions[currentQIndex];
+    if (!currentQ) return;
+
+    // Count how many players have answered this question
+    const answersForCurrentQ = answers.filter(a => a.question_id === currentQ.id);
+    const allPlayersAnswered = answersForCurrentQ.length >= players.length && players.length >= 2;
+
+    if (allPlayersAnswered) {
+      const nextIndex = currentQIndex + 1;
+      if (nextIndex >= questions.length) {
+        // End battle
+        setTimeout(async () => {
+          const sorted = [...players].sort((a, b) => b.score - a.score);
+          const winnerId = sorted[0]?.user_id;
+          await endBattle(battleId, winnerId);
+        }, 1500);
+      } else {
+        // Auto-advance after a short delay
+        const timer = setTimeout(() => {
+          advanceQuestion(battleId, nextIndex);
+        }, 1500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [answers, currentQIndex, questions, players, battleId, isCreator, battleStarted, advanceQuestion, endBattle]);
 
   // Realtime reactions channel
   useEffect(() => {
@@ -125,26 +168,40 @@ export default function BattleLobby() {
   };
 
   const handleStartBattle = async () => {
-    if (!battleId || players.length < 2) {
-      toast.error("Need at least 2 players to start");
-      return;
+    if (!battleId || players.length < 2 || startingBattle) return;
+    setStartingBattle(true);
+    try {
+      await startBattle(battleId);
+    } finally {
+      setStartingBattle(false);
     }
-    await startBattle(battleId);
+  };
+
+  const handleDeleteBattle = async () => {
+    if (!battleId || deleting) return;
+    setDeleting(true);
+    try {
+      await deleteBattle(battleId);
+      toast.success("Battle deleted successfully");
+      navigate("/battle-arena");
+    } catch {
+      toast.error("Failed to delete battle");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleAnswer = async (selectedAnswer: number, timeTaken: number) => {
-    if (!battleId || !user || !questions[currentQIndex] || submitting) return;
+    if (!battleId || !user || !questions[currentQIndex] || submitting || hasAnsweredCurrent) return;
 
     const q = questions[currentQIndex];
 
     // Check if already answered
     const alreadyAnswered = answers.some(a => a.question_id === q.id && a.user_id === user.id);
-    if (alreadyAnswered) {
-      console.log("Already answered this question");
-      return;
-    }
+    if (alreadyAnswered) return;
 
     setSubmitting(true);
+    setHasAnsweredCurrent(true);
     const isCorrect = selectedAnswer === q.correct_answer;
 
     let points = 0;
@@ -174,34 +231,8 @@ export default function BattleLobby() {
     setSubmitting(false);
 
     if (!result) {
-      // Submission failed, allow retry
+      setHasAnsweredCurrent(false); // Allow retry on failure
       return;
-    }
-
-    const nextIndex = currentQIndex + 1;
-    if (nextIndex >= questions.length) {
-      setTimeout(async () => {
-        const updatedPlayers = players.map((p) => {
-          if (p.user_id === user.id) return { ...p, score: totalScore };
-          return p;
-        });
-        const sorted = [...updatedPlayers].sort((a, b) => b.score - a.score);
-        const winnerId = sorted[0]?.user_id;
-
-        await endBattle(battleId, winnerId);
-
-        const isWinner = winnerId === user.id;
-        let bp = 20;
-        if (isWinner) bp += 50;
-        if (totalScore === questions.length * 10 + questions.length * 5) bp += 30;
-
-        await awardBrainPoints(bp, isWinner ? "battle_win" : "battle_participation", battleId);
-        setBrainPointsEarned(bp);
-      }, 2000);
-    } else if (isCreator) {
-      setTimeout(() => {
-        advanceQuestion(battleId, nextIndex);
-      }, 2000);
     }
   };
 
@@ -250,7 +281,10 @@ export default function BattleLobby() {
           subject={battle.subject}
           brainPointsEarned={brainPointsEarned}
           battleId={battleId || ""}
+          isCreator={isCreator}
           onGoBack={() => navigate("/battle-arena")}
+          onDeleteBattle={handleDeleteBattle}
+          deleting={deleting}
         />
       </div>
     );
@@ -261,6 +295,29 @@ export default function BattleLobby() {
     const q = questions[currentQIndex];
     return (
       <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4">
+        {/* Loading overlay when submitting */}
+        <BattleLoadingOverlay
+          show={submitting}
+          message="Submitting Answer..."
+          subMessage="Verifying your response"
+        />
+
+        {/* Waiting for others overlay */}
+        {hasAnsweredCurrent && !submitting && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-3 px-4 rounded-xl glass-card border border-primary/20"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-sm font-medium text-muted-foreground">
+                Waiting for other players...
+              </span>
+            </div>
+          </motion.div>
+        )}
+
         <div className="flex items-center justify-between">
           <Badge variant="outline" className="text-xs">{battle.subject} · {battle.difficulty}</Badge>
           <Badge className="bg-orange-500/20 text-orange-400 animate-pulse">LIVE</Badge>
@@ -279,7 +336,7 @@ export default function BattleLobby() {
           questionIndex={currentQIndex}
           totalQuestions={questions.length}
           onAnswer={handleAnswer}
-          disabled={submitting}
+          disabled={submitting || hasAnsweredCurrent}
         />
 
         {/* Reactions */}
@@ -302,6 +359,13 @@ export default function BattleLobby() {
   // WAITING state (Lobby)
   return (
     <div className="p-4 md:p-6 max-w-lg mx-auto space-y-6">
+      {/* Loading overlay for starting */}
+      <BattleLoadingOverlay
+        show={startingBattle}
+        message="Starting Battle..."
+        subMessage="Preparing the arena for all players"
+      />
+
       <Button variant="ghost" size="sm" onClick={() => navigate("/battle-arena")} className="gap-1">
         <ArrowLeft className="h-4 w-4" /> Back
       </Button>
@@ -311,17 +375,18 @@ export default function BattleLobby() {
           <Swords className="h-7 w-7 text-primary-foreground" />
         </div>
         <h2 className="text-2xl font-bold">Battle Lobby</h2>
-        <div className="flex gap-2 justify-center">
+        <div className="flex gap-2 justify-center flex-wrap">
           <Badge variant="outline">{battle.subject}</Badge>
           <Badge variant="outline">{battle.difficulty}</Badge>
           <Badge variant="outline">{battle.num_questions} Qs</Badge>
+          <Badge variant="outline">{maxPlayers} Players</Badge>
         </div>
       </motion.div>
 
       {/* Battle Code */}
       <Card className="border-primary/20">
         <CardContent className="p-4 text-center space-y-2">
-          <p className="text-xs text-muted-foreground">Share this code with your opponent</p>
+          <p className="text-xs text-muted-foreground">Share this code with your opponents</p>
           <div className="flex items-center justify-center gap-2">
             <span className="font-mono text-3xl font-bold tracking-[0.3em] text-primary">
               {battle.battle_code}
@@ -336,7 +401,7 @@ export default function BattleLobby() {
       {/* Players */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold flex items-center gap-2">
-          <Users className="h-4 w-4" /> Players ({players.length}/2)
+          <Users className="h-4 w-4" /> Players ({players.length}/{maxPlayers})
         </h3>
         {players.map((p, i) => (
           <motion.div
@@ -364,10 +429,12 @@ export default function BattleLobby() {
           </motion.div>
         ))}
 
-        {players.length < 2 && (
+        {players.length < maxPlayers && (
           <div className="text-center py-4">
             <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">Waiting for opponent...</p>
+            <p className="text-sm text-muted-foreground">
+              Waiting for {maxPlayers - players.length} more player{maxPlayers - players.length > 1 ? "s" : ""}...
+            </p>
           </div>
         )}
       </div>
@@ -377,10 +444,15 @@ export default function BattleLobby() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <Button
             onClick={handleStartBattle}
+            disabled={startingBattle}
             className="w-full gradient-bg text-primary-foreground font-bold py-3 text-lg"
           >
-            <Swords className="h-5 w-5 mr-2" />
-            Start Battle!
+            {startingBattle ? (
+              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+            ) : (
+              <Swords className="h-5 w-5 mr-2" />
+            )}
+            {startingBattle ? "Starting..." : "Start Battle!"}
           </Button>
         </motion.div>
       )}

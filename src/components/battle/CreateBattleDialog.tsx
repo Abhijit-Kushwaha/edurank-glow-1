@@ -14,6 +14,7 @@ const difficulties = [
   { value: "adaptive", label: "Adaptive AI", emoji: "🤖" },
 ];
 const questionCounts = [5, 7, 10];
+const playerCounts = [2, 3, 4];
 
 interface CreateBattleDialogProps {
   onCreateBattle: (config: {
@@ -21,6 +22,7 @@ interface CreateBattleDialogProps {
     difficulty: string;
     numQuestions: number;
     source: BattleSource;
+    maxPlayers: number;
   }) => Promise<any>;
   loading: boolean;
 }
@@ -30,6 +32,7 @@ export default function CreateBattleDialog({ onCreateBattle, loading }: CreateBa
   const [source, setSource] = useState<BattleSource>({ type: "custom_topic" });
   const [difficulty, setDifficulty] = useState("medium");
   const [numQuestions, setNumQuestions] = useState(5);
+  const [maxPlayers, setMaxPlayers] = useState(2);
 
   const getSubjectLabel = () => {
     switch (source.type) {
@@ -48,11 +51,13 @@ export default function CreateBattleDialog({ onCreateBattle, loading }: CreateBa
   };
 
   const handleCreate = async () => {
+    if (loading) return;
     const result = await onCreateBattle({
       subject: getSubjectLabel(),
       difficulty,
       numQuestions,
       source,
+      maxPlayers,
     });
     if (result) setOpen(false);
   };
@@ -81,6 +86,24 @@ export default function CreateBattleDialog({ onCreateBattle, loading }: CreateBa
         <div className="space-y-5 py-4">
           {/* Battle Source */}
           <BattleSourceSelector value={source} onChange={setSource} />
+
+          {/* Number of Players */}
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold">Number of Players</Label>
+            <div className="flex gap-2">
+              {playerCounts.map((n) => (
+                <Button
+                  key={n}
+                  variant={maxPlayers === n ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setMaxPlayers(n)}
+                  className="flex-1"
+                >
+                  {n} 👤
+                </Button>
+              ))}
+            </div>
+          </div>
 
           {/* Difficulty */}
           <div className="space-y-2">
