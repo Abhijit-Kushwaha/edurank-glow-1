@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { preflightResponse, withCors, withCorsError } from "../_shared/cors.ts";
 import { callLovableAI } from "../_shared/lovableAI.ts";
+import { consumeCredits, CREDIT_COSTS } from "../_shared/credits.ts";
 
 Deno.serve(async (req) => {
   const preflight = preflightResponse(req);
