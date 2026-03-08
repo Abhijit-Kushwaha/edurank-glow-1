@@ -252,6 +252,7 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
         questions: finalQuestions,
         is_published: publish,
         due_date: quizForm.due_date || null,
+        lock_screen: quizForm.lock_screen,
       }).select("id").single();
       if (error) throw error;
 
