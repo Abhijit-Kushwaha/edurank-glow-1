@@ -32,9 +32,9 @@ interface OrgMember {
 }
 
 const ROLE_CONFIG: Record<string, { label: string; icon: typeof Crown; color: string; badgeVariant: "default" | "secondary" | "outline" | "destructive" }> = {
-  super_admin: { label: "Super Admin", icon: Crown, color: "text-yellow-500", badgeVariant: "default" },
+  super_admin: { label: "Super Admin", icon: Crown, color: "text-accent", badgeVariant: "default" },
   admin: { label: "Admin", icon: Shield, color: "text-primary", badgeVariant: "secondary" },
-  teacher: { label: "Teacher", icon: UserCog, color: "text-green-500", badgeVariant: "outline" },
+  teacher: { label: "Teacher", icon: UserCog, color: "text-primary/70", badgeVariant: "outline" },
   student: { label: "Student", icon: GraduationCap, color: "text-muted-foreground", badgeVariant: "outline" },
 };
 
