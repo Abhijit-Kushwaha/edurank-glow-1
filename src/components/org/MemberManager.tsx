@@ -167,6 +167,7 @@ export default function MemberManager({ orgId }: MemberManagerProps) {
     }
   };
 
+  const getAvailableRoles = () => {
     if (callerRole === "super_admin") return ["super_admin", "admin", "teacher", "student"];
     if (callerRole === "admin") return ["admin", "teacher", "student"];
     return [];
