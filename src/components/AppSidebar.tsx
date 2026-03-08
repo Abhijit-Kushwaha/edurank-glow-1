@@ -13,6 +13,7 @@ import {
   Sparkles,
   FileText,
   Swords,
+  Shield,
   MessageSquare,
   Layers,
   Timer,
