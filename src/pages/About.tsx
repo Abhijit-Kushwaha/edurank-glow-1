@@ -15,6 +15,7 @@ import Roadmap from "@/assets/BRAIN BUDDY Development Roadmap (1) 1.png";
 import AbhijitImage from "@/assets/Core Team pic/Abhijit Kushwaha.jpg";
 import AbhinavImage from "@/assets/Core Team pic/Abhinav Bajpai.jpg";
 import DewashishImage from "@/assets/Core Team pic/Dewashish Kesharwani.png";
+import PrinceImage from "@/assets/Core Team pic/Prince Kumar Verma.jpg";
 
 const teamMembers = [
   { name: "Abhijit Kushwaha", role: "Backend Coder & Integrator" },
@@ -28,6 +29,7 @@ const About = () => {
   const [abhiDialogOpen, setAbhiDialogOpen] = useState(false);
   const [abhinavDialogOpen, setAbhinavDialogOpen] = useState(false);
   const [dewashishDialogOpen, setDewashishDialogOpen] = useState(false);
+  const [princeDialogOpen, setPrinceDialogOpen] = useState(false);
   const [roadmapDialogOpen, setRoadmapDialogOpen] = useState(false);
 
   return (
@@ -136,6 +138,26 @@ const About = () => {
                           <img
                             src={DewashishImage}
                             alt="Dewashish Kesharwani"
+                            className="w-full"
+                          />
+                        </DialogContent>
+                      </Dialog>
+                    ) : member.name === "Prince Kumar Verma" ? (
+                      <Dialog open={princeDialogOpen} onOpenChange={setPrinceDialogOpen}>
+                        <DialogTrigger asChild>
+                          <img
+                            src={PrinceImage}
+                            alt="Prince Kumar Verma"
+                            className="w-full h-full object-cover cursor-pointer"
+                          />
+                        </DialogTrigger>
+                        <DialogContent>
+                          <VisuallyHidden>
+                            <DialogDescription>Profile photo of Prince Kumar Verma</DialogDescription>
+                          </VisuallyHidden>
+                          <img
+                            src={PrinceImage}
+                            alt="Prince Kumar Verma"
                             className="w-full"
                           />
                         </DialogContent>
