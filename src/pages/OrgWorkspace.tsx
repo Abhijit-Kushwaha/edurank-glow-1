@@ -241,6 +241,7 @@ export default function OrgWorkspace() {
           </div>
           {[
             { id: "batches", label: "Batches & Sections", icon: Layers },
+            { id: "marks", label: "Exams & Marks", icon: ClipboardList },
             { id: "teaching", label: "Teaching", icon: GraduationCap },
             { id: "timetable", label: "Timetable", icon: Calendar },
             { id: "knowledge", label: "Knowledge Base", icon: FileText },
