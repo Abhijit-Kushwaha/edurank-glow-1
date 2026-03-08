@@ -1667,6 +1667,136 @@ export type Database = {
           },
         ]
       }
+      org_quiz_submissions: {
+        Row: {
+          answers: Json
+          attempt_number: number
+          correct_answers: number
+          id: string
+          quiz_id: string
+          score: number | null
+          student_id: string
+          submitted_at: string
+          time_taken_seconds: number | null
+          total_questions: number
+        }
+        Insert: {
+          answers?: Json
+          attempt_number?: number
+          correct_answers?: number
+          id?: string
+          quiz_id: string
+          score?: number | null
+          student_id: string
+          submitted_at?: string
+          time_taken_seconds?: number | null
+          total_questions?: number
+        }
+        Update: {
+          answers?: Json
+          attempt_number?: number
+          correct_answers?: number
+          id?: string
+          quiz_id?: string
+          score?: number | null
+          student_id?: string
+          submitted_at?: string
+          time_taken_seconds?: number | null
+          total_questions?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_quiz_submissions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "org_quizzes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_quiz_submissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_quizzes: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          difficulty: string
+          due_date: string | null
+          id: string
+          is_published: boolean
+          max_attempts: number
+          org_id: string
+          questions: Json
+          section_id: string | null
+          subject: string
+          time_limit_mins: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          difficulty?: string
+          due_date?: string | null
+          id?: string
+          is_published?: boolean
+          max_attempts?: number
+          org_id: string
+          questions?: Json
+          section_id?: string | null
+          subject: string
+          time_limit_mins?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          difficulty?: string
+          due_date?: string | null
+          id?: string
+          is_published?: boolean
+          max_attempts?: number
+          org_id?: string
+          questions?: Json
+          section_id?: string | null
+          subject?: string
+          time_limit_mins?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_quizzes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_quizzes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_quizzes_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organisations: {
         Row: {
           ai_enabled: boolean
@@ -2377,6 +2507,147 @@ export type Database = {
             columns: ["todo_id"]
             isOneToOne: false
             referencedRelation: "todos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_sections: {
+        Row: {
+          classroom_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          org_id: string
+          schedule_info: string | null
+          section_name: string
+          student_count: number
+          subject: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          classroom_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          org_id: string
+          schedule_info?: string | null
+          section_name: string
+          student_count?: number
+          subject: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          classroom_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          org_id?: string
+          schedule_info?: string | null
+          section_name?: string
+          student_count?: number
+          subject?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_sections_classroom_id_fkey"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_sections_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_sections_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timetable_entries: {
+        Row: {
+          created_at: string
+          created_by: string
+          day_of_week: number
+          end_time: string
+          id: string
+          org_id: string
+          room: string | null
+          section_id: string | null
+          start_time: string
+          subject: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          org_id: string
+          room?: string | null
+          section_id?: string | null
+          start_time: string
+          subject: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          org_id?: string
+          room?: string | null
+          section_id?: string | null
+          start_time?: string
+          subject?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timetable_entries_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_entries_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_entries_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_entries_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
