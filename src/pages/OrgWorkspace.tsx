@@ -273,6 +273,8 @@ export default function OrgWorkspace() {
           />
         ) : activeTab === "batches" ? (
           <BatchManager orgId={org?.id || ""} />
+        ) : activeTab === "marks" ? (
+          <MarksManager orgId={org?.id || ""} />
         ) : activeTab === "teaching" ? (
           <TeacherSections orgId={org?.id || ""} />
         ) : activeTab === "timetable" ? (
