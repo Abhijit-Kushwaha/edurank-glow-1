@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import StudentProgressDialog from "./StudentProgressDialog";
+import CreditManager from "./CreditManager";
 
 interface OrgMember {
   user_id: string;
