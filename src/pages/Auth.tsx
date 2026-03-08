@@ -238,7 +238,7 @@ const Auth = () => {
           resetTurnstile();
         } else {
           // Handle org joining/creation after signup
-          if ((orgRole === "student" || orgRole === "teacher") && orgCode.trim() && orgCodeValid) {
+          if (orgRole === "student" && orgCode.trim() && orgCodeValid) {
             try {
               const { data: { user: currentUser } } = await supabase.auth.getUser();
               if (currentUser) {
