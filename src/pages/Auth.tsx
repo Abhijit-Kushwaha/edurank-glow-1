@@ -147,9 +147,10 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await login(email, password);
+        const { error } = await login(email, password, turnstileToken || undefined);
         if (error) {
           toast.error(error);
+          resetTurnstile();
         } else {
           toast.success("Welcome back!");
           navigate("/dashboard");
@@ -170,7 +171,7 @@ const Auth = () => {
           setIsLoading(false);
           return;
         }
-        const { error } = await signup(email, password, name, username.trim());
+        const { error } = await signup(email, password, name, username.trim(), turnstileToken || undefined);
         if (error) {
           if (
             error.includes("profiles_name_unique") ||
@@ -182,6 +183,7 @@ const Auth = () => {
           } else {
             toast.error(error);
           }
+          resetTurnstile();
         } else {
           toast.success("Account created successfully!");
           navigate("/dashboard");

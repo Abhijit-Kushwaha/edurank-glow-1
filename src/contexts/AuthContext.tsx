@@ -27,15 +27,17 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ error?: string }>;
+  login: (email: string, password: string, turnstileToken?: string) => Promise<{ error?: string }>;
   signup: (
     email: string,
     password: string,
     name: string,
     username: string,
+    turnstileToken?: string,
   ) => Promise<{ error?: string }>;
   loginWithGoogle: () => Promise<{ error?: string }>;
   logout: () => Promise<void>;
+  verifyTurnstile: (token: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -110,11 +112,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const verifyTurnstile = async (token: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-turnstile", {
+        body: { token },
+      });
+      
+      if (error) {
+        console.error("Turnstile verification error:", error);
+        return false;
+      }
+      
+      return data?.success === true;
+    } catch (error) {
+      console.error("Turnstile verification error:", error);
+      return false;
+    }
+  };
+
   const login = async (
     email: string,
     password: string,
+    turnstileToken?: string,
   ): Promise<{ error?: string }> => {
     try {
+      // Verify turnstile token if provided
+      if (turnstileToken) {
+        const isValid = await verifyTurnstile(turnstileToken);
+        if (!isValid) {
+          return { error: "Security verification failed. Please try again." };
+        }
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -137,8 +166,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     password: string,
     name: string,
     username: string,
+    turnstileToken?: string,
   ): Promise<{ error?: string }> => {
     try {
+      // Verify turnstile token if provided
+      if (turnstileToken) {
+        const isValid = await verifyTurnstile(turnstileToken);
+        if (!isValid) {
+          return { error: "Security verification failed. Please try again." };
+        }
+      }
       const redirectUrl = `${window.location.origin}/`;
 
       const { data, error } = await supabase.auth.signUp({
@@ -222,6 +259,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         signup,
         loginWithGoogle,
         logout,
+        verifyTurnstile,
       }}
     >
       {children}
