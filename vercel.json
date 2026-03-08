@@ -2,15 +2,15 @@
   "rewrites": [
     {
       "source": "/~oauth/initiate",
-      "destination": "https://oauth.lovable.app/~oauth/initiate"
+      "destination": "https://oauth.lovable.app/initiate"
     },
     {
       "source": "/~oauth/callback",
-      "destination": "https://oauth.lovable.app/~oauth/callback"
+      "destination": "https://oauth.lovable.app/callback"
     },
     {
       "source": "/~oauth/:path*",
-      "destination": "https://oauth.lovable.app/~oauth/:path*"
+      "destination": "https://oauth.lovable.app/:path*"
     },
     {
       "source": "/(.*)",
