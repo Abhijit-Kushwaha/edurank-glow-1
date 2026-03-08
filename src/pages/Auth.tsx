@@ -257,8 +257,8 @@ const Auth = () => {
             } catch (orgError) {
               console.error("Org join error:", orgError);
             }
-          } else if (orgRole === "teacher" && orgName.trim() && !orgCode.trim()) {
-            // Teacher creating a new org via secure RPC
+          } else if (orgRole === "admin" && orgName.trim()) {
+            // Admin creating a new org via secure RPC
             try {
               const { data: rawResult, error: rpcError } = await supabase.rpc("create_organisation", {
                 p_name: orgName.trim(),
