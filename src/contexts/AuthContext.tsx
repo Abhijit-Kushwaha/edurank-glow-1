@@ -166,8 +166,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     password: string,
     name: string,
     username: string,
+    turnstileToken?: string,
   ): Promise<{ error?: string }> => {
     try {
+      // Verify turnstile token if provided
+      if (turnstileToken) {
+        const isValid = await verifyTurnstile(turnstileToken);
+        if (!isValid) {
+          return { error: "Security verification failed. Please try again." };
+        }
+      }
       const redirectUrl = `${window.location.origin}/`;
 
       const { data, error } = await supabase.auth.signUp({
