@@ -102,10 +102,10 @@ Keep topics concise (2-4 words each). Keep suggestions actionable (1 sentence ea
       analysis = JSON.parse(jsonMatch[0]);
     } catch {
       analysis = {
-        strong_topics: correctCount > 0 ? [`${subject} basics`] : [],
-        weak_topics: wrongQuestions?.length > 0 ? [`${subject} advanced concepts`] : [],
+        strong_topics: safeCorrectCount > 0 ? [`${safeSubject} basics`] : [],
+        weak_topics: safeWrong.length > 0 ? [`${safeSubject} advanced concepts`] : [],
         suggestions: ["Review missed questions", "Practice more in this subject"],
-        overall_message: `You scored ${correctCount}/${totalQuestions}. ${correctCount >= totalQuestions / 2 ? "Good job!" : "Keep practicing!"}`,
+        overall_message: `You scored ${safeCorrectCount}/${safeTotalQuestions}. ${safeCorrectCount >= safeTotalQuestions / 2 ? "Good job!" : "Keep practicing!"}`,
       };
     }
 
