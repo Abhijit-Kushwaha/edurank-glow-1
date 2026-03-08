@@ -116,7 +116,7 @@ const FeatureCard = ({ icon: Icon, title, description, index }: { icon: any; tit
       ref={ref}
       initial={{ opacity: 0, y: 40 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.6, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
       whileHover={{ scale: 1.05, y: -5 }}
       className="glass-card rounded-2xl p-6 group cursor-pointer relative overflow-hidden border border-transparent hover:border-primary/30 transition-all duration-500"
     >
