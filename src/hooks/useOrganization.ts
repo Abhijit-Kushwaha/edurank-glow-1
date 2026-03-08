@@ -150,6 +150,7 @@ export function useOrganization() {
     createChannel,
     createRole,
     createPage,
+    refetch,
     isOrgMember: !!orgId,
   };
 }
