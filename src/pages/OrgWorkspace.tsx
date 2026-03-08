@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Hash, Megaphone, HelpCircle, BookOpen, Shield, FileText, BarChart3, Plus, Users, Swords, Copy, Check, GraduationCap, Calendar, Layers, ClipboardList } from "lucide-react";
+import { Building2, Hash, Megaphone, HelpCircle, BookOpen, Shield, FileText, BarChart3, Plus, Users, Swords, Copy, Check, GraduationCap, Calendar, Layers, ClipboardList, UserPlus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,6 +21,9 @@ import TeacherSections from "@/components/org/TeacherSections";
 import TimetableManager from "@/components/org/TimetableManager";
 import BatchManager from "@/components/org/BatchManager";
 import MarksManager from "@/components/org/MarksManager";
+import JoinRequestsManager from "@/components/org/JoinRequestsManager";
+import SuperAdminPanel from "@/components/org/SuperAdminPanel";
+import JoinOrgCard from "@/components/org/JoinOrgCard";
 
 const channelIcons: Record<string, typeof Hash> = {
   text: Hash,
@@ -32,7 +35,7 @@ const channelIcons: Record<string, typeof Hash> = {
 
 export default function OrgWorkspace() {
   const { org, channels, roles, pages, loading, isOrgMember, createChannel, createRole, createPage, refetch } = useOrganization();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
   const [showCreateChannel, setShowCreateChannel] = useState(false);
   const [activeTab, setActiveTab] = useState("channels");
@@ -112,11 +115,22 @@ export default function OrgWorkspace() {
           <Building2 className="h-16 w-16 text-muted-foreground" />
           <h2 className="text-2xl font-bold">No Organization</h2>
           <p className="text-muted-foreground text-center max-w-md">
-            You're not part of any organization yet. Ask your teacher or admin for an invite link, or create your own organization.
+            You're not part of any organization yet. Join one with an invite code, or create your own.
           </p>
-          <Button className="mt-2" onClick={() => setShowCreateOrg(true)}>
+
+          <div className="w-full max-w-md mt-4">
+            <JoinOrgCard />
+          </div>
+
+          <div className="flex items-center gap-3 w-full max-w-md my-2">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
+
+          <Button variant="outline" onClick={() => setShowCreateOrg(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Create Organization
+            Create New Organization
           </Button>
         </div>
 
@@ -237,7 +251,9 @@ export default function OrgWorkspace() {
             { id: "roles", label: "Roles & Permissions", icon: Shield },
             { id: "analytics", label: "Analytics", icon: BarChart3 },
             { id: "members", label: "Members", icon: Users },
+            { id: "join-requests", label: "Join Requests", icon: UserPlus },
             { id: "battles", label: "Battle Arena", icon: Swords },
+            ...(profile?.role === "super_admin" ? [{ id: "admin-settings", label: "Admin Settings", icon: Settings }] : []),
           ].map(item => (
             <button
               key={item.id}
@@ -276,10 +292,16 @@ export default function OrgWorkspace() {
           <OrgAnalytics org={org} />
         ) : activeTab === "members" ? (
           <MemberManager orgId={org?.id || ""} />
+        ) : activeTab === "join-requests" ? (
+          <JoinRequestsManager orgId={org?.id || ""} />
+        ) : activeTab === "admin-settings" ? (
+          <SuperAdminPanel orgId={org?.id || ""} />
         ) : activeTab === "battles" ? (
           <div className="p-6">
             <h2 className="text-xl font-bold mb-4">Organization Battle Arena</h2>
-            <p className="text-muted-foreground">Tournament mode coming soon.</p>
+            <p className="text-muted-foreground">
+              Go to <a href="/org-battle-arena" className="text-primary hover:underline">Org Battle Arena</a> for org-restricted battles and leaderboards.
+            </p>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
