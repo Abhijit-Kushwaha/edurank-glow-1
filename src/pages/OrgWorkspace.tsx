@@ -90,8 +90,8 @@ export default function OrgWorkspace() {
       setShowCreateOrg(false);
       setOrgName("");
       setOrgDescription("");
-      // Refresh data
-      refetch();
+      // Reload to pick up updated profile with org_id
+      window.location.reload();
     } catch (err) {
       console.error(err);
       toast.error("Something went wrong");
