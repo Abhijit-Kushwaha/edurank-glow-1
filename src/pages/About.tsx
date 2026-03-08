@@ -142,6 +142,26 @@ const About = () => {
                           />
                         </DialogContent>
                       </Dialog>
+                    ) : member.name === "Prince Kumar Verma" ? (
+                      <Dialog open={princeDialogOpen} onOpenChange={setPrinceDialogOpen}>
+                        <DialogTrigger asChild>
+                          <img
+                            src={PrinceImage}
+                            alt="Prince Kumar Verma"
+                            className="w-full h-full object-cover cursor-pointer"
+                          />
+                        </DialogTrigger>
+                        <DialogContent>
+                          <VisuallyHidden>
+                            <DialogDescription>Profile photo of Prince Kumar Verma</DialogDescription>
+                          </VisuallyHidden>
+                          <img
+                            src={PrinceImage}
+                            alt="Prince Kumar Verma"
+                            className="w-full"
+                          />
+                        </DialogContent>
+                      </Dialog>
                     ) : (
                       <span className="text-primary font-semibold">
                         {member.name
