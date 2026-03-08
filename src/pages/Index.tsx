@@ -375,7 +375,7 @@ const Index = () => {
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  <Zap className="h-6 w-6 text-yellow-500" />
+                  <Zap className="h-6 w-6 text-primary" />
                 </motion.div>
               </motion.div>
               <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
