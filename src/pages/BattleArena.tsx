@@ -60,6 +60,7 @@ export default function BattleArena() {
       difficulty: config.difficulty,
       numQuestions: config.numQuestions,
       source: config.source,
+      maxPlayers: config.maxPlayers,
     });
     if (battle) {
       navigate(`/battle/${battle.id}`);
