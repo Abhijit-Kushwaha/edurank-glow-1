@@ -3136,12 +3136,43 @@ export type Database = {
         Returns: boolean
       }
       generate_org_invite_code: { Args: never; Returns: string }
+      get_org_members_with_stats: {
+        Args: { p_org_id: string }
+        Returns: {
+          avatar_url: string
+          average_score: number
+          created_at: string
+          email: string
+          last_activity: string
+          level: number
+          name: string
+          profile_id: string
+          role: string
+          status: string
+          streak: number
+          total_quizzes: number
+          total_xp: number
+          user_id: string
+        }[]
+      }
       get_profile_id: { Args: { uid: string }; Returns: string }
+      get_student_progress: {
+        Args: { p_student_user_id: string }
+        Returns: Json
+      }
       get_user_org_id: { Args: { uid: string }; Returns: string }
       get_user_role: { Args: { uid: string }; Returns: string }
       get_week_start: { Args: { d?: string }; Returns: string }
       join_org_by_code: {
         Args: { p_code: string; p_role?: string; p_user_id: string }
+        Returns: Json
+      }
+      promote_org_creator: {
+        Args: { p_org_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      set_member_role: {
+        Args: { p_new_role: string; p_target_user_id: string }
         Returns: Json
       }
       update_achievement_progress: {

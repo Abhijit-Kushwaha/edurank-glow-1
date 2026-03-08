@@ -16,6 +16,7 @@ import ChannelCreateDialog from "@/components/org/ChannelCreateDialog";
 import RoleManager from "@/components/org/RoleManager";
 import KnowledgeWorkspace from "@/components/org/KnowledgeWorkspace";
 import OrgAnalytics from "@/components/org/OrgAnalytics";
+import MemberManager from "@/components/org/MemberManager";
 
 const channelIcons: Record<string, typeof Hash> = {
   text: Hash,
@@ -55,14 +56,14 @@ export default function OrgWorkspace() {
         return;
       }
 
-      // 2. Update profile to link to org and set role to admin
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ org_id: orgData.id, role: "admin" })
-        .eq("user_id", user.id);
+      // 2. Promote creator to super_admin using secure function
+      const { data: promoted, error: profileError } = await supabase.rpc("promote_org_creator", {
+        p_user_id: user.id,
+        p_org_id: orgData.id,
+      });
 
-      if (profileError) {
-        toast.error("Organization created but failed to link your profile: " + profileError.message);
+      if (profileError || !promoted) {
+        toast.error("Organization created but failed to link your profile");
         setCreatingOrg(false);
         return;
       }
@@ -269,10 +270,7 @@ export default function OrgWorkspace() {
         ) : activeTab === "analytics" ? (
           <OrgAnalytics org={org} />
         ) : activeTab === "members" ? (
-          <div className="p-6">
-            <h2 className="text-xl font-bold mb-4">Members</h2>
-            <p className="text-muted-foreground">Member management coming soon.</p>
-          </div>
+          <MemberManager orgId={org?.id || ""} />
         ) : activeTab === "battles" ? (
           <div className="p-6">
             <h2 className="text-xl font-bold mb-4">Organization Battle Arena</h2>
