@@ -253,7 +253,7 @@ export default function OrgWorkspace() {
             { id: "members", label: "Members", icon: Users },
             { id: "join-requests", label: "Join Requests", icon: UserPlus },
             { id: "battles", label: "Battle Arena", icon: Swords },
-            ...(profile?.role === "super_admin" ? [{ id: "admin-settings", label: "Admin Settings", icon: Settings }] : []),
+            ...(profile?.role && ["super_admin", "admin"].includes(profile.role) ? [{ id: "admin-settings", label: "Admin Settings", icon: Settings }] : []),
           ].map(item => (
             <button
               key={item.id}
