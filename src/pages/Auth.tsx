@@ -208,8 +208,18 @@ const Auth = () => {
           setIsLoading(false);
           return;
         }
-        if (orgRole === "teacher" && !orgName.trim() && !orgCode.trim()) {
-          toast.error("Please enter your organization name or an organization code");
+        if (orgRole === "admin" && !orgName.trim()) {
+          toast.error("Please enter your organization name");
+          setIsLoading(false);
+          return;
+        }
+        if (orgRole === "teacher" && !orgCode.trim()) {
+          toast.error("Please enter an organization code to join");
+          setIsLoading(false);
+          return;
+        }
+        if (orgRole === "student" && !orgCode.trim()) {
+          toast.error("Please enter an organization code to join");
           setIsLoading(false);
           return;
         }
