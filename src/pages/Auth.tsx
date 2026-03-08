@@ -493,11 +493,14 @@ const Auth = () => {
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
+                id="email"
+                name="email"
                 type="email"
                 placeholder="Email Address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="pl-10"
+                autoComplete="email"
                 required
               />
             </div>
