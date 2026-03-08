@@ -1,0 +1,153 @@
+import { useState } from "react";
+import { useOrganization } from "@/hooks/useOrganization";
+import { Building2, Hash, Megaphone, HelpCircle, BookOpen, Shield, FileText, BarChart3, Plus, Settings, Users, Swords } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import ChannelView from "@/components/org/ChannelView";
+import ChannelCreateDialog from "@/components/org/ChannelCreateDialog";
+import RoleManager from "@/components/org/RoleManager";
+import KnowledgeWorkspace from "@/components/org/KnowledgeWorkspace";
+import OrgAnalytics from "@/components/org/OrgAnalytics";
+
+const channelIcons: Record<string, typeof Hash> = {
+  text: Hash,
+  announcements: Megaphone,
+  "doubt-solving": HelpCircle,
+  resources: BookOpen,
+  general: Hash,
+};
+
+export default function OrgWorkspace() {
+  const { org, channels, roles, pages, loading, isOrgMember, createChannel, createRole, createPage } = useOrganization();
+  const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
+  const [showCreateChannel, setShowCreateChannel] = useState(false);
+  const [activeTab, setActiveTab] = useState("channels");
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-4">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32" />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (!isOrgMember) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-6">
+        <Building2 className="h-16 w-16 text-muted-foreground" />
+        <h2 className="text-2xl font-bold">No Organization</h2>
+        <p className="text-muted-foreground text-center max-w-md">
+          You're not part of any organization yet. Ask your teacher or admin for an invite link, or create your own organization.
+        </p>
+        <Button className="mt-2">
+          <Plus className="h-4 w-4 mr-2" />
+          Create Organization
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-[calc(100vh-4rem)]">
+      {/* Left sidebar - Channels */}
+      <div className="w-64 border-r border-border/50 bg-card/50 flex flex-col shrink-0">
+        <div className="p-4 border-b border-border/50">
+          <div className="flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-primary" />
+            <h2 className="font-bold text-sm truncate">{org?.name || "Organization"}</h2>
+          </div>
+          <Badge variant="outline" className="mt-1 text-[10px]">{org?.plan || "free"}</Badge>
+        </div>
+
+        <div className="flex-1 overflow-auto p-2 space-y-1">
+          <div className="flex items-center justify-between px-2 py-1">
+            <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">Channels</span>
+            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => setShowCreateChannel(true)}>
+              <Plus className="h-3 w-3" />
+            </Button>
+          </div>
+          {channels.map(ch => {
+            const Icon = channelIcons[ch.channel_type] || Hash;
+            return (
+              <button
+                key={ch.id}
+                onClick={() => { setSelectedChannel(ch.id); setActiveTab("channels"); }}
+                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors ${
+                  selectedChannel === ch.id ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{ch.name}</span>
+              </button>
+            );
+          })}
+
+          <div className="pt-4">
+            <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider px-2">Navigation</span>
+          </div>
+          {[
+            { id: "knowledge", label: "Knowledge Base", icon: FileText },
+            { id: "roles", label: "Roles & Permissions", icon: Shield },
+            { id: "analytics", label: "Analytics", icon: BarChart3 },
+            { id: "members", label: "Members", icon: Users },
+            { id: "battles", label: "Battle Arena", icon: Swords },
+          ].map(item => (
+            <button
+              key={item.id}
+              onClick={() => { setActiveTab(item.id); setSelectedChannel(null); }}
+              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors ${
+                activeTab === item.id && !selectedChannel ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+              }`}
+            >
+              <item.icon className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 min-w-0">
+        {selectedChannel ? (
+          <ChannelView
+            channelId={selectedChannel}
+            channel={channels.find(c => c.id === selectedChannel)}
+          />
+        ) : activeTab === "knowledge" ? (
+          <KnowledgeWorkspace pages={pages} onCreatePage={createPage} />
+        ) : activeTab === "roles" ? (
+          <RoleManager roles={roles} onCreateRole={createRole} />
+        ) : activeTab === "analytics" ? (
+          <OrgAnalytics org={org} />
+        ) : activeTab === "members" ? (
+          <div className="p-6">
+            <h2 className="text-xl font-bold mb-4">Members</h2>
+            <p className="text-muted-foreground">Member management coming soon.</p>
+          </div>
+        ) : activeTab === "battles" ? (
+          <div className="p-6">
+            <h2 className="text-xl font-bold mb-4">Organization Battle Arena</h2>
+            <p className="text-muted-foreground">Tournament mode coming soon.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+            <Hash className="h-12 w-12 mb-4" />
+            <p>Select a channel or section to get started</p>
+          </div>
+        )}
+      </div>
+
+      <ChannelCreateDialog
+        open={showCreateChannel}
+        onOpenChange={setShowCreateChannel}
+        onCreateChannel={createChannel}
+      />
+    </div>
+  );
+}
