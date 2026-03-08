@@ -77,7 +77,7 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
   const [savingQuiz, setSavingQuiz] = useState(false);
   const [generatingQuiz, setGeneratingQuiz] = useState(false);
 
-  const profileId = (profile as any)?.id;
+  const profileId = profile?.id;
 
   const fetchData = useCallback(async () => {
     setLoading(true);

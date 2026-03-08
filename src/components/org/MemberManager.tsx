@@ -224,7 +224,7 @@ export default function MemberManager({ orgId }: MemberManagerProps) {
                     <Eye className="h-4 w-4" />
                   </Button>
                 )}
-                {canManageRoles && member.user_id !== (profile as any)?.user_id && (
+                {canManageRoles && member.user_id !== profile?.user_id && (
                   <Button
                     variant="ghost"
                     size="icon"
