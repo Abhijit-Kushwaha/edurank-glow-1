@@ -112,11 +112,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const verifyTurnstile = async (token: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-turnstile", {
+        body: { token },
+      });
+      
+      if (error) {
+        console.error("Turnstile verification error:", error);
+        return false;
+      }
+      
+      return data?.success === true;
+    } catch (error) {
+      console.error("Turnstile verification error:", error);
+      return false;
+    }
+  };
+
   const login = async (
     email: string,
     password: string,
+    turnstileToken?: string,
   ): Promise<{ error?: string }> => {
     try {
+      // Verify turnstile token if provided
+      if (turnstileToken) {
+        const isValid = await verifyTurnstile(turnstileToken);
+        if (!isValid) {
+          return { error: "Security verification failed. Please try again." };
+        }
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
