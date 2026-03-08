@@ -355,7 +355,7 @@ const Auth = () => {
               variant="neon"
               size="lg"
               className="w-full"
-              disabled={isLoading || isGoogleLoading}
+              disabled={isLoading || isGoogleLoading || !turnstileToken}
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
