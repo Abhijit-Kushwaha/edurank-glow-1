@@ -198,6 +198,14 @@ const App = () => (
                   </ProtectedWithLayout>
                 }
               />
+              <Route
+                path="/achievements"
+                element={
+                  <ProtectedWithLayout>
+                    <Achievements />
+                  </ProtectedWithLayout>
+                }
+              />
               <Route path="/about" element={<About />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
