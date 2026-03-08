@@ -383,6 +383,8 @@ const Auth = () => {
                 <div className="relative">
                   <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
+                    id="username"
+                    name="username"
                     type="text"
                     placeholder="Username (unique)"
                     value={username}
@@ -390,6 +392,7 @@ const Auth = () => {
                       setUsername(e.target.value.replace(/\s/g, ""))
                     }
                     className="pl-10 pr-10"
+                    autoComplete="username"
                     required={!isLogin}
                   />
                   {username.trim() && (
