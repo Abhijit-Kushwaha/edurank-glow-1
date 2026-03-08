@@ -18,9 +18,10 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const claimsError = userError;
+    const claimsData = userData;
+    if (claimsError || !claimsData?.user) {
       return withCorsError(req, 401, "Unauthorized");
     }
 
@@ -44,7 +45,7 @@ Make cards progressively harder. Cover key concepts, definitions, formulas, and 
 Example format:
 [{"front":"What is photosynthesis?","back":"The process by which plants convert light energy into chemical energy (glucose) using CO2 and water, releasing O2 as a byproduct."}]`;
 
-    const response = await callLovableAI(prompt, { temperature: 0.7 });
+    const response = await callLovableAI([{ role: "user", content: prompt }], { temperature: 0.7 });
 
     const jsonMatch = response.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
