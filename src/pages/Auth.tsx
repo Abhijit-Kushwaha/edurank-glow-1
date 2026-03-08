@@ -475,11 +475,14 @@ const Auth = () => {
                   <div className="relative">
                     <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input
+                      id="orgName"
+                      name="orgName"
                       type="text"
                       placeholder="Organization Name (e.g. Sunrise Academy)"
                       value={orgName}
                       onChange={(e) => setOrgName(e.target.value)}
                       className="pl-10"
+                      autoComplete="organization"
                     />
                     <p className="text-[10px] text-muted-foreground mt-1">You'll become the Super Admin of this new organization</p>
                   </div>
