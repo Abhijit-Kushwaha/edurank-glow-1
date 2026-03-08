@@ -270,10 +270,7 @@ export default function OrgWorkspace() {
         ) : activeTab === "analytics" ? (
           <OrgAnalytics org={org} />
         ) : activeTab === "members" ? (
-          <div className="p-6">
-            <h2 className="text-xl font-bold mb-4">Members</h2>
-            <p className="text-muted-foreground">Member management coming soon.</p>
-          </div>
+          <MemberManager orgId={org?.id || ""} />
         ) : activeTab === "battles" ? (
           <div className="p-6">
             <h2 className="text-xl font-bold mb-4">Organization Battle Arena</h2>
