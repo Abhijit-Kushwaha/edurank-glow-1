@@ -35,7 +35,7 @@ const channelIcons: Record<string, typeof Hash> = {
 
 export default function OrgWorkspace() {
   const { org, channels, roles, pages, loading, isOrgMember, createChannel, createRole, createPage, refetch } = useOrganization();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
   const [showCreateChannel, setShowCreateChannel] = useState(false);
   const [activeTab, setActiveTab] = useState("channels");
