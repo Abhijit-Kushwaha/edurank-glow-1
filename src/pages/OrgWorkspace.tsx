@@ -228,16 +228,38 @@ export default function OrgWorkspace() {
           {channels.map(ch => {
             const Icon = channelIcons[ch.channel_type] || Hash;
             return (
-              <button
-                key={ch.id}
-                onClick={() => { setSelectedChannel(ch.id); setActiveTab("channels"); }}
-                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors ${
-                  selectedChannel === ch.id ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{ch.name}</span>
-              </button>
+              <div key={ch.id} className="flex items-center group">
+                <button
+                  onClick={() => { setSelectedChannel(ch.id); setActiveTab("channels"); }}
+                  className={`flex-1 flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors ${
+                    selectedChannel === ch.id ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{ch.name}</span>
+                </button>
+                {profile?.role === "super_admin" && (
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (!confirm(`Delete channel "#${ch.name}"? All messages will be lost.`)) return;
+                      try {
+                        await (supabase as any).from("channel_messages").delete().eq("channel_id", ch.id);
+                        await (supabase as any).from("channels").delete().eq("id", ch.id);
+                        toast.success(`Channel #${ch.name} deleted`);
+                        if (selectedChannel === ch.id) setSelectedChannel(null);
+                        refetch();
+                      } catch (err: any) {
+                        toast.error(err.message || "Failed to delete channel");
+                      }
+                    }}
+                    className="hidden group-hover:flex items-center justify-center h-5 w-5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                    title="Delete channel"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
             );
           })}
 
