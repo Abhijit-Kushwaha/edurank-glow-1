@@ -16,7 +16,8 @@ const difficulties = [
   { value: "adaptive", label: "Adaptive AI", emoji: "🤖" },
 ];
 const questionCounts = [5, 7, 10];
-const playerCounts = [2, 3, 4];
+const MIN_PLAYERS = 2;
+const MAX_PLAYERS = 50;
 
 interface CreateBattleDialogProps {
   onCreateBattle: (config: {
