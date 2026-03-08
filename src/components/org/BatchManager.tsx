@@ -690,7 +690,7 @@ export default function BatchManager({ orgId }: BatchManagerProps) {
                       <p className="text-[10px] text-muted-foreground truncate">{s.email}</p>
                     </div>
                     {isEnrolled ? (
-                      <Badge variant="outline" className="text-[10px] text-green-500">Enrolled</Badge>
+                      <Badge variant="outline" className="text-[10px] text-primary">Enrolled</Badge>
                     ) : (
                       <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleAddStudent(s.profile_id)}>
                         <Plus className="h-3 w-3 mr-1" /> Add
