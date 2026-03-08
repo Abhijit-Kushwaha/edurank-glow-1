@@ -240,7 +240,7 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <Badge variant="secondary" className="text-[10px]">{s.subject}</Badge>
-                  {s.is_active && <Badge variant="outline" className="text-[10px] text-green-500 border-green-500/30">Active</Badge>}
+                  {s.is_active && <Badge variant="outline" className="text-[10px] text-emerald-500 border-emerald-500/30">Active</Badge>}
                 </div>
                 <CardTitle className="text-sm mt-1">{s.section_name}</CardTitle>
               </CardHeader>
