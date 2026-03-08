@@ -292,10 +292,16 @@ export default function OrgWorkspace() {
           <OrgAnalytics org={org} />
         ) : activeTab === "members" ? (
           <MemberManager orgId={org?.id || ""} />
+        ) : activeTab === "join-requests" ? (
+          <JoinRequestsManager orgId={org?.id || ""} />
+        ) : activeTab === "admin-settings" ? (
+          <SuperAdminPanel orgId={org?.id || ""} />
         ) : activeTab === "battles" ? (
           <div className="p-6">
             <h2 className="text-xl font-bold mb-4">Organization Battle Arena</h2>
-            <p className="text-muted-foreground">Tournament mode coming soon.</p>
+            <p className="text-muted-foreground">
+              Go to <a href="/org-battle-arena" className="text-primary hover:underline">Org Battle Arena</a> for org-restricted battles and leaderboards.
+            </p>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
