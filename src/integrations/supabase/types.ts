@@ -2241,6 +2241,9 @@ export type Database = {
           grading_lock_days: number
           id: string
           invite_code: string
+          invite_code_admin: string | null
+          invite_code_student: string | null
+          invite_code_teacher: string | null
           invite_mode: string
           late_penalty_percent_per_day: number
           late_submission_policy: string
@@ -2262,6 +2265,9 @@ export type Database = {
           grading_lock_days?: number
           id?: string
           invite_code?: string
+          invite_code_admin?: string | null
+          invite_code_student?: string | null
+          invite_code_teacher?: string | null
           invite_mode?: string
           late_penalty_percent_per_day?: number
           late_submission_policy?: string
@@ -2283,6 +2289,9 @@ export type Database = {
           grading_lock_days?: number
           id?: string
           invite_code?: string
+          invite_code_admin?: string | null
+          invite_code_student?: string | null
+          invite_code_teacher?: string | null
           invite_mode?: string
           late_penalty_percent_per_day?: number
           late_submission_policy?: string

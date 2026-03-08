@@ -201,19 +201,31 @@ export default function OrgWorkspace() {
             <h2 className="font-bold text-sm truncate">{org?.name || "Organization"}</h2>
           </div>
           <Badge variant="outline" className="mt-1 text-[10px]">{org?.plan || "free"}</Badge>
-          {(org as any)?.invite_code && (
-            <div className="mt-2">
-              <p className="text-[10px] text-muted-foreground">Invite Code</p>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText((org as any).invite_code);
-                  toast.success("Invite code copied!");
-                }}
-                className="flex items-center gap-1 text-xs font-mono bg-muted/50 px-2 py-0.5 rounded hover:bg-muted transition-colors"
-              >
-                {(org as any).invite_code}
-                <Copy className="h-3 w-3 text-muted-foreground" />
-              </button>
+          {(profile?.role === "super_admin" || profile?.role === "admin") && (
+            <div className="mt-2 space-y-1">
+              <p className="text-[10px] text-muted-foreground">Invite Codes</p>
+              {[
+                { key: "invite_code_student", label: "Student", color: "text-blue-400" },
+                { key: "invite_code_teacher", label: "Teacher", color: "text-amber-400" },
+                { key: "invite_code_admin", label: "Admin", color: "text-red-400" },
+              ].map(({ key, label, color }) => {
+                const code = (org as any)?.[key];
+                if (!code) return null;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      navigator.clipboard.writeText(code);
+                      toast.success(`${label} code copied!`);
+                    }}
+                    className="w-full flex items-center justify-between text-[10px] font-mono bg-muted/50 px-2 py-0.5 rounded hover:bg-muted transition-colors"
+                  >
+                    <span className={color}>{label[0]}</span>
+                    <span>{code}</span>
+                    <Copy className="h-2.5 w-2.5 text-muted-foreground" />
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>

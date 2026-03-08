@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Building2, Check, X, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 
@@ -14,8 +14,8 @@ export default function JoinOrgCard() {
   const [orgCode, setOrgCode] = useState("");
   const [orgCodeValid, setOrgCodeValid] = useState<boolean | null>(null);
   const [orgCodeOrgName, setOrgCodeOrgName] = useState("");
+  const [detectedRole, setDetectedRole] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
-  const [role, setRole] = useState<"student" | "teacher">("student");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -26,6 +26,7 @@ export default function JoinOrgCard() {
     if (code.length < 4) {
       setOrgCodeValid(null);
       setOrgCodeOrgName("");
+      setDetectedRole(null);
       return;
     }
     setIsChecking(true);
@@ -34,6 +35,7 @@ export default function JoinOrgCard() {
       const result = data as any;
       setOrgCodeValid(result?.valid ?? false);
       setOrgCodeOrgName(result?.org_name ?? "");
+      setDetectedRole(result?.role ?? null);
     } catch {
       setOrgCodeValid(null);
     } finally {
@@ -47,11 +49,10 @@ export default function JoinOrgCard() {
     try {
       const { data } = await supabase.rpc("request_join_org", {
         p_code: orgCode.trim(),
-        p_role: role,
       });
       const result = data as any;
       if (result?.success) {
-        toast.success(`Join request sent to ${result.org_name}! You'll be notified when approved.`);
+        toast.success(`Join request sent to ${result.org_name} as ${result.role}! You'll be notified when approved.`);
         setSubmitted(true);
       } else {
         toast.error(result?.error || "Failed to send request");
@@ -72,13 +73,15 @@ export default function JoinOrgCard() {
           </div>
           <h3 className="font-semibold text-lg">Request Sent!</h3>
           <p className="text-muted-foreground text-sm text-center max-w-sm">
-            Your request to join <strong>{orgCodeOrgName}</strong> has been sent.
+            Your request to join <strong>{orgCodeOrgName}</strong> as <Badge variant="outline" className="mx-1">{detectedRole}</Badge> has been sent.
             The organization admin will review it shortly.
           </p>
         </CardContent>
       </Card>
     );
   }
+
+  const roleBadgeColor = detectedRole === "admin" ? "destructive" : detectedRole === "teacher" ? "secondary" : "default";
 
   return (
     <Card className="border-border/50">
@@ -90,24 +93,11 @@ export default function JoinOrgCard() {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Enter your organization's invite code to request membership. An admin will review your request.
+          Enter the invite code shared by your organization's admin. The code determines your role (Student, Teacher, or Admin).
         </p>
 
         <div className="space-y-2">
-          <Label>I want to join as</Label>
-          <Select value={role} onValueChange={(v: "student" | "teacher") => setRole(v)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="student">Student</SelectItem>
-              <SelectItem value="teacher">Teacher</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Organization Code</Label>
+          <Label>Invite Code</Label>
           <div className="relative">
             <Input
               placeholder="e.g. A1B2C3D4"
@@ -133,9 +123,15 @@ export default function JoinOrgCard() {
             )}
           </div>
           {orgCodeValid && orgCodeOrgName && (
-            <p className="text-xs text-green-500 flex items-center gap-1">
-              <Check className="h-3 w-3" /> Organization: <strong>{orgCodeOrgName}</strong>
-            </p>
+            <div className="flex items-center gap-2 text-xs text-green-500">
+              <Check className="h-3 w-3" />
+              <span>Organization: <strong>{orgCodeOrgName}</strong></span>
+              {detectedRole && (
+                <Badge variant={roleBadgeColor as any} className="text-[10px] capitalize">
+                  Joining as {detectedRole}
+                </Badge>
+              )}
+            </div>
           )}
           {orgCodeValid === false && orgCode.length >= 4 && (
             <p className="text-xs text-destructive">Invalid code. Ask your admin for the correct code.</p>
@@ -152,7 +148,7 @@ export default function JoinOrgCard() {
           ) : (
             <Send className="h-4 w-4 mr-2" />
           )}
-          {submitting ? "Sending Request..." : "Request to Join"}
+          {submitting ? "Sending Request..." : `Request to Join${detectedRole ? ` as ${detectedRole.charAt(0).toUpperCase() + detectedRole.slice(1)}` : ""}`}
         </Button>
       </CardContent>
     </Card>
