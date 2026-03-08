@@ -250,9 +250,10 @@ const Auth = () => {
           } else if (orgRole === "teacher" && orgName.trim() && !orgCode.trim()) {
             // Teacher creating a new org via secure RPC
             try {
-              const { data: result, error: rpcError } = await supabase.rpc("create_organisation", {
+              const { data: rawResult, error: rpcError } = await supabase.rpc("create_organisation", {
                 p_name: orgName.trim(),
               });
+              const result = rawResult as any;
               if (rpcError || !result?.success) {
                 console.error("Org creation error:", result?.error || rpcError?.message);
               }

@@ -48,10 +48,11 @@ export default function OrgWorkspace() {
     setCreatingOrg(true);
     try {
       // Create org + promote creator atomically via secure RPC
-      const { data: result, error: rpcError } = await supabase.rpc("create_organisation", {
+      const { data: rawResult, error: rpcError } = await supabase.rpc("create_organisation", {
         p_name: orgName.trim(),
       });
 
+      const result = rawResult as any;
       if (rpcError || !result?.success) {
         toast.error(result?.error || rpcError?.message || "Failed to create organization");
         setCreatingOrg(false);
