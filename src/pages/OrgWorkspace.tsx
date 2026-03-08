@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Hash, Megaphone, HelpCircle, BookOpen, Shield, FileText, BarChart3, Plus, Users, Swords, Copy, Check, GraduationCap, Calendar } from "lucide-react";
+import { Building2, Hash, Megaphone, HelpCircle, BookOpen, Shield, FileText, BarChart3, Plus, Users, Swords, Copy, Check, GraduationCap, Calendar, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,6 +19,7 @@ import OrgAnalytics from "@/components/org/OrgAnalytics";
 import MemberManager from "@/components/org/MemberManager";
 import TeacherSections from "@/components/org/TeacherSections";
 import TimetableManager from "@/components/org/TimetableManager";
+import BatchManager from "@/components/org/BatchManager";
 
 const channelIcons: Record<string, typeof Hash> = {
   text: Hash,
@@ -238,6 +239,7 @@ export default function OrgWorkspace() {
             <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider px-2">Navigation</span>
           </div>
           {[
+            { id: "batches", label: "Batches & Sections", icon: Layers },
             { id: "teaching", label: "Teaching", icon: GraduationCap },
             { id: "timetable", label: "Timetable", icon: Calendar },
             { id: "knowledge", label: "Knowledge Base", icon: FileText },
@@ -267,6 +269,8 @@ export default function OrgWorkspace() {
             channelId={selectedChannel}
             channel={channels.find(c => c.id === selectedChannel)}
           />
+        ) : activeTab === "batches" ? (
+          <BatchManager orgId={org?.id || ""} />
         ) : activeTab === "teaching" ? (
           <TeacherSections orgId={org?.id || ""} />
         ) : activeTab === "timetable" ? (
