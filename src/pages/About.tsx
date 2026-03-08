@@ -29,6 +29,7 @@ const About = () => {
   const [abhiDialogOpen, setAbhiDialogOpen] = useState(false);
   const [abhinavDialogOpen, setAbhinavDialogOpen] = useState(false);
   const [dewashishDialogOpen, setDewashishDialogOpen] = useState(false);
+  const [princeDialogOpen, setPrinceDialogOpen] = useState(false);
   const [roadmapDialogOpen, setRoadmapDialogOpen] = useState(false);
 
   return (
