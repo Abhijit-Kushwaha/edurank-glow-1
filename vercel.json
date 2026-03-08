@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/~oauth/initiate",
-      "destination": "https://oauth.lovable.app/initiate"
+      "destination": "https://oauth.lovable.app/initiate?project_id=90f8581c-f8e9-4037-92ae-7fc389144b19"
     },
     {
       "source": "/~oauth/callback",
