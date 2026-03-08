@@ -181,6 +181,22 @@ const App = () => (
                   </ProtectedWithLayout>
                 }
               />
+              <Route
+                path="/flashcards"
+                element={
+                  <ProtectedWithLayout>
+                    <Flashcards />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/pomodoro"
+                element={
+                  <ProtectedWithLayout>
+                    <PomodoroTimer />
+                  </ProtectedWithLayout>
+                }
+              />
               <Route path="/about" element={<About />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
