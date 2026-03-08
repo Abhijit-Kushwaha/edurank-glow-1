@@ -98,6 +98,7 @@ export default function PomodoroTimer() {
   useEffect(() => {
     if (!isRunning) return;
     intervalRef.current = setInterval(() => {
+      playTick();
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(intervalRef.current!);
