@@ -83,6 +83,7 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
     time_limit_mins: 30, section_id: "all", max_attempts: 1,
     scheduled_at: "", due_date: "",
     shuffle_questions: false, shuffle_options: false, show_answers_after: true,
+    lock_screen: false,
   });
   const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
   const [savingQuiz, setSavingQuiz] = useState(false);
