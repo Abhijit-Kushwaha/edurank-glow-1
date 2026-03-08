@@ -338,7 +338,7 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
               <Select value={quizForm.section_id} onValueChange={v => setQuizForm(p => ({ ...p, section_id: v }))}>
                 <SelectTrigger><SelectValue placeholder="All students" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All students</SelectItem>
+                  <SelectItem value="all">All students</SelectItem>
                   {sections.filter(s => s.teacher_id === profileId).map(s => (
                     <SelectItem key={s.id} value={s.id}>{s.section_name} - {s.subject}</SelectItem>
                   ))}

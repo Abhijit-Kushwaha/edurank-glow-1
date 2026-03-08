@@ -166,7 +166,7 @@ export function useChannelMessages(channelId: string | null) {
     setLoading(true);
     (supabase as any)
       .from("channel_messages")
-      .select("*")
+      .select("*, sender:profiles!channel_messages_sender_id_fkey(name, avatar_url)")
       .eq("channel_id", channelId)
       .is("deleted_at", null)
       .order("created_at", { ascending: true })
