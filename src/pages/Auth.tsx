@@ -457,6 +457,7 @@ const Auth = () => {
                       <p className="text-xs text-green-500 flex items-center gap-1">
                         <Check className="h-3 w-3" />
                         Joining: <strong>{orgCodeOrgName}</strong>
+                        {/* Role auto-detected from invite code */}
                       </p>
                     )}
                     {orgCode.trim() && orgCodeValid === false && (
