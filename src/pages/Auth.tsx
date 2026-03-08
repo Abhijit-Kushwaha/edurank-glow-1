@@ -189,6 +189,7 @@ const Auth = () => {
       }
     } catch (error) {
       toast.error("Something went wrong");
+      resetTurnstile();
     } finally {
       setIsLoading(false);
     }
