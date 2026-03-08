@@ -314,6 +314,10 @@ export default function OrgWorkspace() {
             channelId={selectedChannel}
             channel={channels.find(c => c.id === selectedChannel)}
           />
+        ) : activeTab === "my-quizzes" ? (
+          <div className="p-6">
+            <StudentAssignedQuizzes orgId={org?.id || ""} />
+          </div>
         ) : activeTab === "batches" ? (
           <BatchManager orgId={org?.id || ""} />
         ) : activeTab === "marks" ? (
