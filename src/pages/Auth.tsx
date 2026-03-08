@@ -434,11 +434,14 @@ const Auth = () => {
                     <div className="relative">
                       <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                       <Input
+                        id="orgCode"
+                        name="orgCode"
                         type="text"
                         placeholder="Organization Code (e.g. A1B2C3D4)"
                         value={orgCode}
                         onChange={(e) => setOrgCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8))}
                         className="pl-10 pr-10 uppercase tracking-widest font-mono"
+                        autoComplete="off"
                         maxLength={8}
                       />
                       {orgCode.trim() && (
