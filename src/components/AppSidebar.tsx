@@ -16,6 +16,7 @@ import {
   MessageSquare,
   Layers,
   Timer,
+  Building2,
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
