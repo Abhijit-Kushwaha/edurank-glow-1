@@ -69,8 +69,8 @@ export function useOrganization() {
   const [loading, setLoading] = useState(true);
   const [fetchKey, setFetchKey] = useState(0);
 
-  // Profile has org_id but it may not be in the Profile interface, access via any
-  const orgId = (profile as any)?.org_id as string | undefined;
+  // Profile has org_id
+  const orgId = profile?.org_id as string | undefined;
 
   useEffect(() => {
     if (!orgId) {
@@ -166,7 +166,7 @@ export function useChannelMessages(channelId: string | null) {
     setLoading(true);
     (supabase as any)
       .from("channel_messages")
-      .select("*")
+      .select("*, sender:profiles!channel_messages_sender_id_fkey(name, avatar_url)")
       .eq("channel_id", channelId)
       .is("deleted_at", null)
       .order("created_at", { ascending: true })

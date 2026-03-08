@@ -53,7 +53,7 @@ export default function MemberManager({ orgId }: MemberManagerProps) {
   const [changingRole, setChangingRole] = useState(false);
   const [viewingProgress, setViewingProgress] = useState<string | null>(null);
 
-  const callerRole = (profile as any)?.role as string || "student";
+  const callerRole = profile?.role as string || "student";
   const canManageRoles = ["super_admin", "admin"].includes(callerRole);
 
   const fetchMembers = useCallback(async () => {
@@ -224,7 +224,7 @@ export default function MemberManager({ orgId }: MemberManagerProps) {
                     <Eye className="h-4 w-4" />
                   </Button>
                 )}
-                {canManageRoles && member.user_id !== (profile as any)?.user_id && (
+                {canManageRoles && member.user_id !== profile?.user_id && (
                   <Button
                     variant="ghost"
                     size="icon"

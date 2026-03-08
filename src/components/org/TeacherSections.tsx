@@ -54,7 +54,7 @@ interface TeacherSectionsProps {
 
 export default function TeacherSections({ orgId }: TeacherSectionsProps) {
   const { user, profile } = useAuth();
-  const callerRole = (profile as any)?.role || "student";
+  const callerRole = profile?.role || "student";
   const isTeacherOrAbove = ["super_admin", "admin", "teacher"].includes(callerRole);
 
   const [sections, setSections] = useState<Section[]>([]);
@@ -71,13 +71,13 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
   const [showQuizDialog, setShowQuizDialog] = useState(false);
   const [quizForm, setQuizForm] = useState({
     title: "", subject: "", description: "", difficulty: "medium",
-    time_limit_mins: 30, section_id: "", max_attempts: 1,
+    time_limit_mins: 30, section_id: "all", max_attempts: 1,
   });
   const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
   const [savingQuiz, setSavingQuiz] = useState(false);
   const [generatingQuiz, setGeneratingQuiz] = useState(false);
 
-  const profileId = (profile as any)?.id;
+  const profileId = profile?.id;
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -165,7 +165,7 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
         description: quizForm.description || null,
         difficulty: quizForm.difficulty,
         time_limit_mins: quizForm.time_limit_mins,
-        section_id: quizForm.section_id || null,
+        section_id: quizForm.section_id === "all" ? null : quizForm.section_id,
         max_attempts: quizForm.max_attempts,
         questions: quizQuestions,
         is_published: publish,
@@ -173,7 +173,7 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
       if (error) throw error;
       toast.success(publish ? "Quiz published!" : "Quiz saved as draft!");
       setShowQuizDialog(false);
-      setQuizForm({ title: "", subject: "", description: "", difficulty: "medium", time_limit_mins: 30, section_id: "", max_attempts: 1 });
+      setQuizForm({ title: "", subject: "", description: "", difficulty: "medium", time_limit_mins: 30, section_id: "all", max_attempts: 1 });
       setQuizQuestions([]);
       fetchData();
     } catch (err: any) {
@@ -240,7 +240,7 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <Badge variant="secondary" className="text-[10px]">{s.subject}</Badge>
-                  {s.is_active && <Badge variant="outline" className="text-[10px] text-green-500 border-green-500/30">Active</Badge>}
+                  {s.is_active && <Badge variant="outline" className="text-[10px] text-emerald-500 border-emerald-500/30">Active</Badge>}
                 </div>
                 <CardTitle className="text-sm mt-1">{s.section_name}</CardTitle>
               </CardHeader>
@@ -338,7 +338,7 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
               <Select value={quizForm.section_id} onValueChange={v => setQuizForm(p => ({ ...p, section_id: v }))}>
                 <SelectTrigger><SelectValue placeholder="All students" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All students</SelectItem>
+                  <SelectItem value="all">All students</SelectItem>
                   {sections.filter(s => s.teacher_id === profileId).map(s => (
                     <SelectItem key={s.id} value={s.id}>{s.section_name} - {s.subject}</SelectItem>
                   ))}
