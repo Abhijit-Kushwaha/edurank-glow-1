@@ -312,6 +312,17 @@ export default function MemberManager({ orgId }: MemberManagerProps) {
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 )}
+                {callerRole === "super_admin" && member.user_id !== profile?.user_id && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => handleRemoveMember(member)}
+                    title="Remove from organization"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
           );
