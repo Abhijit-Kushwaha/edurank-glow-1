@@ -202,7 +202,7 @@ export default function Flashcards() {
                   >
                     <Card className={`min-h-[250px] flex items-center justify-center border-2 ${flipped ? "border-green-500/30 bg-green-500/5" : "border-primary/20"}`}>
                       <CardContent className="p-8 text-center">
-                        <Badge variant="outline" className="mb-4 text-xs">{flipped ? "Answer" : "Question"}</Badge>
+                        <span className="inline-block mb-4"><Badge variant="outline" className="text-xs">{flipped ? "Answer" : "Question"}</Badge></span>
                         <p className="text-xl font-semibold leading-relaxed">
                           {flipped ? currentCard?.back : currentCard?.front}
                         </p>
