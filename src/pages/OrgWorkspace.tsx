@@ -115,11 +115,22 @@ export default function OrgWorkspace() {
           <Building2 className="h-16 w-16 text-muted-foreground" />
           <h2 className="text-2xl font-bold">No Organization</h2>
           <p className="text-muted-foreground text-center max-w-md">
-            You're not part of any organization yet. Ask your teacher or admin for an invite link, or create your own organization.
+            You're not part of any organization yet. Join one with an invite code, or create your own.
           </p>
-          <Button className="mt-2" onClick={() => setShowCreateOrg(true)}>
+
+          <div className="w-full max-w-md mt-4">
+            <JoinOrgCard />
+          </div>
+
+          <div className="flex items-center gap-3 w-full max-w-md my-2">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
+
+          <Button variant="outline" onClick={() => setShowCreateOrg(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Create Organization
+            Create New Organization
           </Button>
         </div>
 
