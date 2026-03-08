@@ -27,15 +27,17 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ error?: string }>;
+  login: (email: string, password: string, turnstileToken?: string) => Promise<{ error?: string }>;
   signup: (
     email: string,
     password: string,
     name: string,
     username: string,
+    turnstileToken?: string,
   ) => Promise<{ error?: string }>;
   loginWithGoogle: () => Promise<{ error?: string }>;
   logout: () => Promise<void>;
+  verifyTurnstile: (token: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
