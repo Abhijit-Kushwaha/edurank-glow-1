@@ -25,7 +25,7 @@ interface UserCredits {
   last_reset_at: string;
 }
 
-const TOTAL_MONTHLY_CREDITS = 50;
+const TOTAL_MONTHLY_CREDITS = 100;
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -229,15 +229,23 @@ const Profile = () => {
 
         {/* Credits Section */}
         <section className="glass-card rounded-2xl p-6 animate-slide-up">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Coins className="h-5 w-5 text-primary" />
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Coins className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="font-semibold">Monthly Credits</h2>
+                <p className="text-sm text-muted-foreground">
+                  Resets every 30 days
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="font-semibold">Monthly Credits</h2>
-              <p className="text-sm text-muted-foreground">
-                Resets every month
-              </p>
+            <div className="text-right">
+              <span className="text-3xl font-bold neon-text">
+                {credits?.credits_remaining ?? 0}
+              </span>
+              <span className="text-muted-foreground text-sm">/{TOTAL_MONTHLY_CREDITS}</span>
             </div>
           </div>
 
@@ -250,37 +258,52 @@ const Profile = () => {
           )}
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Credits Remaining</span>
-              <span className="text-2xl font-bold neon-text">
-                {credits?.credits_remaining || 0}
-              </span>
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-muted-foreground">
+                  {credits?.credits_used ?? 0} used
+                </span>
+                <span className="text-muted-foreground">
+                  {credits?.credits_remaining ?? 0} remaining
+                </span>
+              </div>
+              <Progress
+                value={
+                  ((credits?.credits_remaining ?? 0) / TOTAL_MONTHLY_CREDITS) * 100
+                }
+                className="h-3"
+              />
             </div>
 
-            <Progress value={100 - usedPercent} className="h-3" />
-
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
-              <div className="text-center">
-                <p className="text-2xl font-bold">
-                  {credits?.credits_used || 0}
-                </p>
-                <p className="text-sm text-muted-foreground">Credits Used</p>
+            <div className="grid grid-cols-3 gap-3 pt-4 border-t border-border text-center">
+              <div>
+                <p className="text-xl font-bold">{credits?.credits_used ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Used</p>
               </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold">{TOTAL_MONTHLY_CREDITS}</p>
-                <p className="text-sm text-muted-foreground">Monthly Limit</p>
+              <div>
+                <p className="text-xl font-bold">{credits?.credits_remaining ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Remaining</p>
+              </div>
+              <div>
+                <p className="text-xl font-bold">{TOTAL_MONTHLY_CREDITS}</p>
+                <p className="text-xs text-muted-foreground">Monthly Limit</p>
               </div>
             </div>
 
             <div className="pt-4 border-t border-border space-y-2">
-              <p className="text-sm text-muted-foreground">
-                <strong>Credit Costs:</strong>
-              </p>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Find Video: 1 credit</li>
-                <li>• AI Notes: 4 credits</li>
-                <li>• Quiz: 4 credits</li>
-              </ul>
+              <p className="text-sm font-medium">Credit Costs:</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                <span>• AI Chat: 3 credits</span>
+                <span>• Find Video: 2 credits</span>
+                <span>• AI Notes: 5 credits</span>
+                <span>• Generate Quiz: 5 credits</span>
+                <span>• Flashcards: 4 credits</span>
+                <span>• Battle Questions: 3 credits</span>
+                <span>• Analyze Weakness: 3 credits</span>
+                <span>• Fix Weak Areas: 5 credits</span>
+                <span>• Adaptive Q: 2 credits</span>
+                <span>• Battle Analysis: 3 credits</span>
+              </div>
             </div>
 
             {nextResetDate && (

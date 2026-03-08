@@ -19,7 +19,7 @@ export async function consumeCredits(
   await serviceClient
     .from("user_credits")
     .upsert(
-      { user_id: userId, credits_remaining: 50, credits_used: 0 },
+      { user_id: userId, credits_remaining: 100, credits_used: 0 },
       { onConflict: "user_id", ignoreDuplicates: true },
     );
 
@@ -43,9 +43,9 @@ export async function consumeCredits(
   if (daysSinceReset >= 30) {
     await serviceClient
       .from("user_credits")
-      .update({ credits_remaining: 50, credits_used: 0, last_reset_at: now.toISOString(), updated_at: now.toISOString() })
+      .update({ credits_remaining: 100, credits_used: 0, last_reset_at: now.toISOString(), updated_at: now.toISOString() })
       .eq("user_id", userId);
-    creditData.credits_remaining = 50;
+    creditData.credits_remaining = 100;
   }
 
   if (creditData.credits_remaining < amount) {
@@ -79,14 +79,14 @@ export async function consumeCredits(
 
 /** Credit costs for each feature */
 export const CREDIT_COSTS: Record<string, number> = {
-  "ai-chat": 1,
-  "ai-notes-gen": 2,
-  "generate-quiz": 2,
-  "find-video": 1,
-  "generate-flashcards": 2,
-  "analyze-weakness": 1,
-  "fix-weak-areas-quiz": 2,
-  "generate-battle-questions": 1,
-  "analyze-battle": 1,
-  "adaptive-question": 1,
+  "ai-chat": 3,
+  "ai-notes-gen": 5,
+  "generate-quiz": 5,
+  "find-video": 2,
+  "generate-flashcards": 4,
+  "analyze-weakness": 3,
+  "fix-weak-areas-quiz": 5,
+  "generate-battle-questions": 3,
+  "analyze-battle": 3,
+  "adaptive-question": 2,
 };
