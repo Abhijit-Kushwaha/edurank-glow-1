@@ -1,20 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { preflightResponse, withCors, withCorsError } from "../_shared/cors.ts";
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const preflight = preflightResponse(req);
+  if (preflight) return preflight;
 
   try {
     const { section_id, term_id, org_id } = await req.json();
     if (!section_id || !term_id || !org_id) {
-      return new Response(JSON.stringify({ error: "Missing required fields" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return withCorsError(req, 400, "Missing required fields");
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -30,9 +25,7 @@ serve(async (req) => {
 
     if (examsError) throw examsError;
     if (!exams || exams.length === 0) {
-      return new Response(JSON.stringify({ error: "No exams found for this term and section" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return withCorsError(req, 400, "No exams found for this term and section");
     }
 
     // Fetch all marks for these exams
@@ -44,9 +37,7 @@ serve(async (req) => {
 
     if (marksError) throw marksError;
     if (!marks || marks.length === 0) {
-      return new Response(JSON.stringify({ error: "No marks entered yet" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return withCorsError(req, 400, "No marks entered yet");
     }
 
     // Build student performance data
@@ -93,17 +84,18 @@ serve(async (req) => {
       totalMax: s.totalMax,
       subjects: s.subjects,
       absent_count: s.absent_count,
+      rank: 0,
     })).sort((a, b) => b.percentage - a.percentage);
 
     // Assign ranks
-    studentPerformances.forEach((s, i) => { (s as any).rank = i + 1; });
+    studentPerformances.forEach((s, i) => { s.rank = i + 1; });
 
     // Build prompt for AI
     const performanceSummary = studentPerformances.map(s => {
       const subjectDetails = Object.entries(s.subjects)
         .map(([sub, data]) => `${sub}: ${data.obtained}/${data.max} (${data.max > 0 ? ((data.obtained / data.max) * 100).toFixed(1) : 0}%)`)
         .join(", ");
-      return `${s.name}: Overall ${s.percentage.toFixed(1)}%, Rank #${(s as any).rank}, Subjects: [${subjectDetails}], Absent: ${s.absent_count} exams`;
+      return `${s.name}: Overall ${s.percentage.toFixed(1)}%, Rank #${s.rank}, Subjects: [${subjectDetails}], Absent: ${s.absent_count} exams`;
     }).join("\n");
 
     const totalStudents = studentPerformances.length;
@@ -168,20 +160,20 @@ Return ONLY valid JSON, no markdown.`;
           { role: "system", content: "You are an expert educational analyst. Return ONLY valid JSON." },
           { role: "user", content: prompt },
         ],
+        temperature: 0.3,
+        max_tokens: 4000,
       }),
     });
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return withCorsError(req, 429, "Rate limit exceeded. Please try again later.");
       }
       if (aiResponse.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return withCorsError(req, 402, "AI credits exhausted.");
       }
+      const errText = await aiResponse.text();
+      console.error("AI gateway error:", aiResponse.status, errText);
       throw new Error("AI gateway error: " + aiResponse.status);
     }
 
@@ -205,7 +197,7 @@ Return ONLY valid JSON, no markdown.`;
         student_reports: studentPerformances.map(s => ({
           name: s.name,
           percentage: s.percentage,
-          rank: (s as any).rank,
+          rank: s.rank,
           grade: s.percentage >= 90 ? "A+" : s.percentage >= 80 ? "A" : s.percentage >= 70 ? "B+" :
             s.percentage >= 60 ? "B" : s.percentage >= 50 ? "C+" : s.percentage >= 40 ? "C" :
             s.percentage >= 33 ? "D" : "F",
@@ -218,13 +210,9 @@ Return ONLY valid JSON, no markdown.`;
       };
     }
 
-    return new Response(JSON.stringify(analysis), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return withCors(req, { json: analysis });
   } catch (err) {
     console.error("analyze-student-marks error:", err);
-    return new Response(JSON.stringify({ error: err.message || "Unknown error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return withCorsError(req, 500, (err as Error).message || "Unknown error");
   }
 });

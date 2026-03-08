@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Plus, GraduationCap, Users, UserCog, ChevronRight, ChevronDown,
-  Layers, BookOpen, Trash2, UserPlus, Search, X
+  Layers, BookOpen, UserPlus, Search, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
