@@ -128,10 +128,12 @@ export default function OrgWorkspace() {
             <div className="flex-1 h-px bg-border" />
           </div>
 
-          <Button variant="outline" onClick={() => setShowCreateOrg(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create New Organization
-          </Button>
+          {profile?.role !== "student" && (
+            <Button variant="outline" onClick={() => setShowCreateOrg(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create New Organization
+            </Button>
+          )}
         </div>
 
         <Dialog open={showCreateOrg} onOpenChange={setShowCreateOrg}>

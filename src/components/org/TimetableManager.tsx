@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import jsPDF from "jspdf";
 
 interface TimetableEntry {
   id: string;
@@ -44,11 +45,12 @@ export default function TimetableManager({ orgId }: TimetableManagerProps) {
   const [generating, setGenerating] = useState(false);
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [constraints, setConstraints] = useState("");
+  const [orgName, setOrgName] = useState("");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [entryRes, secRes] = await Promise.all([
+      const [entryRes, secRes, orgRes] = await Promise.all([
         (supabase as any).from("timetable_entries")
           .select("*, profiles!timetable_entries_teacher_id_fkey(name), teacher_sections!timetable_entries_section_id_fkey(section_name)")
           .eq("org_id", orgId)
@@ -58,6 +60,7 @@ export default function TimetableManager({ orgId }: TimetableManagerProps) {
           .select("*, profiles!teacher_sections_teacher_id_fkey(name)")
           .eq("org_id", orgId)
           .eq("is_active", true),
+        supabase.from("organisations").select("name").eq("id", orgId).single(),
       ]);
 
       if (entryRes.data) {
@@ -69,6 +72,9 @@ export default function TimetableManager({ orgId }: TimetableManagerProps) {
       }
       if (secRes.data) {
         setSections(secRes.data.map((s: any) => ({ ...s, teacher_name: s.profiles?.name })));
+      }
+      if (orgRes.data) {
+        setOrgName(orgRes.data.name);
       }
     } catch (err) {
       console.error(err);
@@ -104,7 +110,6 @@ export default function TimetableManager({ orgId }: TimetableManagerProps) {
         throw new Error("Invalid timetable response");
       }
 
-      // Map AI results to section/teacher IDs
       const profileId = profile?.id;
       const newEntries = data.timetable.map((entry: any) => {
         const matchSection = sections.find(s =>
@@ -128,7 +133,6 @@ export default function TimetableManager({ orgId }: TimetableManagerProps) {
         throw new Error("No valid entries generated");
       }
 
-      // Clear existing and insert new
       await (supabase as any).from("timetable_entries").delete().eq("org_id", orgId);
       const { error: insertError } = await (supabase as any).from("timetable_entries").insert(newEntries);
       if (insertError) throw insertError;
@@ -155,6 +159,143 @@ export default function TimetableManager({ orgId }: TimetableManagerProps) {
     }
   };
 
+  const downloadPDF = () => {
+    if (entries.length === 0) {
+      toast.error("No timetable to download");
+      return;
+    }
+
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+
+    // Header
+    doc.setFillColor(30, 58, 138); // dark blue
+    doc.rect(0, 0, pageW, 28, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text(orgName || "Organization", pageW / 2, 12, { align: "center" });
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text("Weekly Class Timetable", pageW / 2, 20, { align: "center" });
+    doc.setFontSize(8);
+    doc.text(`Generated on ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`, pageW / 2, 25, { align: "center" });
+
+    // Group entries by day
+    const byDay: Record<number, TimetableEntry[]> = {};
+    entries.forEach(e => {
+      if (!byDay[e.day_of_week]) byDay[e.day_of_week] = [];
+      byDay[e.day_of_week].push(e);
+    });
+
+    // Get unique time slots sorted
+    const allSlots = [...new Set(entries.map(e => `${e.start_time}-${e.end_time}`))].sort();
+
+    // Table dimensions
+    const marginL = 10;
+    const marginR = 10;
+    const tableW = pageW - marginL - marginR;
+    const timeColW = 30;
+    const dayColW = (tableW - timeColW) / 5;
+    const headerH = 10;
+    const rowH = Math.min(22, Math.max(16, (pageH - 50) / (allSlots.length + 1)));
+    const tableTop = 34;
+
+    // Table header row
+    doc.setFillColor(59, 130, 246); // blue
+    doc.rect(marginL, tableTop, tableW, headerH, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("Time", marginL + timeColW / 2, tableTop + headerH / 2 + 1, { align: "center" });
+    for (let i = 0; i < 5; i++) {
+      const x = marginL + timeColW + i * dayColW;
+      doc.text(WEEKDAYS[i], x + dayColW / 2, tableTop + headerH / 2 + 1, { align: "center" });
+    }
+
+    // Draw rows
+    let y = tableTop + headerH;
+    allSlots.forEach((slot, idx) => {
+      const [start, end] = slot.split("-");
+      // Alternating row colors
+      if (idx % 2 === 0) {
+        doc.setFillColor(241, 245, 249); // slate-100
+      } else {
+        doc.setFillColor(255, 255, 255);
+      }
+      doc.rect(marginL, y, tableW, rowH, "F");
+
+      // Time cell
+      doc.setTextColor(51, 65, 85); // slate-700
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.text(start?.slice(0, 5) || "", marginL + timeColW / 2, y + rowH / 2 - 1, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.text(end?.slice(0, 5) || "", marginL + timeColW / 2, y + rowH / 2 + 3, { align: "center" });
+
+      // Day cells
+      for (let d = 1; d <= 5; d++) {
+        const x = marginL + timeColW + (d - 1) * dayColW;
+        const match = (byDay[d] || []).find(e => `${e.start_time}-${e.end_time}` === slot);
+        if (match) {
+          // Subject pill
+          doc.setFillColor(219, 234, 254); // blue-100
+          const pillW = dayColW - 6;
+          const pillH = rowH - 4;
+          doc.roundedRect(x + 3, y + 2, pillW, pillH, 2, 2, "F");
+
+          doc.setTextColor(30, 64, 175); // blue-800
+          doc.setFontSize(8);
+          doc.setFont("helvetica", "bold");
+          doc.text(match.subject, x + dayColW / 2, y + rowH / 2 - 2, { align: "center", maxWidth: pillW - 4 });
+
+          doc.setTextColor(71, 85, 105); // slate-600
+          doc.setFontSize(6.5);
+          doc.setFont("helvetica", "normal");
+          const subText = [match.teacher_name, match.room].filter(Boolean).join(" · ");
+          doc.text(subText, x + dayColW / 2, y + rowH / 2 + 3, { align: "center", maxWidth: pillW - 4 });
+
+          if (match.section_name) {
+            doc.setFontSize(5.5);
+            doc.setTextColor(100, 116, 139);
+            doc.text(match.section_name, x + dayColW / 2, y + rowH / 2 + 6.5, { align: "center", maxWidth: pillW - 4 });
+          }
+        }
+      }
+
+      y += rowH;
+    });
+
+    // Draw grid lines
+    doc.setDrawColor(203, 213, 225); // slate-300
+    doc.setLineWidth(0.3);
+    // Outer border
+    doc.rect(marginL, tableTop, tableW, headerH + allSlots.length * rowH);
+    // Vertical lines
+    doc.line(marginL + timeColW, tableTop, marginL + timeColW, y);
+    for (let i = 1; i < 5; i++) {
+      const lx = marginL + timeColW + i * dayColW;
+      doc.line(lx, tableTop, lx, y);
+    }
+    // Horizontal lines
+    for (let i = 0; i <= allSlots.length; i++) {
+      const ly = tableTop + headerH + i * rowH;
+      doc.line(marginL, ly, marginL + tableW, ly);
+    }
+
+    // Footer
+    doc.setFontSize(7);
+    doc.setTextColor(148, 163, 184);
+    doc.setFont("helvetica", "italic");
+    doc.text("This timetable was generated by BrainBuddy", marginL, pageH - 6);
+    doc.text(`Page 1 of 1`, pageW - marginR, pageH - 6, { align: "right" });
+
+    doc.save(`${(orgName || "Timetable").replace(/\s+/g, "_")}_Timetable.pdf`);
+    toast.success("Timetable PDF downloaded!");
+  };
+
   if (loading) {
     return <div className="p-6 space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-64" /></div>;
   }
@@ -176,18 +317,25 @@ export default function TimetableManager({ orgId }: TimetableManagerProps) {
           </h2>
           <p className="text-sm text-muted-foreground">Weekly class schedule</p>
         </div>
-        {isSuperAdmin && (
-          <div className="flex gap-2">
-            {entries.length > 0 && (
-              <Button variant="outline" size="sm" onClick={clearTimetable}>
-                <Trash2 className="h-4 w-4 mr-1" /> Clear
-              </Button>
-            )}
-            <Button size="sm" onClick={() => setShowGenerateDialog(true)}>
-              <Sparkles className="h-4 w-4 mr-1" /> AI Generate
+        <div className="flex gap-2">
+          {entries.length > 0 && (
+            <Button variant="outline" size="sm" onClick={downloadPDF}>
+              <Download className="h-4 w-4 mr-1" /> Download PDF
             </Button>
-          </div>
-        )}
+          )}
+          {isSuperAdmin && (
+            <>
+              {entries.length > 0 && (
+                <Button variant="outline" size="sm" onClick={clearTimetable}>
+                  <Trash2 className="h-4 w-4 mr-1" /> Clear
+                </Button>
+              )}
+              <Button size="sm" onClick={() => setShowGenerateDialog(true)}>
+                <Sparkles className="h-4 w-4 mr-1" /> AI Generate
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {entries.length === 0 ? (
@@ -201,33 +349,50 @@ export default function TimetableManager({ orgId }: TimetableManagerProps) {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-          {[1, 2, 3, 4, 5].map(day => (
-            <div key={day} className="space-y-2">
-              <h3 className="text-sm font-semibold text-center py-1.5 rounded-lg bg-muted/50">
-                {WEEKDAYS[day - 1]}
-              </h3>
-              {(byDay[day] || []).map(entry => (
-                <Card key={entry.id} className={`border-border/50 ${DAY_COLORS[day]}`}>
-                  <CardContent className="p-2.5 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="secondary" className="text-[9px]">{entry.subject}</Badge>
-                      {entry.room && <span className="text-[9px] text-muted-foreground">{entry.room}</span>}
-                    </div>
-                    <p className="text-xs font-medium">{entry.teacher_name || "TBD"}</p>
-                    {entry.section_name && <p className="text-[10px] text-muted-foreground">{entry.section_name}</p>}
-                    <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-2.5 w-2.5" />
-                      {entry.start_time?.slice(0, 5)} - {entry.end_time?.slice(0, 5)}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-              {(!byDay[day] || byDay[day].length === 0) && (
-                <p className="text-[10px] text-muted-foreground text-center py-4">No classes</p>
-              )}
-            </div>
-          ))}
+        /* Formal table view */
+        <div className="overflow-auto rounded-lg border border-border">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="bg-primary/10">
+                <th className="border border-border/50 px-3 py-2 text-left font-semibold text-foreground w-28">Time</th>
+                {WEEKDAYS.map(day => (
+                  <th key={day} className="border border-border/50 px-3 py-2 text-center font-semibold text-foreground">{day}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[...new Set(entries.map(e => `${e.start_time}-${e.end_time}`))].sort().map((slot, idx) => {
+                const [start, end] = slot.split("-");
+                return (
+                  <tr key={slot} className={idx % 2 === 0 ? "bg-card" : "bg-muted/30"}>
+                    <td className="border border-border/50 px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {start?.slice(0, 5)} – {end?.slice(0, 5)}
+                      </div>
+                    </td>
+                    {[1, 2, 3, 4, 5].map(d => {
+                      const match = (byDay[d] || []).find(e => `${e.start_time}-${e.end_time}` === slot);
+                      return (
+                        <td key={d} className="border border-border/50 px-2 py-1.5 text-center">
+                          {match ? (
+                            <div className="rounded-md bg-primary/10 p-1.5 space-y-0.5">
+                              <p className="font-semibold text-xs text-primary">{match.subject}</p>
+                              <p className="text-[10px] text-muted-foreground">{match.teacher_name || "TBD"}</p>
+                              {match.section_name && <p className="text-[10px] text-muted-foreground italic">{match.section_name}</p>}
+                              {match.room && <p className="text-[10px] text-muted-foreground">📍 {match.room}</p>}
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground">—</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
