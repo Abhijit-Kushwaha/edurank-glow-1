@@ -29,7 +29,7 @@ function resolveOrigin(origin: string | null): string {
     // Allow any Vercel preview: *.vercel.app
     if (url.hostname.endsWith(".vercel.app")) return origin;
     // Allow any Lovable preview: *.lovable.app or *.lovable.dev
-    if (url.hostname.endsWith(".lovable.app") || url.hostname.endsWith(".lovable.dev")) return origin;
+    if (url.hostname.endsWith(".lovable.app") || url.hostname.endsWith(".lovable.dev") || url.hostname.endsWith(".lovableproject.com")) return origin;
   } catch {
     // Invalid URL — fall through
   }
