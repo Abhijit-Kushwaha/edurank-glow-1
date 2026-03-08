@@ -105,6 +105,9 @@ serve(async (req) => {
     const rateLimitResult = await checkRateLimit(supabaseClient, { operation: "analyze-weakness", userId, limitsPerHour: 3, limitsPerDay: 15 });
     if (!rateLimitResult.allowed) return withCorsError(req, 429, rateLimitResult.message || "Rate limit exceeded");
 
+    const creditResult = await consumeCredits(userId, CREDIT_COSTS["analyze-weakness"]);
+    if (!creditResult.success) return withCorsError(req, 402, creditResult.error || "Insufficient credits");
+
     const { todoId, videoId, quizId, questions } = await req.json();
     if (!todoId || !videoId || !questions || !Array.isArray(questions)) return withCorsError(req, 400, "Missing required fields: todoId, videoId, questions");
 

@@ -68,6 +68,9 @@ serve(async (req) => {
     const rateLimitResult = await checkRateLimit(supabaseClient, { operation: "adaptive-question", userId: user.id, limitsPerHour: 20, limitsPerDay: 100 });
     if (!rateLimitResult.allowed) return withCorsError(req, 429, rateLimitResult.message || "Rate limit exceeded");
 
+    const creditResult = await consumeCredits(user.id, CREDIT_COSTS["adaptive-question"]);
+    if (!creditResult.success) return withCorsError(req, 402, creditResult.error || "Insufficient credits");
+
     const { notes, previousQuestion, wasCorrect, difficulty } = await req.json();
     if (!notes || !previousQuestion) return withCorsError(req, 400, "Missing required fields: notes, previousQuestion");
 

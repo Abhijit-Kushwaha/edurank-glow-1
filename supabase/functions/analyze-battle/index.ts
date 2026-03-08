@@ -38,6 +38,14 @@ serve(async (req) => {
       });
     }
 
+    const creditResult = await consumeCredits(user.id, CREDIT_COSTS["analyze-battle"]);
+    if (!creditResult.success) {
+      return new Response(JSON.stringify({ error: creditResult.error || "Insufficient credits" }), {
+        status: 402,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { subject, correctQuestions, wrongQuestions, totalQuestions, correctCount } = await req.json();
 
     // Input sanitization — match patterns used across all other AI edge functions

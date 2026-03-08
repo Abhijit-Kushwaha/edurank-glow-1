@@ -37,6 +37,14 @@ serve(async (req) => {
       });
     }
 
+    const creditResult = await consumeCredits(user.id, CREDIT_COSTS["generate-battle-questions"]);
+    if (!creditResult.success) {
+      return new Response(JSON.stringify({ error: creditResult.error || "Insufficient credits" }), {
+        status: 402,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { subject, difficulty, numQuestions, battleId, source } = await req.json();
 
     if (!difficulty || !numQuestions || !battleId) {

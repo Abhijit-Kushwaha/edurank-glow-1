@@ -73,6 +73,9 @@ serve(async (req) => {
     });
     if (!rateLimitResult.allowed) return withCorsError(req, 429, rateLimitResult.message || "Rate limit exceeded");
 
+    const creditResult = await consumeCredits(claimsData.claims.sub as string, CREDIT_COSTS["fix-weak-areas-quiz"]);
+    if (!creditResult.success) return withCorsError(req, 402, creditResult.error || "Insufficient credits");
+
     const { topics, notes, questionsPerTopic = 2 } = await req.json();
     if (!topics || !Array.isArray(topics) || topics.length === 0) return withCorsError(req, 400, "No topics provided");
     if (topics.length > 20) return withCorsError(req, 400, "Too many topics");
