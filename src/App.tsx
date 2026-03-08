@@ -32,6 +32,7 @@ import Flashcards from "./pages/Flashcards";
 import PomodoroTimer from "./pages/PomodoroTimer";
 import Achievements from "./pages/Achievements";
 import OrgWorkspace from "./pages/OrgWorkspace";
+import OrgBattleArena from "./pages/OrgBattleArena";
 
 const queryClient = new QueryClient();
 
