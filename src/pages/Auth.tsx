@@ -423,30 +423,58 @@ const Auth = () => {
                   </Select>
                 </div>
 
-                {orgRole === "teacher" && (
-                  <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                      type="text"
-                      placeholder="Organization Name (e.g. Sunrise Academy)"
-                      value={orgName}
-                      onChange={(e) => setOrgName(e.target.value)}
-                      className="pl-10"
-                    />
+                {(orgRole === "student" || orgRole === "teacher") && (
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Organization Code (e.g. A1B2C3D4)"
+                        value={orgCode}
+                        onChange={(e) => setOrgCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8))}
+                        className="pl-10 pr-10 uppercase tracking-widest font-mono"
+                        maxLength={8}
+                      />
+                      {orgCode.trim() && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {isCheckingOrgCode ? (
+                            <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                          ) : orgCodeValid === true ? (
+                            <Check className="h-5 w-5 text-green-500" />
+                          ) : orgCodeValid === false ? (
+                            <X className="h-5 w-5 text-destructive" />
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                    {orgCode.trim() && orgCodeValid && orgCodeOrgName && (
+                      <p className="text-xs text-green-500 flex items-center gap-1">
+                        <Check className="h-3 w-3" />
+                        Joining: <strong>{orgCodeOrgName}</strong>
+                      </p>
+                    )}
+                    {orgCode.trim() && orgCodeValid === false && (
+                      <p className="text-xs text-destructive">Invalid code. Ask your admin for the correct organization code.</p>
+                    )}
+                    <p className="text-[10px] text-muted-foreground">
+                      {orgRole === "student"
+                        ? "Enter the code provided by your teacher/admin to join their organization."
+                        : "Enter a code to join an existing org, or leave blank and enter an org name below to create a new one."}
+                    </p>
                   </div>
                 )}
 
-                {orgRole === "student" && (
+                {orgRole === "teacher" && !orgCode.trim() && (
                   <div className="relative">
                     <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input
                       type="text"
-                      placeholder="Organization Invite Code (optional)"
+                      placeholder="New Organization Name (e.g. Sunrise Academy)"
                       value={orgName}
                       onChange={(e) => setOrgName(e.target.value)}
                       className="pl-10"
                     />
-                    <p className="text-[10px] text-muted-foreground mt-1">You can also join later from your dashboard</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">You'll become the admin of this new organization</p>
                   </div>
                 )}
               </>
