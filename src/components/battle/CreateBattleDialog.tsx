@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Swords, Loader2, Zap } from "lucide-react";
@@ -14,7 +15,8 @@ const difficulties = [
   { value: "adaptive", label: "Adaptive AI", emoji: "🤖" },
 ];
 const questionCounts = [5, 7, 10];
-const playerCounts = [2, 3, 4];
+const MIN_PLAYERS = 2;
+const MAX_PLAYERS = 50;
 
 interface CreateBattleDialogProps {
   onCreateBattle: (config: {
@@ -89,20 +91,17 @@ export default function CreateBattleDialog({ onCreateBattle, loading }: CreateBa
 
           {/* Number of Players */}
           <div className="space-y-2">
-            <Label className="text-sm font-semibold">Number of Players</Label>
-            <div className="flex gap-2">
-              {playerCounts.map((n) => (
-                <Button
-                  key={n}
-                  variant={maxPlayers === n ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setMaxPlayers(n)}
-                  className="flex-1"
-                >
-                  {n} 👤
-                </Button>
-              ))}
-            </div>
+            <Label className="text-sm font-semibold">Number of Players (2–50)</Label>
+            <Input
+              type="number"
+              min={MIN_PLAYERS}
+              max={MAX_PLAYERS}
+              value={maxPlayers}
+              onChange={(e) => {
+                const v = Math.max(MIN_PLAYERS, Math.min(MAX_PLAYERS, Number(e.target.value) || MIN_PLAYERS));
+                setMaxPlayers(v);
+              }}
+            />
           </div>
 
           {/* Difficulty */}
