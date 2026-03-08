@@ -58,6 +58,7 @@ const socialItems = [
 
 const accountItems = [
   { title: "Profile", url: "/profile", icon: User },
+  { title: "Achievements", url: "/achievements", icon: Trophy },
   { title: "Quiz History", url: "/quiz-history", icon: BookOpen },
 ];
 
