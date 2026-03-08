@@ -1031,6 +1031,144 @@ export type Database = {
           },
         ]
       }
+      exam_terms: {
+        Row: {
+          batch_id: string
+          created_at: string
+          created_by: string
+          end_date: string | null
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          start_date: string | null
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          created_by: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          start_date?: string | null
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          created_by?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_terms_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_terms_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_terms_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exams: {
+        Row: {
+          created_at: string
+          created_by: string
+          exam_date: string | null
+          exam_type: string
+          id: string
+          is_published: boolean
+          max_internal_marks: number
+          max_written_marks: number
+          name: string
+          org_id: string
+          section_id: string
+          subject: string
+          term_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          exam_date?: string | null
+          exam_type?: string
+          id?: string
+          is_published?: boolean
+          max_internal_marks?: number
+          max_written_marks?: number
+          name: string
+          org_id: string
+          section_id: string
+          subject: string
+          term_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          exam_date?: string | null
+          exam_type?: string
+          id?: string
+          is_published?: boolean
+          max_internal_marks?: number
+          max_written_marks?: number
+          name?: string
+          org_id?: string
+          section_id?: string
+          subject?: string
+          term_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "batch_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "exam_terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flashcards: {
         Row: {
           back: string
@@ -2612,6 +2750,191 @@ export type Database = {
             columns: ["teacher_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_marks: {
+        Row: {
+          created_at: string
+          entered_by: string
+          exam_id: string
+          grade: string | null
+          id: string
+          internal_marks: number | null
+          is_absent: boolean
+          org_id: string
+          remarks: string | null
+          section_id: string
+          student_id: string
+          total_marks: number | null
+          updated_at: string
+          written_marks: number | null
+        }
+        Insert: {
+          created_at?: string
+          entered_by: string
+          exam_id: string
+          grade?: string | null
+          id?: string
+          internal_marks?: number | null
+          is_absent?: boolean
+          org_id: string
+          remarks?: string | null
+          section_id: string
+          student_id: string
+          total_marks?: number | null
+          updated_at?: string
+          written_marks?: number | null
+        }
+        Update: {
+          created_at?: string
+          entered_by?: string
+          exam_id?: string
+          grade?: string | null
+          id?: string
+          internal_marks?: number | null
+          is_absent?: boolean
+          org_id?: string
+          remarks?: string | null
+          section_id?: string
+          student_id?: string
+          total_marks?: number | null
+          updated_at?: string
+          written_marks?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_marks_entered_by_fkey"
+            columns: ["entered_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_marks_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_marks_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_marks_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "batch_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_marks_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_promotions: {
+        Row: {
+          academic_year: string
+          created_at: string
+          decided_at: string | null
+          decision_by: string | null
+          from_batch_id: string
+          from_section_id: string
+          id: string
+          org_id: string
+          overall_percentage: number | null
+          status: string
+          student_id: string
+          to_batch_id: string | null
+          to_section_id: string | null
+        }
+        Insert: {
+          academic_year: string
+          created_at?: string
+          decided_at?: string | null
+          decision_by?: string | null
+          from_batch_id: string
+          from_section_id: string
+          id?: string
+          org_id: string
+          overall_percentage?: number | null
+          status?: string
+          student_id: string
+          to_batch_id?: string | null
+          to_section_id?: string | null
+        }
+        Update: {
+          academic_year?: string
+          created_at?: string
+          decided_at?: string | null
+          decision_by?: string | null
+          from_batch_id?: string
+          from_section_id?: string
+          id?: string
+          org_id?: string
+          overall_percentage?: number | null
+          status?: string
+          student_id?: string
+          to_batch_id?: string | null
+          to_section_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_promotions_decision_by_fkey"
+            columns: ["decision_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_promotions_from_batch_id_fkey"
+            columns: ["from_batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_promotions_from_section_id_fkey"
+            columns: ["from_section_id"]
+            isOneToOne: false
+            referencedRelation: "batch_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_promotions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_promotions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_promotions_to_batch_id_fkey"
+            columns: ["to_batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_promotions_to_section_id_fkey"
+            columns: ["to_section_id"]
+            isOneToOne: false
+            referencedRelation: "batch_sections"
             referencedColumns: ["id"]
           },
         ]
