@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Swords, Loader2, Zap } from "lucide-react";
+import { motion } from "framer-motion";
 import { motion } from "framer-motion";
 import BattleSourceSelector, { type BattleSource } from "./BattleSourceSelector";
 
