@@ -267,6 +267,10 @@ export default function OrgWorkspace() {
             channelId={selectedChannel}
             channel={channels.find(c => c.id === selectedChannel)}
           />
+        ) : activeTab === "teaching" ? (
+          <TeacherSections orgId={org?.id || ""} />
+        ) : activeTab === "timetable" ? (
+          <TimetableManager orgId={org?.id || ""} />
         ) : activeTab === "knowledge" ? (
           <KnowledgeWorkspace pages={pages} onCreatePage={createPage} />
         ) : activeTab === "roles" ? (
