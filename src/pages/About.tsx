@@ -249,6 +249,14 @@ const About = () => {
           <p className="text-muted-foreground font-medium text-center text-lg py-2">
             SPECIAL THANKS TO VIDYAGYAN SCHOOL FOR SUPPORTING US.
           </p>
+          <div className="mt-4 rounded-xl overflow-hidden border border-border/50">
+            <img
+              src={VidyagyanSpecialThanksImage}
+              alt="Vidyagyan School campus"
+              loading="lazy"
+              className="w-full"
+            />
+          </div>
         </section>
 
         {/* Contact Section */}
