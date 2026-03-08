@@ -54,7 +54,7 @@ interface TeacherSectionsProps {
 
 export default function TeacherSections({ orgId }: TeacherSectionsProps) {
   const { user, profile } = useAuth();
-  const callerRole = (profile as any)?.role || "student";
+  const callerRole = profile?.role || "student";
   const isTeacherOrAbove = ["super_admin", "admin", "teacher"].includes(callerRole);
 
   const [sections, setSections] = useState<Section[]>([]);
