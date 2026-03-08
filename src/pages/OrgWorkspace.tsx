@@ -239,6 +239,7 @@ export default function OrgWorkspace() {
             <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider px-2">Navigation</span>
           </div>
           {[
+            { id: "batches", label: "Batches & Sections", icon: Layers },
             { id: "teaching", label: "Teaching", icon: GraduationCap },
             { id: "timetable", label: "Timetable", icon: Calendar },
             { id: "knowledge", label: "Knowledge Base", icon: FileText },
