@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit, logRateLimitRequest } from "../_shared/rateLimit.ts";
 import { preflightResponse, withCors, withCorsError } from "../_shared/cors.ts";
+import { consumeCredits, CREDIT_COSTS } from "../_shared/credits.ts";
 
 interface QuestionAttempt {
   questionText: string;
