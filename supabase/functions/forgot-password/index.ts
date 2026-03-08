@@ -51,9 +51,9 @@ serve(async (req) => {
       return withCorsError(req, 429, "Too many requests. Please try again later.");
     }
 
-    // Log the request for rate limiting (use ip_address field to store email key since no user_id)
+    // Log the request for rate limiting (user_id is null for unauthenticated operations)
     await serviceClient.from("rate_limit_logs").insert({
-      user_id: "00000000-0000-0000-0000-000000000000",
+      user_id: null,
       operation: "forgot-password",
       ip_address: normalizedEmail,
       success: true,
