@@ -56,14 +56,14 @@ export default function OrgWorkspace() {
         return;
       }
 
-      // 2. Update profile to link to org and set role to admin
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ org_id: orgData.id, role: "admin" })
-        .eq("user_id", user.id);
+      // 2. Promote creator to super_admin using secure function
+      const { data: promoted, error: profileError } = await supabase.rpc("promote_org_creator", {
+        p_user_id: user.id,
+        p_org_id: orgData.id,
+      });
 
-      if (profileError) {
-        toast.error("Organization created but failed to link your profile: " + profileError.message);
+      if (profileError || !promoted) {
+        toast.error("Organization created but failed to link your profile");
         setCreatingOrg(false);
         return;
       }
