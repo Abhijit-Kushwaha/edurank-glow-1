@@ -152,7 +152,21 @@ export default function MemberManager({ orgId }: MemberManagerProps) {
     }
   };
 
-  const getAvailableRoles = () => {
+  const handleRemoveMember = async (member: OrgMember) => {
+    if (!confirm(`Remove ${member.name || member.email} from the organization? They will become an independent user.`)) return;
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ org_id: null, role: "student", is_independent: true, updated_at: new Date().toISOString() })
+        .eq("user_id", member.user_id);
+      if (error) throw error;
+      toast.success(`${member.name || "Member"} removed from organization`);
+      fetchMembers();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to remove member");
+    }
+  };
+
     if (callerRole === "super_admin") return ["super_admin", "admin", "teacher", "student"];
     if (callerRole === "admin") return ["admin", "teacher", "student"];
     return [];
