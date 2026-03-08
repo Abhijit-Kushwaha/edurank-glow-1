@@ -25,7 +25,7 @@ interface UserCredits {
   last_reset_at: string;
 }
 
-const TOTAL_MONTHLY_CREDITS = 100;
+const TOTAL_MONTHLY_CREDITS = 50;
 
 const Profile = () => {
   const navigate = useNavigate();
