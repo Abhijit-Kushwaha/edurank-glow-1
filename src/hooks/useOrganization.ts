@@ -67,7 +67,8 @@ export function useOrganization() {
   const [pages, setPages] = useState<KnowledgePage[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const orgId = profile?.org_id;
+  // Profile has org_id but it may not be in the Profile interface, access via any
+  const orgId = (profile as any)?.org_id as string | undefined;
 
   useEffect(() => {
     if (!orgId) {
@@ -79,15 +80,15 @@ export function useOrganization() {
       setLoading(true);
       const [orgRes, channelsRes, rolesRes, pagesRes] = await Promise.all([
         supabase.from("organisations").select("*").eq("id", orgId).single(),
-        supabase.from("channels").select("*").eq("org_id", orgId).eq("is_archived", false).order("position"),
-        supabase.from("custom_roles").select("*").eq("org_id", orgId).order("position"),
-        supabase.from("knowledge_pages").select("*").eq("org_id", orgId).order("updated_at", { ascending: false }),
+        (supabase as any).from("channels").select("*").eq("org_id", orgId).eq("is_archived", false).order("position"),
+        (supabase as any).from("custom_roles").select("*").eq("org_id", orgId).order("position"),
+        (supabase as any).from("knowledge_pages").select("*").eq("org_id", orgId).order("updated_at", { ascending: false }),
       ]);
 
       if (orgRes.data) setOrg(orgRes.data as unknown as Organization);
-      if (channelsRes.data) setChannels(channelsRes.data as unknown as Channel[]);
-      if (rolesRes.data) setRoles(rolesRes.data as unknown as CustomRole[]);
-      if (pagesRes.data) setPages(pagesRes.data as unknown as KnowledgePage[]);
+      if (channelsRes.data) setChannels(channelsRes.data as Channel[]);
+      if (rolesRes.data) setRoles(rolesRes.data as CustomRole[]);
+      if (pagesRes.data) setPages(pagesRes.data as KnowledgePage[]);
       setLoading(false);
     };
 
@@ -96,7 +97,7 @@ export function useOrganization() {
 
   const createChannel = useCallback(async (name: string, type: string, description?: string) => {
     if (!orgId || !profile) return null;
-    const { data, error } = await supabase.from("channels").insert({
+    const { data, error } = await (supabase as any).from("channels").insert({
       org_id: orgId,
       name,
       channel_type: type,
@@ -105,13 +106,13 @@ export function useOrganization() {
       position: channels.length,
     }).select().single();
 
-    if (data) setChannels(prev => [...prev, data as unknown as Channel]);
+    if (data) setChannels(prev => [...prev, data as Channel]);
     return { data, error };
   }, [orgId, profile, channels.length]);
 
   const createRole = useCallback(async (name: string, color: string) => {
     if (!orgId || !profile) return null;
-    const { data, error } = await supabase.from("custom_roles").insert({
+    const { data, error } = await (supabase as any).from("custom_roles").insert({
       org_id: orgId,
       name,
       color,
@@ -119,13 +120,13 @@ export function useOrganization() {
       position: roles.length,
     }).select().single();
 
-    if (data) setRoles(prev => [...prev, data as unknown as CustomRole]);
+    if (data) setRoles(prev => [...prev, data as CustomRole]);
     return { data, error };
   }, [orgId, profile, roles.length]);
 
   const createPage = useCallback(async (title: string, parentId?: string) => {
     if (!orgId || !profile) return null;
-    const { data, error } = await supabase.from("knowledge_pages").insert({
+    const { data, error } = await (supabase as any).from("knowledge_pages").insert({
       org_id: orgId,
       title,
       parent_id: parentId || null,
@@ -133,7 +134,7 @@ export function useOrganization() {
       is_published: false,
     }).select().single();
 
-    if (data) setPages(prev => [data as unknown as KnowledgePage, ...prev]);
+    if (data) setPages(prev => [data as KnowledgePage, ...prev]);
     return { data, error };
   }, [orgId, profile]);
 
@@ -158,15 +159,15 @@ export function useChannelMessages(channelId: string | null) {
     if (!channelId) return;
 
     setLoading(true);
-    supabase
+    (supabase as any)
       .from("channel_messages")
       .select("*")
       .eq("channel_id", channelId)
       .is("deleted_at", null)
       .order("created_at", { ascending: true })
       .limit(100)
-      .then(({ data }) => {
-        if (data) setMessages(data as unknown as ChannelMessage[]);
+      .then(({ data }: any) => {
+        if (data) setMessages(data as ChannelMessage[]);
         setLoading(false);
       });
 
@@ -188,7 +189,7 @@ export function useChannelMessages(channelId: string | null) {
 
   const sendMessage = useCallback(async (content: string, senderId: string) => {
     if (!channelId) return;
-    await supabase.from("channel_messages").insert({
+    await (supabase as any).from("channel_messages").insert({
       channel_id: channelId,
       sender_id: senderId,
       content,
