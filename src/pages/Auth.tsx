@@ -9,10 +9,12 @@ import {
   AtSign,
   Check,
   X,
+  Building2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,6 +44,8 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
+  const [orgName, setOrgName] = useState("");
+  const [orgRole, setOrgRole] = useState<"student" | "teacher" | "independent">("independent");
   const [isUsernameAvailable, setIsUsernameAvailable] = useState<
     boolean | null
   >(null);
@@ -171,6 +175,11 @@ const Auth = () => {
           setIsLoading(false);
           return;
         }
+        if (orgRole === "teacher" && !orgName.trim()) {
+          toast.error("Please enter your organization name");
+          setIsLoading(false);
+          return;
+        }
         const { error } = await signup(email, password, name, username.trim(), turnstileToken || undefined);
         if (error) {
           if (
@@ -185,6 +194,29 @@ const Auth = () => {
           }
           resetTurnstile();
         } else {
+          // If teacher, create org and assign role after signup
+          if (orgRole === "teacher" && orgName.trim()) {
+            try {
+              const { data: orgData } = await supabase
+                .from("organisations")
+                .insert({ name: orgName.trim() })
+                .select()
+                .single();
+              
+              if (orgData) {
+                // Update profile with org_id and role
+                const { data: { user: currentUser } } = await supabase.auth.getUser();
+                if (currentUser) {
+                  await supabase
+                    .from("profiles")
+                    .update({ org_id: orgData.id, role: "admin" })
+                    .eq("user_id", currentUser.id);
+                }
+              }
+            } catch (orgError) {
+              console.error("Org creation error:", orgError);
+            }
+          }
           toast.success("Account created successfully!");
           navigate("/dashboard");
         }
@@ -319,6 +351,48 @@ const Auth = () => {
                   <p className="text-xs text-destructive -mt-2">
                     This username is already taken
                   </p>
+                )}
+
+                {/* Organization / Role Selection */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">I am a...</label>
+                  <Select value={orgRole} onValueChange={(v: "student" | "teacher" | "independent") => setOrgRole(v)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="independent">Independent Student</SelectItem>
+                      <SelectItem value="student">Student (joining an organization)</SelectItem>
+                      <SelectItem value="teacher">Teacher / Admin (creating an organization)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {orgRole === "teacher" && (
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Organization Name (e.g. Sunrise Academy)"
+                      value={orgName}
+                      onChange={(e) => setOrgName(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                )}
+
+                {orgRole === "student" && (
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Organization Invite Code (optional)"
+                      value={orgName}
+                      onChange={(e) => setOrgName(e.target.value)}
+                      className="pl-10"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">You can also join later from your dashboard</p>
+                  </div>
                 )}
               </>
             )}
