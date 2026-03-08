@@ -112,7 +112,7 @@ const Auth = () => {
   }, []);
   // Validate org code with debounce
   useEffect(() => {
-    if (!orgCode.trim() || isLogin || orgRole === "independent") {
+    if (!orgCode.trim() || isLogin || orgRole !== "student") {
       setOrgCodeValid(null);
       setOrgCodeOrgName("");
       return;
@@ -213,17 +213,12 @@ const Auth = () => {
           setIsLoading(false);
           return;
         }
-        if (orgRole === "teacher" && !orgCode.trim()) {
-          toast.error("Please enter an organization code to join");
-          setIsLoading(false);
-          return;
-        }
         if (orgRole === "student" && !orgCode.trim()) {
-          toast.error("Please enter an organization code to join");
+          toast.error("Please enter an organization invite code to join");
           setIsLoading(false);
           return;
         }
-        if ((orgRole === "student" || orgRole === "teacher") && orgCode.trim() && orgCodeValid === false) {
+        if (orgRole === "student" && orgCode.trim() && orgCodeValid === false) {
           toast.error("Invalid organization code. Please check and try again.");
           setIsLoading(false);
           return;
@@ -243,18 +238,16 @@ const Auth = () => {
           resetTurnstile();
         } else {
           // Handle org joining/creation after signup
-          if ((orgRole === "student" || orgRole === "teacher") && orgCode.trim() && orgCodeValid) {
+          if (orgRole === "student" && orgCode.trim() && orgCodeValid) {
             try {
               const { data: { user: currentUser } } = await supabase.auth.getUser();
               if (currentUser) {
-                const roleToAssign = orgRole === "teacher" ? "teacher" : "student";
                 const { data: reqResult } = await supabase.rpc("request_join_org", {
                   p_code: orgCode.trim(),
-                  p_role: roleToAssign,
                 });
                 const res = reqResult as any;
                 if (res?.success) {
-                  toast.info(`Join request sent to ${res.org_name}. You'll be notified when approved.`);
+                  toast.info(`Join request sent to ${res.org_name} as ${res.role}. You'll be notified when approved.`);
                 } else {
                   console.error("Join request error:", res?.error);
                 }
@@ -426,15 +419,14 @@ const Auth = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="independent">Independent Student</SelectItem>
-                      <SelectItem value="student">Student (joining an organization)</SelectItem>
-                      <SelectItem value="teacher">Teacher (joining an organization)</SelectItem>
-                      <SelectItem value="admin">Admin (creating a new organization)</SelectItem>
+                      <SelectItem value="independent">Independent Student (no organization)</SelectItem>
+                      <SelectItem value="student">Joining an Organization (with invite code)</SelectItem>
+                      <SelectItem value="admin">Creating a New Organization</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {(orgRole === "student" || orgRole === "teacher") && (
+                {orgRole === "student" && (
                   <div className="space-y-2">
                     <div className="relative">
                       <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -465,13 +457,14 @@ const Auth = () => {
                       <p className="text-xs text-green-500 flex items-center gap-1">
                         <Check className="h-3 w-3" />
                         Joining: <strong>{orgCodeOrgName}</strong>
+                        {/* Role auto-detected from invite code */}
                       </p>
                     )}
                     {orgCode.trim() && orgCodeValid === false && (
                       <p className="text-xs text-destructive">Invalid code. Ask your admin for the correct organization code.</p>
                     )}
                     <p className="text-[10px] text-muted-foreground">
-                      Enter the code provided by your admin to join their organization.
+                      Enter the invite code from your admin. Your role (Student, Teacher, or Admin) is determined by the code.
                     </p>
                   </div>
                 )}

@@ -11,6 +11,9 @@ interface Organization {
   invite_mode: string;
   ai_enabled: boolean;
   invite_code?: string;
+  invite_code_student?: string;
+  invite_code_teacher?: string;
+  invite_code_admin?: string;
 }
 
 interface Channel {
