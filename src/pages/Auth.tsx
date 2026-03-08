@@ -44,6 +44,8 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
+  const [orgName, setOrgName] = useState("");
+  const [orgRole, setOrgRole] = useState<"student" | "teacher" | "independent">("independent");
   const [isUsernameAvailable, setIsUsernameAvailable] = useState<
     boolean | null
   >(null);
