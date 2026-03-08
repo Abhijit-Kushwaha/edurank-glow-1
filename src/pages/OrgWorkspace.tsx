@@ -20,6 +20,7 @@ import MemberManager from "@/components/org/MemberManager";
 import TeacherSections from "@/components/org/TeacherSections";
 import TimetableManager from "@/components/org/TimetableManager";
 import BatchManager from "@/components/org/BatchManager";
+import MarksManager from "@/components/org/MarksManager";
 
 const channelIcons: Record<string, typeof Hash> = {
   text: Hash,
