@@ -426,7 +426,7 @@ const Auth = () => {
                   </Select>
                 </div>
 
-                {(orgRole === "student" || orgRole === "teacher") && (
+                {orgRole === "student" && (
                   <div className="space-y-2">
                     <div className="relative">
                       <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
