@@ -71,7 +71,7 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
   const [showQuizDialog, setShowQuizDialog] = useState(false);
   const [quizForm, setQuizForm] = useState({
     title: "", subject: "", description: "", difficulty: "medium",
-    time_limit_mins: 30, section_id: "", max_attempts: 1,
+    time_limit_mins: 30, section_id: "all", max_attempts: 1,
   });
   const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
   const [savingQuiz, setSavingQuiz] = useState(false);
