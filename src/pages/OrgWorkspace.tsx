@@ -24,6 +24,7 @@ import MarksManager from "@/components/org/MarksManager";
 import JoinRequestsManager from "@/components/org/JoinRequestsManager";
 import SuperAdminPanel from "@/components/org/SuperAdminPanel";
 import JoinOrgCard from "@/components/org/JoinOrgCard";
+import StudentAssignedQuizzes from "@/components/org/StudentAssignedQuizzes";
 
 const channelIcons: Record<string, typeof Hash> = {
   text: Hash,
