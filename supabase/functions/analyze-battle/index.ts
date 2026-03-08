@@ -39,17 +39,43 @@ serve(async (req) => {
 
     const { subject, correctQuestions, wrongQuestions, totalQuestions, correctCount } = await req.json();
 
+    // Input sanitization — match patterns used across all other AI edge functions
+    const FORBIDDEN_PATTERNS = [
+      /ignore\s+(all\s+)?previous\s+instructions/i,
+      /disregard\s+(all\s+)?previous/i,
+      /forget\s+(all\s+)?previous/i,
+      /override\s+instructions/i,
+      /you\s+are\s+now/i,
+      /act\s+as\s+a/i,
+      /system\s*:\s*/i,
+    ];
+
+    function sanitize(input: string, max: number): string {
+      if (typeof input !== "string") return "";
+      const trimmed = input.replace(/[\x00-\x1F\x7F]/g, "").trim().slice(0, max);
+      for (const p of FORBIDDEN_PATTERNS) {
+        if (p.test(trimmed)) throw new Error("Invalid input");
+      }
+      return trimmed;
+    }
+
+    const safeSubject = sanitize(subject ?? "", 100);
+    const safeCorrect = (correctQuestions ?? []).slice(0, 20).map((q: string) => sanitize(q, 200));
+    const safeWrong = (wrongQuestions ?? []).slice(0, 20).map((q: string) => sanitize(q, 200));
+    const safeTotalQuestions = Math.min(Math.max(Number(totalQuestions) || 0, 0), 100);
+    const safeCorrectCount = Math.min(Math.max(Number(correctCount) || 0, 0), safeTotalQuestions);
+
     const prompt = `Analyze this quiz battle performance and return a JSON object.
 
-Subject: ${subject}
-Total Questions: ${totalQuestions}
-Correct: ${correctCount}
+Subject: ${safeSubject}
+Total Questions: ${safeTotalQuestions}
+Correct: ${safeCorrectCount}
 
 Correctly answered questions:
-${(correctQuestions || []).map((q: string) => `- ${q}`).join("\n") || "None"}
+${safeCorrect.map((q: string) => `- ${q}`).join("\n") || "None"}
 
 Incorrectly answered questions:
-${(wrongQuestions || []).map((q: string) => `- ${q}`).join("\n") || "None"}
+${safeWrong.map((q: string) => `- ${q}`).join("\n") || "None"}
 
 Return ONLY a JSON object with these fields:
 {
@@ -76,10 +102,10 @@ Keep topics concise (2-4 words each). Keep suggestions actionable (1 sentence ea
       analysis = JSON.parse(jsonMatch[0]);
     } catch {
       analysis = {
-        strong_topics: correctCount > 0 ? [`${subject} basics`] : [],
-        weak_topics: wrongQuestions?.length > 0 ? [`${subject} advanced concepts`] : [],
+        strong_topics: safeCorrectCount > 0 ? [`${safeSubject} basics`] : [],
+        weak_topics: safeWrong.length > 0 ? [`${safeSubject} advanced concepts`] : [],
         suggestions: ["Review missed questions", "Practice more in this subject"],
-        overall_message: `You scored ${correctCount}/${totalQuestions}. ${correctCount >= totalQuestions / 2 ? "Good job!" : "Keep practicing!"}`,
+        overall_message: `You scored ${safeCorrectCount}/${safeTotalQuestions}. ${safeCorrectCount >= safeTotalQuestions / 2 ? "Good job!" : "Keep practicing!"}`,
       };
     }
 
