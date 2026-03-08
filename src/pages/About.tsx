@@ -273,11 +273,11 @@ const About = () => {
               Have questions or feedback? Reach out to us!
             </p>
             <a
-              href="mailto:qbitworld018@gmail.com"
+              href="mailto:qbitworld1504@gmail.com"
               className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
             >
               <Mail className="h-4 w-4" />
-              qbitworld018@gmail.com
+              qbitworld1504@gmail.com
             </a>
           </div>
         </section>
