@@ -750,6 +750,57 @@ export type Database = {
           },
         ]
       }
+      flashcards: {
+        Row: {
+          back: string
+          created_at: string
+          difficulty: string
+          ease_factor: number
+          front: string
+          id: string
+          interval_days: number
+          is_ai_generated: boolean
+          last_reviewed_at: string | null
+          next_review_at: string
+          repetitions: number
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          back: string
+          created_at?: string
+          difficulty?: string
+          ease_factor?: number
+          front: string
+          id?: string
+          interval_days?: number
+          is_ai_generated?: boolean
+          last_reviewed_at?: string | null
+          next_review_at?: string
+          repetitions?: number
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          back?: string
+          created_at?: string
+          difficulty?: string
+          ease_factor?: number
+          front?: string
+          id?: string
+          interval_days?: number
+          is_ai_generated?: boolean
+          last_reviewed_at?: string | null
+          next_review_at?: string
+          repetitions?: number
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       friend_invite_codes: {
         Row: {
           code: string
@@ -1367,6 +1418,45 @@ export type Database = {
           score_counts_as?: string
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      pomodoro_sessions: {
+        Row: {
+          break_duration_mins: number
+          completed_pomodoros: number
+          created_at: string
+          ended_at: string | null
+          id: string
+          started_at: string
+          subject: string | null
+          total_focus_mins: number
+          user_id: string
+          work_duration_mins: number
+        }
+        Insert: {
+          break_duration_mins?: number
+          completed_pomodoros?: number
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          subject?: string | null
+          total_focus_mins?: number
+          user_id: string
+          work_duration_mins?: number
+        }
+        Update: {
+          break_duration_mins?: number
+          completed_pomodoros?: number
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          subject?: string | null
+          total_focus_mins?: number
+          user_id?: string
+          work_duration_mins?: number
         }
         Relationships: []
       }
