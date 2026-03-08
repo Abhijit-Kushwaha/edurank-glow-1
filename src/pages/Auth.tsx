@@ -110,6 +110,35 @@ const Auth = () => {
       setTurnstileToken(null);
     }
   }, []);
+  // Validate org code with debounce
+  useEffect(() => {
+    if (!orgCode.trim() || isLogin || orgRole === "independent") {
+      setOrgCodeValid(null);
+      setOrgCodeOrgName("");
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setIsCheckingOrgCode(true);
+      try {
+        const { data, error } = await supabase.rpc("validate_org_code", { p_code: orgCode.trim() });
+        if (error) {
+          setOrgCodeValid(null);
+        } else {
+          const result = data as any;
+          setOrgCodeValid(result?.valid ?? false);
+          setOrgCodeOrgName(result?.org_name ?? "");
+        }
+      } catch {
+        setOrgCodeValid(null);
+      } finally {
+        setIsCheckingOrgCode(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [orgCode, isLogin, orgRole]);
+
   // Check username availability with debounce
   useEffect(() => {
     if (!username.trim() || isLogin) {
