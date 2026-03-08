@@ -16,6 +16,7 @@ export interface BattleConfig {
   difficulty: string;
   numQuestions: number;
   source?: BattleSource;
+  maxPlayers?: number;
 }
 
 export function useBattle() {
@@ -27,6 +28,8 @@ export function useBattle() {
     setLoading(true);
     try {
       const battleCode = generateBattleCode();
+      const maxPlayers = Math.min(Math.max(config.maxPlayers || 2, 2), 4);
+
       const { data: battle, error } = await supabase
         .from("battles")
         .insert({
@@ -35,7 +38,8 @@ export function useBattle() {
           difficulty: config.difficulty,
           num_questions: config.numQuestions,
           battle_code: battleCode,
-        })
+          max_players: maxPlayers,
+        } as any)
         .select()
         .single();
 
@@ -86,6 +90,18 @@ export function useBattle() {
 
       if (findError || !battle) {
         toast.error("Battle not found or already started");
+        return null;
+      }
+
+      // Check player count against max_players
+      const { count } = await supabase
+        .from("battle_players")
+        .select("*", { count: "exact", head: true })
+        .eq("battle_id", battle.id);
+
+      const maxPlayers = (battle as any).max_players || 2;
+      if ((count || 0) >= maxPlayers) {
+        toast.error("Battle is full");
         return null;
       }
 
@@ -165,6 +181,20 @@ export function useBattle() {
       .eq("id", battleId);
   }, []);
 
+  const deleteBattle = useCallback(async (battleId: string) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("battles")
+      .delete()
+      .eq("id", battleId)
+      .eq("creator_id", user.id);
+
+    if (error) {
+      console.error("Delete battle error:", error);
+      throw error;
+    }
+  }, [user]);
+
   const awardBrainPoints = useCallback(async (amount: number, reason: string, battleId?: string) => {
     if (!user) return;
     console.log("Brain points award requested (handled server-side):", { amount, reason, battleId });
@@ -178,6 +208,7 @@ export function useBattle() {
     startBattle,
     advanceQuestion,
     endBattle,
+    deleteBattle,
     awardBrainPoints,
   };
 }

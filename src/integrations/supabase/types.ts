@@ -308,6 +308,7 @@ export type Database = {
           difficulty: string
           ended_at: string | null
           id: string
+          max_players: number
           num_questions: number
           started_at: string | null
           status: string
@@ -322,6 +323,7 @@ export type Database = {
           difficulty?: string
           ended_at?: string | null
           id?: string
+          max_players?: number
           num_questions?: number
           started_at?: string | null
           status?: string
@@ -336,6 +338,7 @@ export type Database = {
           difficulty?: string
           ended_at?: string | null
           id?: string
+          max_players?: number
           num_questions?: number
           started_at?: string | null
           status?: string

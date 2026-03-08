@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { FILTER_OPTIONS } from "@/contexts/FilterContext";
 import ReactMarkdown from "react-markdown";
+import BattleLoadingOverlay from "@/components/battle/BattleLoadingOverlay";
 
 const AINotes = () => {
   const [subject, setSubject] = useState("");
@@ -35,10 +36,7 @@ const AINotes = () => {
     : [];
 
   const generateNotes = async () => {
-    if (!topic.trim()) {
-      toast.error("Please enter a topic");
-      return;
-    }
+    if (!topic.trim() || isLoading) return;
 
     setIsLoading(true);
     setNotes("");
@@ -82,6 +80,13 @@ const AINotes = () => {
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)]">
+      {/* Full-screen loading overlay */}
+      <BattleLoadingOverlay
+        show={isLoading}
+        message="Generating Notes..."
+        subMessage="AI is creating structured, exam-ready notes for you"
+      />
+
       {/* Header */}
       <div className="px-6 py-4 border-b border-border/50">
         <div className="flex items-center gap-3 mb-4">
@@ -171,18 +176,6 @@ const AINotes = () => {
               Select a subject and topic, then hit Generate to get structured,
               exam-ready notes instantly.
             </p>
-          </div>
-        )}
-
-        {isLoading && (
-          <div className="space-y-4 animate-pulse max-w-3xl mx-auto">
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="h-4 bg-muted rounded w-full"
-                style={{ width: `${80 - i * 8}%` }}
-              />
-            ))}
           </div>
         )}
 
