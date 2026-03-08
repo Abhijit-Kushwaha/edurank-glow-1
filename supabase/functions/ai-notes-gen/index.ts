@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit, logRateLimitRequest } from "../_shared/rateLimit.ts";
 import { preflightResponse, withCors, withCorsError } from "../_shared/cors.ts";
+import { consumeCredits, CREDIT_COSTS } from "../_shared/credits.ts";
 
 const LOVABLE_AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
@@ -34,6 +35,9 @@ serve(async (req) => {
       operation: "ai-notes-gen", userId: user.id, limitsPerHour: 5, limitsPerDay: 20,
     });
     if (!rateLimitResult.allowed) return withCorsError(req, 429, rateLimitResult.message || "Rate limit exceeded");
+
+    const creditResult = await consumeCredits(user.id, CREDIT_COSTS["ai-notes-gen"]);
+    if (!creditResult.success) return withCorsError(req, 402, creditResult.error || "Insufficient credits");
 
     const { topic, subject, classLevel } = await req.json();
 

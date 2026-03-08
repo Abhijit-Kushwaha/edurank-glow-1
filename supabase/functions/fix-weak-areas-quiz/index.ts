@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit } from "../_shared/rateLimit.ts";
 import { preflightResponse, withCors, withCorsError } from "../_shared/cors.ts";
+import { consumeCredits, CREDIT_COSTS } from "../_shared/credits.ts";
 
 interface TopicInput { name: string; weaknessScore: number; }
 
@@ -71,6 +72,9 @@ serve(async (req) => {
       operation: "fix-weak-areas-quiz", userId: claimsData.claims.sub as string, limitsPerHour: 3, limitsPerDay: 10,
     });
     if (!rateLimitResult.allowed) return withCorsError(req, 429, rateLimitResult.message || "Rate limit exceeded");
+
+    const creditResult = await consumeCredits(claimsData.claims.sub as string, CREDIT_COSTS["fix-weak-areas-quiz"]);
+    if (!creditResult.success) return withCorsError(req, 402, creditResult.error || "Insufficient credits");
 
     const { topics, notes, questionsPerTopic = 2 } = await req.json();
     if (!topics || !Array.isArray(topics) || topics.length === 0) return withCorsError(req, 400, "No topics provided");

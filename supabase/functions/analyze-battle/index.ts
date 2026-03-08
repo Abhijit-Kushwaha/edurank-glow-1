@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 import { callLovableAI } from "../_shared/lovableAI.ts";
+import { consumeCredits, CREDIT_COSTS } from "../_shared/credits.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +34,14 @@ serve(async (req) => {
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const creditResult = await consumeCredits(user.id, CREDIT_COSTS["analyze-battle"]);
+    if (!creditResult.success) {
+      return new Response(JSON.stringify({ error: creditResult.error || "Insufficient credits" }), {
+        status: 402,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

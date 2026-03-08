@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { preflightResponse, withCors, withCorsError } from "../_shared/cors.ts";
 import { callLovableAI } from "../_shared/lovableAI.ts";
+import { consumeCredits, CREDIT_COSTS } from "../_shared/credits.ts";
 
 Deno.serve(async (req) => {
   const preflight = preflightResponse(req);
@@ -24,6 +25,10 @@ Deno.serve(async (req) => {
       console.error("Auth error:", claimsError?.message);
       return withCorsError(req, 401, "Unauthorized");
     }
+
+    const userId = claimsData.claims.sub as string;
+    const creditResult = await consumeCredits(userId, CREDIT_COSTS["generate-flashcards"]);
+    if (!creditResult.success) return withCorsError(req, 402, creditResult.error || "Insufficient credits");
 
     const { subject, count = 10 } = await req.json();
 

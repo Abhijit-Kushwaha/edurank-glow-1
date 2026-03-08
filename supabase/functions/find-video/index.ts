@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit, logRateLimitRequest } from "../_shared/rateLimit.ts";
 import { preflightResponse, withCors, withCorsError } from "../_shared/cors.ts";
+import { consumeCredits, CREDIT_COSTS } from "../_shared/credits.ts";
 
 const MAX_TOPIC_LENGTH = 200;
 const FORBIDDEN_PATTERNS = [
@@ -255,6 +256,9 @@ serve(async (req) => {
 
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) return withCorsError(req, 401, "Unauthorized");
+
+    const creditResult = await consumeCredits(user.id, CREDIT_COSTS["find-video"]);
+    if (!creditResult.success) return withCorsError(req, 402, creditResult.error || "Insufficient credits");
 
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",

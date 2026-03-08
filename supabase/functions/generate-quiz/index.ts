@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit, logRateLimitRequest } from "../_shared/rateLimit.ts";
 import { preflightResponse, withCors, withCorsError } from "../_shared/cors.ts";
+import { consumeCredits, CREDIT_COSTS } from "../_shared/credits.ts";
 
 const MAX_NOTES_LENGTH = 50000;
 const MAX_ID_LENGTH = 100;
@@ -113,6 +114,9 @@ serve(async (req) => {
 
     const rateLimitResult = await checkRateLimit(supabaseClient, { operation: "generate-quiz", userId, limitsPerHour: 5, limitsPerDay: 20 });
     if (!rateLimitResult.allowed) return withCorsError(req, 429, rateLimitResult.message || "Rate limit exceeded");
+
+    const creditResult = await consumeCredits(userId, CREDIT_COSTS["generate-quiz"]);
+    if (!creditResult.success) return withCorsError(req, 402, creditResult.error || "Insufficient credits");
 
     const { todoId, notes } = await req.json();
     if (!todoId || !notes) return withCorsError(req, 400, "Missing required fields: todoId, notes");
