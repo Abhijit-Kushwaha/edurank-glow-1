@@ -175,6 +175,11 @@ const Auth = () => {
           setIsLoading(false);
           return;
         }
+        if (orgRole === "teacher" && !orgName.trim()) {
+          toast.error("Please enter your organization name");
+          setIsLoading(false);
+          return;
+        }
         const { error } = await signup(email, password, name, username.trim(), turnstileToken || undefined);
         if (error) {
           if (
@@ -189,6 +194,29 @@ const Auth = () => {
           }
           resetTurnstile();
         } else {
+          // If teacher, create org and assign role after signup
+          if (orgRole === "teacher" && orgName.trim()) {
+            try {
+              const { data: orgData } = await supabase
+                .from("organisations")
+                .insert({ name: orgName.trim() })
+                .select()
+                .single();
+              
+              if (orgData) {
+                // Update profile with org_id and role
+                const { data: { user: currentUser } } = await supabase.auth.getUser();
+                if (currentUser) {
+                  await supabase
+                    .from("profiles")
+                    .update({ org_id: orgData.id, role: "admin" })
+                    .eq("user_id", currentUser.id);
+                }
+              }
+            } catch (orgError) {
+              console.error("Org creation error:", orgError);
+            }
+          }
           toast.success("Account created successfully!");
           navigate("/dashboard");
         }
