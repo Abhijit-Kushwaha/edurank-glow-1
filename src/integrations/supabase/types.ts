@@ -4426,6 +4426,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_org_safe: { Args: { p_org_id: string }; Returns: Json }
       get_profile_id: { Args: { uid: string }; Returns: string }
       get_student_progress: {
         Args: { p_student_user_id: string }
@@ -4434,6 +4435,7 @@ export type Database = {
       get_user_org_id: { Args: { uid: string }; Returns: string }
       get_user_role: { Args: { uid: string }; Returns: string }
       get_week_start: { Args: { d?: string }; Returns: string }
+      is_same_org: { Args: { target_user_id: string }; Returns: boolean }
       join_org_by_code: {
         Args: { p_code: string; p_role?: string; p_user_id: string }
         Returns: Json
