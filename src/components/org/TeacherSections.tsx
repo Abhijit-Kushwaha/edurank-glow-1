@@ -83,6 +83,7 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
     time_limit_mins: 30, section_id: "all", max_attempts: 1,
     scheduled_at: "", due_date: "",
     shuffle_questions: false, shuffle_options: false, show_answers_after: true,
+    lock_screen: false,
   });
   const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
   const [savingQuiz, setSavingQuiz] = useState(false);
@@ -251,6 +252,7 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
         questions: finalQuestions,
         is_published: publish,
         due_date: quizForm.due_date || null,
+        lock_screen: quizForm.lock_screen,
       }).select("id").single();
       if (error) throw error;
 
@@ -288,6 +290,7 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
       time_limit_mins: 30, section_id: "all", max_attempts: 1,
       scheduled_at: "", due_date: "",
       shuffle_questions: false, shuffle_options: false, show_answers_after: true,
+      lock_screen: false,
     });
     setQuizQuestions([]);
     setManualQuestions([{ ...EMPTY_QUESTION }]);
@@ -615,6 +618,10 @@ export default function TeacherSections({ orgId }: TeacherSectionsProps) {
               <div className="flex items-center gap-2">
                 <Switch checked={quizForm.show_answers_after} onCheckedChange={v => setQuizForm(p => ({ ...p, show_answers_after: v }))} />
                 <Label className="text-xs">Show Answers After</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={quizForm.lock_screen} onCheckedChange={v => setQuizForm(p => ({ ...p, lock_screen: v }))} />
+                <Label className="text-xs flex items-center gap-1">🔒 Lock Screen (Anti-cheat)</Label>
               </div>
             </div>
 

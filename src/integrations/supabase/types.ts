@@ -2163,6 +2163,7 @@ export type Database = {
           due_date: string | null
           id: string
           is_published: boolean
+          lock_screen: boolean | null
           max_attempts: number
           org_id: string
           questions: Json
@@ -2180,6 +2181,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_published?: boolean
+          lock_screen?: boolean | null
           max_attempts?: number
           org_id: string
           questions?: Json
@@ -2197,6 +2199,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_published?: boolean
+          lock_screen?: boolean | null
           max_attempts?: number
           org_id?: string
           questions?: Json
@@ -3207,12 +3210,15 @@ export type Database = {
       student_quiz_attempts: {
         Row: {
           answers: Json
+          anti_cheat_log: Json | null
           assignment_id: string | null
+          copy_events: number | null
           created_at: string
           earned_points: number
           graded_at: string | null
           graded_by: string | null
           id: string
+          minimize_events: number | null
           org_id: string
           quiz_id: string
           score: number | null
@@ -3220,18 +3226,22 @@ export type Database = {
           status: string
           student_id: string
           submitted_at: string | null
+          tab_switches: number | null
           teacher_feedback: string | null
           time_taken_seconds: number | null
           total_points: number
         }
         Insert: {
           answers?: Json
+          anti_cheat_log?: Json | null
           assignment_id?: string | null
+          copy_events?: number | null
           created_at?: string
           earned_points?: number
           graded_at?: string | null
           graded_by?: string | null
           id?: string
+          minimize_events?: number | null
           org_id: string
           quiz_id: string
           score?: number | null
@@ -3239,18 +3249,22 @@ export type Database = {
           status?: string
           student_id: string
           submitted_at?: string | null
+          tab_switches?: number | null
           teacher_feedback?: string | null
           time_taken_seconds?: number | null
           total_points?: number
         }
         Update: {
           answers?: Json
+          anti_cheat_log?: Json | null
           assignment_id?: string | null
+          copy_events?: number | null
           created_at?: string
           earned_points?: number
           graded_at?: string | null
           graded_by?: string | null
           id?: string
+          minimize_events?: number | null
           org_id?: string
           quiz_id?: string
           score?: number | null
@@ -3258,6 +3272,7 @@ export type Database = {
           status?: string
           student_id?: string
           submitted_at?: string | null
+          tab_switches?: number | null
           teacher_feedback?: string | null
           time_taken_seconds?: number | null
           total_points?: number

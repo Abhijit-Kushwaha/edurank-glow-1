@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle, XCircle, Clock, ArrowRight, Trophy, BookOpen, AlertCircle } from "lucide-react";
+import { CheckCircle, XCircle, Clock, ArrowRight, Trophy, BookOpen, AlertCircle, ShieldAlert, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 interface QuizQuestion {
@@ -37,6 +37,14 @@ export default function TakeOrgQuiz() {
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [existingAttempts, setExistingAttempts] = useState(0);
 
+  // Anti-cheat tracking
+  const [tabSwitches, setTabSwitches] = useState(0);
+  const [copyEvents, setCopyEvents] = useState(0);
+  const [minimizeEvents, setMinimizeEvents] = useState(0);
+  const [antiCheatLog, setAntiCheatLog] = useState<any[]>([]);
+  const [isLocked, setIsLocked] = useState(false);
+  const lockOverlayRef = useRef<HTMLDivElement>(null);
+
   const fetchQuiz = useCallback(async () => {
     if (!quizId) return;
     setLoading(true);
@@ -57,7 +65,6 @@ export default function TakeOrgQuiz() {
       setTimeLeft((data.time_limit_mins || 30) * 60);
       setAnswers(new Array(data.questions?.length || 0).fill(null));
 
-      // Check existing attempts
       if (profile?.id) {
         const { data: attempts } = await (supabase as any)
           .from("student_quiz_attempts")
@@ -74,6 +81,86 @@ export default function TakeOrgQuiz() {
   }, [quizId, profile?.id, navigate]);
 
   useEffect(() => { fetchQuiz(); }, [fetchQuiz]);
+
+  // Anti-cheat: Track visibility changes (tab switch / minimize)
+  useEffect(() => {
+    if (!started || isCompleted) return;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        const event = { type: "tab_switch", timestamp: new Date().toISOString() };
+        setTabSwitches(prev => prev + 1);
+        setAntiCheatLog(prev => [...prev, event]);
+
+        if (quiz?.lock_screen) {
+          setIsLocked(true);
+        }
+      }
+    };
+
+    const handleBlur = () => {
+      if (!started || isCompleted) return;
+      const event = { type: "window_blur", timestamp: new Date().toISOString() };
+      setMinimizeEvents(prev => prev + 1);
+      setAntiCheatLog(prev => [...prev, event]);
+    };
+
+    const handleCopy = (e: ClipboardEvent) => {
+      const event = { type: "copy", timestamp: new Date().toISOString() };
+      setCopyEvents(prev => prev + 1);
+      setAntiCheatLog(prev => [...prev, event]);
+
+      if (quiz?.lock_screen) {
+        e.preventDefault();
+        toast.error("Copying is disabled during this quiz");
+      }
+    };
+
+    const handleCut = (e: ClipboardEvent) => {
+      const event = { type: "cut", timestamp: new Date().toISOString() };
+      setCopyEvents(prev => prev + 1);
+      setAntiCheatLog(prev => [...prev, event]);
+
+      if (quiz?.lock_screen) {
+        e.preventDefault();
+        toast.error("Cutting is disabled during this quiz");
+      }
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      if (quiz?.lock_screen) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleBlur);
+    document.addEventListener("copy", handleCopy);
+    document.addEventListener("cut", handleCut);
+    document.addEventListener("contextmenu", handleContextMenu);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleBlur);
+      document.removeEventListener("copy", handleCopy);
+      document.removeEventListener("cut", handleCut);
+      document.removeEventListener("contextmenu", handleContextMenu);
+    };
+  }, [started, isCompleted, quiz?.lock_screen]);
+
+  // Request fullscreen when lock_screen is enabled
+  useEffect(() => {
+    if (started && quiz?.lock_screen && !isCompleted) {
+      try {
+        document.documentElement.requestFullscreen?.();
+      } catch { /* ignore */ }
+    }
+    if (isCompleted) {
+      try {
+        if (document.fullscreenElement) document.exitFullscreen?.();
+      } catch { /* ignore */ }
+    }
+  }, [started, quiz?.lock_screen, isCompleted]);
 
   // Timer
   useEffect(() => {
@@ -130,7 +217,6 @@ export default function TakeOrgQuiz() {
       isCorrect = String(value).trim().toLowerCase() === String(q.correct_answer).trim().toLowerCase();
       autoPoints = isCorrect ? (q.points || 1) : 0;
     }
-    // short_answer needs manual grading
 
     newAnswers[currentIndex] = {
       question_index: currentIndex,
@@ -175,6 +261,10 @@ export default function TakeOrgQuiz() {
           time_taken_seconds: elapsed,
           status: hasShortAnswer ? "submitted" : "graded",
           submitted_at: new Date().toISOString(),
+          tab_switches: tabSwitches,
+          copy_events: copyEvents,
+          minimize_events: minimizeEvents,
+          anti_cheat_log: antiCheatLog,
         })
         .eq("id", attemptId);
 
@@ -202,6 +292,29 @@ export default function TakeOrgQuiz() {
   const maxAttempts = quiz.max_attempts || 1;
   const canAttempt = existingAttempts < maxAttempts;
 
+  // Lock overlay when student switches tab during locked quiz
+  if (isLocked && !isCompleted) {
+    return (
+      <div ref={lockOverlayRef} className="fixed inset-0 z-50 bg-background flex items-center justify-center">
+        <Card className="max-w-md mx-4">
+          <CardContent className="pt-6 text-center space-y-4">
+            <ShieldAlert className="h-16 w-16 text-destructive mx-auto" />
+            <h2 className="text-xl font-bold">Tab Switch Detected!</h2>
+            <p className="text-sm text-muted-foreground">
+              You left the quiz window. This has been recorded. Your teacher will be notified.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Tab switches so far: <span className="font-bold text-destructive">{tabSwitches}</span>
+            </p>
+            <Button onClick={() => setIsLocked(false)} className="w-full">
+              Return to Quiz
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Pre-start screen
   if (!started) {
     return (
@@ -216,6 +329,12 @@ export default function TakeOrgQuiz() {
               <Badge variant="outline">{questions.length} questions</Badge>
               <Badge variant="outline">{quiz.time_limit_mins} min</Badge>
             </div>
+            {quiz.lock_screen && (
+              <div className="flex items-center gap-2 justify-center text-amber-600 text-sm bg-amber-500/10 rounded-lg p-2">
+                <Lock className="h-4 w-4" />
+                <span>Screen lock enabled — switching tabs will be recorded & blocked</span>
+              </div>
+            )}
             {quiz.description && <p className="text-sm text-muted-foreground">{quiz.description}</p>}
             <p className="text-xs text-muted-foreground">
               Attempt {existingAttempts + 1} of {maxAttempts}
@@ -257,6 +376,14 @@ export default function TakeOrgQuiz() {
                 <p className="text-sm text-muted-foreground">{earnedPoints}/{totalPoints} points earned</p>
               </>
             )}
+            {(tabSwitches > 0 || copyEvents > 0) && (
+              <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-2 space-y-1">
+                <p className="font-medium">Activity recorded:</p>
+                {tabSwitches > 0 && <p>Tab switches: {tabSwitches}</p>}
+                {copyEvents > 0 && <p>Copy/cut attempts: {copyEvents}</p>}
+                {minimizeEvents > 0 && <p>Window blur events: {minimizeEvents}</p>}
+              </div>
+            )}
             <Button onClick={() => navigate("/org")} className="w-full">Back to Organization</Button>
           </CardContent>
         </Card>
@@ -268,13 +395,25 @@ export default function TakeOrgQuiz() {
   const progress = ((currentIndex + 1) / questions.length) * 100;
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-4">
+    <div className="p-6 max-w-2xl mx-auto space-y-4" style={quiz?.lock_screen ? { userSelect: "none" } : {}}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="font-bold text-sm truncate">{quiz.title}</h2>
-        <Badge variant={timeLeft < 60 ? "destructive" : "outline"} className="gap-1 font-mono">
-          <Clock className="h-3 w-3" /> {formatTime(timeLeft)}
-        </Badge>
+        <div className="flex items-center gap-2">
+          {quiz.lock_screen && (
+            <Badge variant="outline" className="gap-1 text-[10px] text-amber-600 border-amber-500/30">
+              <Lock className="h-2.5 w-2.5" /> Locked
+            </Badge>
+          )}
+          {tabSwitches > 0 && (
+            <Badge variant="destructive" className="gap-1 text-[10px]">
+              <ShieldAlert className="h-2.5 w-2.5" /> {tabSwitches} switch{tabSwitches > 1 ? "es" : ""}
+            </Badge>
+          )}
+          <Badge variant={timeLeft < 60 ? "destructive" : "outline"} className="gap-1 font-mono">
+            <Clock className="h-3 w-3" /> {formatTime(timeLeft)}
+          </Badge>
+        </div>
       </div>
 
       <Progress value={progress} className="h-2" />
