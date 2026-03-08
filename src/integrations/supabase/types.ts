@@ -1667,6 +1667,82 @@ export type Database = {
           },
         ]
       }
+      org_credit_log: {
+        Row: {
+          amount: number
+          created_at: string
+          granted_by: string | null
+          id: string
+          org_id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          org_id: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          org_id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_credit_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_member_credits: {
+        Row: {
+          id: string
+          last_reset_at: string
+          org_id: string
+          total_credits: number
+          updated_at: string
+          used_credits: number
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_reset_at?: string
+          org_id: string
+          total_credits?: number
+          updated_at?: string
+          used_credits?: number
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_reset_at?: string
+          org_id?: string
+          total_credits?: number
+          updated_at?: string
+          used_credits?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_member_credits_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_quiz_submissions: {
         Row: {
           answers: Json
@@ -3349,6 +3425,10 @@ export type Database = {
         Args: { p_amount?: number; p_user_id: string }
         Returns: boolean
       }
+      allocate_org_credits: {
+        Args: { p_amount: number; p_reason?: string; p_target_user_id: string }
+        Returns: Json
+      }
       assign_daily_challenges: {
         Args: { p_user_id: string }
         Returns: {
@@ -3407,6 +3487,7 @@ export type Database = {
         Returns: boolean
       }
       generate_org_invite_code: { Args: never; Returns: string }
+      get_my_org_credits: { Args: never; Returns: Json }
       get_org_members_with_stats: {
         Args: { p_org_id: string }
         Returns: {
@@ -3455,6 +3536,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      use_org_credits: {
+        Args: { p_amount: number; p_reason: string; p_user_id: string }
+        Returns: Json
       }
       use_streak_protection: { Args: { p_user_id: string }; Returns: boolean }
       validate_org_code: { Args: { p_code: string }; Returns: Json }
