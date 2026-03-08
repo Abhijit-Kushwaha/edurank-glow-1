@@ -35,7 +35,7 @@ interface TimetableManagerProps {
 
 export default function TimetableManager({ orgId }: TimetableManagerProps) {
   const { profile } = useAuth();
-  const callerRole = (profile as any)?.role || "student";
+  const callerRole = profile?.role || "student";
   const isSuperAdmin = callerRole === "super_admin";
 
   const [entries, setEntries] = useState<TimetableEntry[]>([]);
