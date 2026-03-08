@@ -16,6 +16,7 @@ import AbhijitImage from "@/assets/Core Team pic/Abhijit Kushwaha.jpg";
 import AbhinavImage from "@/assets/Core Team pic/Abhinav Bajpai.jpg";
 import DewashishImage from "@/assets/Core Team pic/Dewashish Kesharwani.png";
 import PrinceImage from "@/assets/Core Team pic/Prince Kumar Verma.jpg";
+import VidyagyanSpecialThanksImage from "@/assets/Vidyagyan-special-thanks.png";
 
 const teamMembers = [
   { name: "Abhijit Kushwaha", role: "Backend Coder & Integrator" },
@@ -248,6 +249,14 @@ const About = () => {
           <p className="text-muted-foreground font-medium text-center text-lg py-2">
             SPECIAL THANKS TO VIDYAGYAN SCHOOL FOR SUPPORTING US.
           </p>
+          <div className="mt-4 rounded-xl overflow-hidden border border-border/50">
+            <img
+              src={VidyagyanSpecialThanksImage}
+              alt="Vidyagyan School campus"
+              loading="lazy"
+              className="w-full"
+            />
+          </div>
         </section>
 
         {/* Contact Section */}

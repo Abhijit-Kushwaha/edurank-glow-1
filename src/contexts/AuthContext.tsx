@@ -234,7 +234,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const loginWithGoogle = async (): Promise<{ error?: string }> => {
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: "https://brainbuddy-glow.vercel.app",
+        redirect_uri: window.location.origin,
       });
 
       if (result.error) {
