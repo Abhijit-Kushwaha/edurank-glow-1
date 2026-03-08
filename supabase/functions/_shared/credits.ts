@@ -45,7 +45,7 @@ export async function consumeCredits(
       .from("user_credits")
       .update({ credits_remaining: 100, credits_used: 0, last_reset_at: now.toISOString(), updated_at: now.toISOString() })
       .eq("user_id", userId);
-    creditData.credits_remaining = 50;
+    creditData.credits_remaining = 100;
   }
 
   if (creditData.credits_remaining < amount) {
