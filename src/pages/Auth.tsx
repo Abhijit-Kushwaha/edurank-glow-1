@@ -248,14 +248,19 @@ const Auth = () => {
               const { data: { user: currentUser } } = await supabase.auth.getUser();
               if (currentUser) {
                 const roleToAssign = orgRole === "teacher" ? "teacher" : "student";
-                await supabase.rpc("join_org_by_code", {
-                  p_user_id: currentUser.id,
+                const { data: reqResult } = await supabase.rpc("request_join_org", {
                   p_code: orgCode.trim(),
                   p_role: roleToAssign,
                 });
+                const res = reqResult as any;
+                if (res?.success) {
+                  toast.info(`Join request sent to ${res.org_name}. You'll be notified when approved.`);
+                } else {
+                  console.error("Join request error:", res?.error);
+                }
               }
             } catch (orgError) {
-              console.error("Org join error:", orgError);
+              console.error("Org join request error:", orgError);
             }
           } else if (orgRole === "admin" && orgName.trim()) {
             // Admin creating a new org via secure RPC
