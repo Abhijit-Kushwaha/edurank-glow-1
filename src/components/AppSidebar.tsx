@@ -14,6 +14,8 @@ import {
   FileText,
   Swords,
   MessageSquare,
+  Layers,
+  Timer,
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
