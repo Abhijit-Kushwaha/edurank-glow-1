@@ -49,7 +49,7 @@ const Auth = () => {
   const [orgCodeValid, setOrgCodeValid] = useState<boolean | null>(null);
   const [orgCodeOrgName, setOrgCodeOrgName] = useState("");
   const [isCheckingOrgCode, setIsCheckingOrgCode] = useState(false);
-  const [orgRole, setOrgRole] = useState<"student" | "teacher" | "independent">("independent");
+  const [orgRole, setOrgRole] = useState<"student" | "teacher" | "admin" | "independent">("independent");
   const [isUsernameAvailable, setIsUsernameAvailable] = useState<
     boolean | null
   >(null);
