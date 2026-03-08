@@ -27,7 +27,7 @@ interface TimetableEntry {
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const WEEKDAYS = DAYS.slice(1, 6);
-const DAY_COLORS = ["", "bg-blue-500/10", "bg-green-500/10", "bg-purple-500/10", "bg-orange-500/10", "bg-pink-500/10"];
+const DAY_COLORS = ["", "bg-primary/10", "bg-accent/10", "bg-muted", "bg-primary/5", "bg-accent/5"];
 
 interface TimetableManagerProps {
   orgId: string;

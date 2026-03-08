@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -674,7 +674,7 @@ export default function MarksManager({ orgId }: MarksManagerProps) {
                   </Card>
                   <Card className="border-border/50">
                     <CardContent className="p-3 text-center">
-                      <ArrowUpRight className="h-5 w-5 text-green-500 mx-auto mb-1" />
+                      <ArrowUpRight className="h-5 w-5 text-primary mx-auto mb-1" />
                       <p className="text-2xl font-bold">{analysis.section_summary.highest.toFixed(1)}%</p>
                       <p className="text-[10px] text-muted-foreground">Highest</p>
                     </CardContent>
@@ -688,7 +688,7 @@ export default function MarksManager({ orgId }: MarksManagerProps) {
                   </Card>
                   <Card className="border-border/50">
                     <CardContent className="p-3 text-center">
-                      <CheckCircle2 className="h-5 w-5 text-green-500 mx-auto mb-1" />
+                      <CheckCircle2 className="h-5 w-5 text-primary mx-auto mb-1" />
                       <p className="text-2xl font-bold">{analysis.section_summary.pass_rate.toFixed(0)}%</p>
                       <p className="text-[10px] text-muted-foreground">Pass Rate</p>
                     </CardContent>
@@ -761,7 +761,7 @@ export default function MarksManager({ orgId }: MarksManagerProps) {
                   </p>
                   <div className="grid grid-cols-3 gap-3 text-center">
                     <div>
-                      <p className="text-2xl font-bold text-green-500">
+                      <p className="text-2xl font-bold text-primary">
                         {analysis.student_reports.filter(s => s.status === "Pass").length}
                       </p>
                       <p className="text-[10px] text-muted-foreground">Ready for Promotion</p>
