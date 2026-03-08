@@ -47,30 +47,18 @@ export default function OrgWorkspace() {
     if (!orgName.trim() || !user) return;
     setCreatingOrg(true);
     try {
-      // 1. Create the organisation
-      const { data: orgData, error: orgError } = await supabase
-        .from("organisations")
-        .insert({ name: orgName.trim() })
-        .select()
-        .single();
-
-      if (orgError) {
-        toast.error("Failed to create organization: " + orgError.message);
-        setCreatingOrg(false);
-        return;
-      }
-
-      // 2. Promote creator to super_admin using secure function
-      const { data: promoted, error: profileError } = await supabase.rpc("promote_org_creator", {
-        p_user_id: user.id,
-        p_org_id: orgData.id,
+      // Create org + promote creator atomically via secure RPC
+      const { data: result, error: rpcError } = await supabase.rpc("create_organisation", {
+        p_name: orgName.trim(),
       });
 
-      if (profileError || !promoted) {
-        toast.error("Organization created but failed to link your profile");
+      if (rpcError || !result?.success) {
+        toast.error(result?.error || rpcError?.message || "Failed to create organization");
         setCreatingOrg(false);
         return;
       }
+
+      const orgId = result.org_id;
 
       // 3. Create default channels
       const profileRes = await supabase.from("profiles").select("id").eq("user_id", user.id).single();
