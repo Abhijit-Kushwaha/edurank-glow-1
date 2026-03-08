@@ -109,6 +109,108 @@ export type Database = {
         }
         Relationships: []
       }
+      batch_sections: {
+        Row: {
+          batch_id: string
+          created_at: string
+          display_name: string
+          id: string
+          is_active: boolean
+          max_students: number | null
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          display_name: string
+          id?: string
+          is_active?: boolean
+          max_students?: number | null
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          max_students?: number | null
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batch_sections_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "batch_sections_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      batches: {
+        Row: {
+          academic_year: string
+          class_number: number
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year?: string
+          class_number: number
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          class_number?: number
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batches_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "batches_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       battle_answers: {
         Row: {
           battle_id: string
@@ -2386,6 +2488,130 @@ export type Database = {
             columns: ["role_id"]
             isOneToOne: false
             referencedRelation: "custom_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      section_students: {
+        Row: {
+          enrolled_at: string
+          enrolled_by: string | null
+          id: string
+          org_id: string
+          roll_number: string | null
+          section_id: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          enrolled_at?: string
+          enrolled_by?: string | null
+          id?: string
+          org_id: string
+          roll_number?: string | null
+          section_id: string
+          status?: string
+          student_id: string
+        }
+        Update: {
+          enrolled_at?: string
+          enrolled_by?: string | null
+          id?: string
+          org_id?: string
+          roll_number?: string | null
+          section_id?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "section_students_enrolled_by_fkey"
+            columns: ["enrolled_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "section_students_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "section_students_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "batch_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "section_students_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      section_teachers: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+          is_class_teacher: boolean
+          org_id: string
+          section_id: string
+          subject: string
+          teacher_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          is_class_teacher?: boolean
+          org_id: string
+          section_id: string
+          subject: string
+          teacher_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          is_class_teacher?: boolean
+          org_id?: string
+          section_id?: string
+          subject?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "section_teachers_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "section_teachers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "section_teachers_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "batch_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "section_teachers_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
