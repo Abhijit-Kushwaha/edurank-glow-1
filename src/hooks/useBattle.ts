@@ -17,6 +17,7 @@ export interface BattleConfig {
   numQuestions: number;
   source?: BattleSource;
   maxPlayers?: number;
+  orgId?: string;
 }
 
 export function useBattle() {
@@ -30,16 +31,21 @@ export function useBattle() {
       const battleCode = generateBattleCode();
       const maxPlayers = Math.min(Math.max(config.maxPlayers || 2, 2), 4);
 
+      const insertData: any = {
+        creator_id: user.id,
+        subject: config.subject,
+        difficulty: config.difficulty,
+        num_questions: config.numQuestions,
+        battle_code: battleCode,
+        max_players: maxPlayers,
+      };
+      if (config.orgId) {
+        insertData.org_id = config.orgId;
+      }
+
       const { data: battle, error } = await supabase
         .from("battles")
-        .insert({
-          creator_id: user.id,
-          subject: config.subject,
-          difficulty: config.difficulty,
-          num_questions: config.numQuestions,
-          battle_code: battleCode,
-          max_players: maxPlayers,
-        } as any)
+        .insert(insertData)
         .select()
         .single();
 
