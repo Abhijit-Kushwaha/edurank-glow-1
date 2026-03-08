@@ -10,6 +10,7 @@ interface Organization {
   status: string;
   invite_mode: string;
   ai_enabled: boolean;
+  invite_code?: string;
 }
 
 interface Channel {
