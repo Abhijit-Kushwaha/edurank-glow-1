@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { Users, Shield, GraduationCap, UserCog, Crown, Eye, Share2, Search, ChevronDown } from "lucide-react";
+import { Users, Shield, GraduationCap, UserCog, Crown, Eye, Share2, Search, ChevronDown, UserPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -54,6 +55,14 @@ export default function MemberManager({ orgId }: MemberManagerProps) {
   const [changingRole, setChangingRole] = useState(false);
   const [viewingProgress, setViewingProgress] = useState<string | null>(null);
 
+  // Promote by name feature
+  const [showPromoteDialog, setShowPromoteDialog] = useState(false);
+  const [promoteSearchName, setPromoteSearchName] = useState("");
+  const [promoteRole, setPromoteRole] = useState("super_admin");
+  const [promoteMatches, setPromoteMatches] = useState<OrgMember[]>([]);
+  const [promoteTarget, setPromoteTarget] = useState<OrgMember | null>(null);
+  const [promoting, setPromoting] = useState(false);
+
   const callerRole = profile?.role as string || "student";
   const canManageRoles = ["super_admin", "admin"].includes(callerRole);
 
@@ -93,6 +102,53 @@ export default function MemberManager({ orgId }: MemberManagerProps) {
       toast.error(err.message || "Failed to change role");
     } finally {
       setChangingRole(false);
+    }
+  };
+
+  // Promote by name - search members as user types
+  useEffect(() => {
+    if (!promoteSearchName.trim()) {
+      setPromoteMatches([]);
+      setPromoteTarget(null);
+      return;
+    }
+    const s = promoteSearchName.toLowerCase();
+    const matches = members.filter(m =>
+      m.user_id !== profile?.user_id &&
+      (m.name?.toLowerCase().includes(s) || m.email?.toLowerCase().includes(s))
+    );
+    setPromoteMatches(matches.slice(0, 5));
+    // Auto-select if exact match
+    if (matches.length === 1) {
+      setPromoteTarget(matches[0]);
+    } else {
+      setPromoteTarget(null);
+    }
+  }, [promoteSearchName, members, profile?.user_id]);
+
+  const handlePromoteByName = async () => {
+    if (!promoteTarget || !promoteRole) return;
+    setPromoting(true);
+    try {
+      const { data, error } = await supabase.rpc("set_member_role", {
+        p_target_user_id: promoteTarget.user_id,
+        p_new_role: promoteRole,
+      });
+      if (error) throw error;
+      const result = data as any;
+      if (result?.success) {
+        toast.success(`${promoteTarget.name} is now ${ROLE_CONFIG[promoteRole]?.label || promoteRole}!`);
+        setShowPromoteDialog(false);
+        setPromoteSearchName("");
+        setPromoteTarget(null);
+        fetchMembers();
+      } else {
+        toast.error(result?.error || "Failed to change role");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to change role");
+    } finally {
+      setPromoting(false);
     }
   };
 
@@ -137,12 +193,20 @@ export default function MemberManager({ orgId }: MemberManagerProps) {
           </h2>
           <p className="text-sm text-muted-foreground">Manage organization members and their roles</p>
         </div>
-        {canManageRoles && (
-          <CreditManager
-            members={members.map(m => ({ user_id: m.user_id, name: m.name, role: m.role }))}
-            onCreditsChanged={() => fetchMembers()}
-          />
-        )}
+        <div className="flex items-center gap-2">
+          {canManageRoles && (
+            <Button variant="outline" size="sm" onClick={() => setShowPromoteDialog(true)}>
+              <UserPlus className="h-4 w-4 mr-1" />
+              Assign Role by Name
+            </Button>
+          )}
+          {canManageRoles && (
+            <CreditManager
+              members={members.map(m => ({ user_id: m.user_id, name: m.name, role: m.role }))}
+              onCreditsChanged={() => fetchMembers()}
+            />
+          )}
+        </div>
       </div>
 
       {/* Stats */}
@@ -258,7 +322,7 @@ export default function MemberManager({ orgId }: MemberManagerProps) {
         )}
       </div>
 
-      {/* Role change dialog */}
+      {/* Role change dialog (existing - click on member) */}
       <Dialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>
         <DialogContent>
           <DialogHeader>
@@ -298,6 +362,116 @@ export default function MemberManager({ orgId }: MemberManagerProps) {
             <Button variant="outline" onClick={() => setShowRoleDialog(false)}>Cancel</Button>
             <Button onClick={handleChangeRole} disabled={changingRole || newRole === selectedMember?.role}>
               {changingRole ? "Updating..." : "Update Role"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Promote by Name dialog */}
+      <Dialog open={showPromoteDialog} onOpenChange={(open) => {
+        setShowPromoteDialog(open);
+        if (!open) {
+          setPromoteSearchName("");
+          setPromoteTarget(null);
+          setPromoteMatches([]);
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-primary" />
+              Assign Role by Name
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Type the member's name</Label>
+              <Input
+                placeholder="Start typing a name or email..."
+                value={promoteSearchName}
+                onChange={(e) => setPromoteSearchName(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            {/* Search results */}
+            {promoteSearchName.trim() && promoteMatches.length > 0 && (
+              <div className="space-y-1 max-h-40 overflow-y-auto">
+                {promoteMatches.map(m => {
+                  const rc = ROLE_CONFIG[m.role] || ROLE_CONFIG.student;
+                  const isSelected = promoteTarget?.user_id === m.user_id;
+                  return (
+                    <button
+                      key={m.user_id}
+                      onClick={() => setPromoteTarget(m)}
+                      className={`w-full flex items-center gap-3 p-2 rounded-md text-left transition-colors ${
+                        isSelected ? "bg-primary/10 border border-primary/30" : "hover:bg-muted/50 border border-transparent"
+                      }`}
+                    >
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="text-xs">{(m.name || "?")[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{m.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{m.email} · {rc.label}</p>
+                      </div>
+                      {isSelected && (
+                        <Badge variant="default" className="text-[10px]">Selected</Badge>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {promoteSearchName.trim() && promoteMatches.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-2">No members found matching "{promoteSearchName}"</p>
+            )}
+
+            {promoteTarget && (
+              <>
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Assigning role to: <strong className="text-foreground">{promoteTarget.name}</strong> (currently {ROLE_CONFIG[promoteTarget.role]?.label})
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>New Role</Label>
+                  <Select value={promoteRole} onValueChange={setPromoteRole}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAvailableRoles().map(r => (
+                        <SelectItem key={r} value={r}>{ROLE_CONFIG[r]?.label || r}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {promoteRole === "super_admin" && (
+                  <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive space-y-1">
+                    <p className="font-semibold">⚠️ Warning: Super Admin Access</p>
+                    <p>This gives full control over the organization including the ability to remove other admins and change all settings.</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPromoteDialog(false)}>Cancel</Button>
+            <Button
+              onClick={handlePromoteByName}
+              disabled={!promoteTarget || promoting || promoteTarget.role === promoteRole}
+            >
+              {promoting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Assigning...
+                </>
+              ) : (
+                "Assign Role"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
