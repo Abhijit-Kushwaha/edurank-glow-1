@@ -94,7 +94,9 @@ export function useOrganization() {
     };
 
     fetchData();
-  }, [orgId]);
+  }, [orgId, fetchKey]);
+
+  const refetch = useCallback(() => setFetchKey(k => k + 1), []);
 
   const createChannel = useCallback(async (name: string, type: string, description?: string) => {
     if (!orgId || !profile) return null;
