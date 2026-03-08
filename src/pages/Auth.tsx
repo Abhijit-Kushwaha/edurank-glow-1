@@ -213,17 +213,12 @@ const Auth = () => {
           setIsLoading(false);
           return;
         }
-        if (orgRole === "teacher" && !orgCode.trim()) {
-          toast.error("Please enter an organization code to join");
-          setIsLoading(false);
-          return;
-        }
         if (orgRole === "student" && !orgCode.trim()) {
-          toast.error("Please enter an organization code to join");
+          toast.error("Please enter an organization invite code to join");
           setIsLoading(false);
           return;
         }
-        if ((orgRole === "student" || orgRole === "teacher") && orgCode.trim() && orgCodeValid === false) {
+        if (orgRole === "student" && orgCode.trim() && orgCodeValid === false) {
           toast.error("Invalid organization code. Please check and try again.");
           setIsLoading(false);
           return;
