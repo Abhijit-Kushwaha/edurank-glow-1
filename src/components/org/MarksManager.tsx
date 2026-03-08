@@ -674,7 +674,7 @@ export default function MarksManager({ orgId }: MarksManagerProps) {
                   </Card>
                   <Card className="border-border/50">
                     <CardContent className="p-3 text-center">
-                      <ArrowUpRight className="h-5 w-5 text-green-500 mx-auto mb-1" />
+                      <ArrowUpRight className="h-5 w-5 text-primary mx-auto mb-1" />
                       <p className="text-2xl font-bold">{analysis.section_summary.highest.toFixed(1)}%</p>
                       <p className="text-[10px] text-muted-foreground">Highest</p>
                     </CardContent>
