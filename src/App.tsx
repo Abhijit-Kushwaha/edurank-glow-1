@@ -207,6 +207,14 @@ const App = () => (
                   </ProtectedWithLayout>
                 }
               />
+              <Route
+                path="/org"
+                element={
+                  <ProtectedWithLayout>
+                    <OrgWorkspace />
+                  </ProtectedWithLayout>
+                }
+              />
               <Route path="/about" element={<About />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
