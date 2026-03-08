@@ -369,30 +369,55 @@ export default function SuperAdminPanel({ orgId }: { orgId: string }) {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Invite Code</Label>
-                <div className="flex gap-2">
-                  <Input
-                    value={org.invite_code}
-                    readOnly
-                    className="font-mono tracking-widest"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      navigator.clipboard.writeText(org.invite_code);
-                      toast.success("Code copied!");
-                    }}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  {isSuperAdmin && (
-                    <Button variant="outline" size="icon" onClick={regenerateInviteCode}>
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+              <div className="space-y-3">
+                <Label>Role-Specific Invite Codes</Label>
+                <p className="text-xs text-muted-foreground">Each code auto-assigns the corresponding role when a user joins.</p>
+                {[
+                  { key: "invite_code_student", label: "Student Code", color: "text-blue-500" },
+                  { key: "invite_code_teacher", label: "Teacher Code", color: "text-amber-500" },
+                  { key: "invite_code_admin", label: "Admin Code", color: "text-destructive" },
+                ].map(({ key, label, color }) => (
+                  <div key={key} className="space-y-1">
+                    <Label className={`text-xs ${color}`}>{label}</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={(org as any)[key] || ""}
+                        readOnly
+                        className="font-mono tracking-widest text-sm"
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          navigator.clipboard.writeText((org as any)[key] || "");
+                          toast.success(`${label} copied!`);
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      {isSuperAdmin && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={async () => {
+                            const newCode = Array.from({ length: 8 }, () =>
+                              "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[Math.floor(Math.random() * 36)]
+                            ).join("");
+                            const { error } = await supabase
+                              .from("organisations")
+                              .update({ [key]: newCode } as any)
+                              .eq("id", orgId);
+                            if (error) { toast.error("Failed to regenerate"); return; }
+                            setOrg(prev => prev ? { ...prev, [key]: newCode } : prev);
+                            toast.success(`${label} regenerated!`);
+                          }}
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="space-y-2">
