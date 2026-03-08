@@ -92,20 +92,17 @@ export default function CreateBattleDialog({ onCreateBattle, loading }: CreateBa
 
           {/* Number of Players */}
           <div className="space-y-2">
-            <Label className="text-sm font-semibold">Number of Players</Label>
-            <div className="flex gap-2">
-              {playerCounts.map((n) => (
-                <Button
-                  key={n}
-                  variant={maxPlayers === n ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setMaxPlayers(n)}
-                  className="flex-1"
-                >
-                  {n} 👤
-                </Button>
-              ))}
-            </div>
+            <Label className="text-sm font-semibold">Number of Players (2–50)</Label>
+            <Input
+              type="number"
+              min={MIN_PLAYERS}
+              max={MAX_PLAYERS}
+              value={maxPlayers}
+              onChange={(e) => {
+                const v = Math.max(MIN_PLAYERS, Math.min(MAX_PLAYERS, Number(e.target.value) || MIN_PLAYERS));
+                setMaxPlayers(v);
+              }}
+            />
           </div>
 
           {/* Difficulty */}
