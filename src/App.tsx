@@ -33,6 +33,7 @@ import PomodoroTimer from "./pages/PomodoroTimer";
 import Achievements from "./pages/Achievements";
 import OrgWorkspace from "./pages/OrgWorkspace";
 import OrgBattleArena from "./pages/OrgBattleArena";
+import TakeOrgQuiz from "./pages/TakeOrgQuiz";
 
 const queryClient = new QueryClient();
 
@@ -221,6 +222,14 @@ const App = () => (
                 element={
                   <ProtectedWithLayout>
                     <OrgBattleArena />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/org/quiz/:quizId"
+                element={
+                  <ProtectedWithLayout>
+                    <TakeOrgQuiz />
                   </ProtectedWithLayout>
                 }
               />

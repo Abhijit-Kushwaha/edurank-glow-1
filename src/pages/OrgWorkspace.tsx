@@ -24,6 +24,7 @@ import MarksManager from "@/components/org/MarksManager";
 import JoinRequestsManager from "@/components/org/JoinRequestsManager";
 import SuperAdminPanel from "@/components/org/SuperAdminPanel";
 import JoinOrgCard from "@/components/org/JoinOrgCard";
+import StudentAssignedQuizzes from "@/components/org/StudentAssignedQuizzes";
 
 const channelIcons: Record<string, typeof Hash> = {
   text: Hash,
@@ -279,6 +280,7 @@ export default function OrgWorkspace() {
             <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider px-2">Navigation</span>
           </div>
           {[
+            { id: "my-quizzes", label: "My Quizzes", icon: BookOpen },
             { id: "batches", label: "Batches & Sections", icon: Layers },
             { id: "marks", label: "Exams & Marks", icon: ClipboardList },
             { id: "teaching", label: "Teaching", icon: GraduationCap },
@@ -312,6 +314,10 @@ export default function OrgWorkspace() {
             channelId={selectedChannel}
             channel={channels.find(c => c.id === selectedChannel)}
           />
+        ) : activeTab === "my-quizzes" ? (
+          <div className="p-6">
+            <StudentAssignedQuizzes orgId={org?.id || ""} />
+          </div>
         ) : activeTab === "batches" ? (
           <BatchManager orgId={org?.id || ""} />
         ) : activeTab === "marks" ? (
