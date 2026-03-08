@@ -410,14 +410,15 @@ const Auth = () => {
                 {/* Organization / Role Selection */}
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">I am a...</label>
-                  <Select value={orgRole} onValueChange={(v: "student" | "teacher" | "independent") => setOrgRole(v)}>
+                  <Select value={orgRole} onValueChange={(v: "student" | "teacher" | "admin" | "independent") => { setOrgRole(v); setOrgCode(""); setOrgName(""); setOrgCodeValid(null); setOrgCodeOrgName(""); }}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="independent">Independent Student</SelectItem>
                       <SelectItem value="student">Student (joining an organization)</SelectItem>
-                      <SelectItem value="teacher">Teacher / Admin (creating an organization)</SelectItem>
+                      <SelectItem value="teacher">Teacher (joining an organization)</SelectItem>
+                      <SelectItem value="admin">Admin (creating a new organization)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -456,24 +457,22 @@ const Auth = () => {
                       <p className="text-xs text-destructive">Invalid code. Ask your admin for the correct organization code.</p>
                     )}
                     <p className="text-[10px] text-muted-foreground">
-                      {orgRole === "student"
-                        ? "Enter the code provided by your teacher/admin to join their organization."
-                        : "Enter a code to join an existing org, or leave blank and enter an org name below to create a new one."}
+                      Enter the code provided by your admin to join their organization.
                     </p>
                   </div>
                 )}
 
-                {orgRole === "teacher" && !orgCode.trim() && (
+                {orgRole === "admin" && (
                   <div className="relative">
                     <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input
                       type="text"
-                      placeholder="New Organization Name (e.g. Sunrise Academy)"
+                      placeholder="Organization Name (e.g. Sunrise Academy)"
                       value={orgName}
                       onChange={(e) => setOrgName(e.target.value)}
                       className="pl-10"
                     />
-                    <p className="text-[10px] text-muted-foreground mt-1">You'll become the admin of this new organization</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">You'll become the Super Admin of this new organization</p>
                   </div>
                 )}
               </>
