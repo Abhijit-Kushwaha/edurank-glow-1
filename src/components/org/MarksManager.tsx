@@ -761,7 +761,7 @@ export default function MarksManager({ orgId }: MarksManagerProps) {
                   </p>
                   <div className="grid grid-cols-3 gap-3 text-center">
                     <div>
-                      <p className="text-2xl font-bold text-green-500">
+                      <p className="text-2xl font-bold text-primary">
                         {analysis.student_reports.filter(s => s.status === "Pass").length}
                       </p>
                       <p className="text-[10px] text-muted-foreground">Ready for Promotion</p>
