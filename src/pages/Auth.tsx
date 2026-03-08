@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Mail,
@@ -18,6 +18,24 @@ import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
+declare global {
+  interface Window {
+    turnstile: {
+      render: (container: string | HTMLElement, options: {
+        sitekey: string;
+        callback: (token: string) => void;
+        "expired-callback"?: () => void;
+        "error-callback"?: () => void;
+        theme?: "light" | "dark" | "auto";
+      }) => string;
+      reset: (widgetId: string) => void;
+      remove: (widgetId: string) => void;
+    };
+  }
+}
+
+const TURNSTILE_SITE_KEY = "0x4AAAAAACjPk-A2VPSIaOWx";
+
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -30,6 +48,9 @@ const Auth = () => {
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetId = useRef<string | null>(null);
   const navigate = useNavigate();
   const { login, signup, loginWithGoogle, user } = useAuth();
 
@@ -40,6 +61,47 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
+  // Initialize Turnstile widget
+  useEffect(() => {
+    const initTurnstile = () => {
+      if (turnstileRef.current && window.turnstile && !turnstileWidgetId.current) {
+        turnstileWidgetId.current = window.turnstile.render(turnstileRef.current, {
+          sitekey: TURNSTILE_SITE_KEY,
+          callback: (token: string) => setTurnstileToken(token),
+          "expired-callback": () => setTurnstileToken(null),
+          "error-callback": () => setTurnstileToken(null),
+          theme: "dark",
+        });
+      }
+    };
+
+    // Wait for script to load
+    if (window.turnstile) {
+      initTurnstile();
+    } else {
+      const checkInterval = setInterval(() => {
+        if (window.turnstile) {
+          clearInterval(checkInterval);
+          initTurnstile();
+        }
+      }, 100);
+      return () => clearInterval(checkInterval);
+    }
+
+    return () => {
+      if (turnstileWidgetId.current && window.turnstile) {
+        window.turnstile.remove(turnstileWidgetId.current);
+        turnstileWidgetId.current = null;
+      }
+    };
+  }, []);
+
+  const resetTurnstile = useCallback(() => {
+    if (turnstileWidgetId.current && window.turnstile) {
+      window.turnstile.reset(turnstileWidgetId.current);
+      setTurnstileToken(null);
+    }
+  }, []);
   // Check username availability with debounce
   useEffect(() => {
     if (!username.trim() || isLogin) {
@@ -75,6 +137,12 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!turnstileToken) {
+      toast.error("Please complete the security verification");
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
@@ -121,6 +189,7 @@ const Auth = () => {
       }
     } catch (error) {
       toast.error("Something went wrong");
+      resetTurnstile();
     } finally {
       setIsLoading(false);
     }
@@ -277,12 +346,17 @@ const Auth = () => {
               />
             </div>
 
+            {/* Cloudflare Turnstile Widget */}
+            <div className="flex justify-center">
+              <div ref={turnstileRef} />
+            </div>
+
             <Button
               type="submit"
               variant="neon"
               size="lg"
               className="w-full"
-              disabled={isLoading || isGoogleLoading}
+              disabled={isLoading || isGoogleLoading || !turnstileToken}
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
