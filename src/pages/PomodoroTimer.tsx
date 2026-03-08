@@ -248,8 +248,17 @@ export default function PomodoroTimer() {
 
         {/* Controls */}
         <div className="flex gap-3 items-center">
-          <Button variant="ghost" size="icon" onClick={() => setSoundOn(!soundOn)}>
+          <Button variant="ghost" size="icon" onClick={() => setSoundOn(!soundOn)} title="Toggle sound">
             {soundOn ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+          </Button>
+          <Button 
+            variant={tickSound ? "secondary" : "ghost"} 
+            size="sm" 
+            onClick={() => setTickSound(!tickSound)}
+            title="Toggle tick sound"
+            className="text-xs"
+          >
+            {tickSound ? "🔊 Tick" : "🔇 Tick"}
           </Button>
 
           {isRunning ? (
