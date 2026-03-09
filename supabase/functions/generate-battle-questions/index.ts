@@ -168,11 +168,14 @@ Generate ${safeNum} quiz questions at "${safeDifficulty}" difficulty. Return a J
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e: unknown) {
-    console.error("Error:", e);
-    const msg = e instanceof Error ? e.message : "Unknown error";
+    console.error("generate-battle-questions error:", e);
+    const msg = e instanceof Error ? e.message : "";
     const status = msg.includes("Rate limit") ? 429 : msg.includes("Payment") ? 402 : 500;
+    const clientMsg = status === 429 ? "Rate limit exceeded. Please try again later." 
+      : status === 402 ? "AI credits exhausted." 
+      : "An unexpected error occurred";
     return new Response(
-      JSON.stringify({ error: msg }),
+      JSON.stringify({ error: clientMsg }),
       { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
