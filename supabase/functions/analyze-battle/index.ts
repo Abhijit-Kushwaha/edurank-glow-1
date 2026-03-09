@@ -122,9 +122,13 @@ Keep topics concise (2-4 words each). Keep suggestions actionable (1 sentence ea
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "Unknown error";
+    console.error("analyze-battle error:", e);
+    const msg = e instanceof Error ? e.message : "";
     const status = msg.includes("Rate limit") ? 429 : msg.includes("Payment") ? 402 : 500;
-    return new Response(JSON.stringify({ error: msg }), {
+    const clientMsg = status === 429 ? "Rate limit exceeded. Please try again later." 
+      : status === 402 ? "AI credits exhausted." 
+      : "An unexpected error occurred";
+    return new Response(JSON.stringify({ error: clientMsg }), {
       status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

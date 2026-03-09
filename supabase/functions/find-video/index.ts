@@ -418,7 +418,6 @@ serve(async (req) => {
     });
   } catch (error: unknown) {
     console.error("Error in find-video:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return withCorsError(req, 500, errorMessage);
+    return withCorsError(req, 500, "An unexpected error occurred");
   }
 });
