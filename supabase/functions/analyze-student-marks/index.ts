@@ -7,14 +7,42 @@ serve(async (req) => {
   if (preflight) return preflight;
 
   try {
+    // Auth gate: require authenticated user
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return withCorsError(req, 401, "Unauthorized");
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    if (authError || !user) {
+      return withCorsError(req, 401, "Unauthorized");
+    }
+
     const { section_id, term_id, org_id } = await req.json();
     if (!section_id || !term_id || !org_id) {
       return withCorsError(req, 400, "Missing required fields");
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Verify user belongs to this org and has teacher/admin role
+    const serviceClient = createClient(supabaseUrl, supabaseKey);
+    const { data: profile } = await serviceClient
+      .from("profiles")
+      .select("role, org_id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!profile || profile.org_id !== org_id || !["super_admin", "admin", "teacher"].includes(profile.role)) {
+      return withCorsError(req, 403, "Insufficient permissions");
+    }
+
+    const supabase = serviceClient;
 
     // Fetch all exams for this term + section
     const { data: exams, error: examsError } = await supabase
