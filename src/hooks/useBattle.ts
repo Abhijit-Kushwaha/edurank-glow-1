@@ -92,9 +92,14 @@ export function useBattle() {
         .select("*")
         .eq("battle_code", battleCode.toUpperCase())
         .eq("status", "waiting")
-        .single();
+        .maybeSingle();
 
-      if (findError || !battle) {
+      if (findError) {
+        console.error("Find battle error:", findError);
+        toast.error("Failed to find battle");
+        return null;
+      }
+      if (!battle) {
         toast.error("Battle not found or already started");
         return null;
       }
