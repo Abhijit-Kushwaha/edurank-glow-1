@@ -1,0 +1,64 @@
+import { useRef } from "react";
+import { MessageCircle, BookOpen, Trophy, Swords, Video, Users } from "lucide-react";
+import { motion, useInView } from "framer-motion";
+
+const features = [
+  { icon: MessageCircle, title: "AI Chat", description: "Instant doubt-solving with your AI study buddy that understands context", gradient: "from-blue-500/20 to-cyan-500/20", iconBg: "from-blue-500 to-cyan-500" },
+  { icon: BookOpen, title: "Smart Notes", description: "AI-generated comprehensive study notes in seconds, ready to revise", gradient: "from-violet-500/20 to-purple-500/20", iconBg: "from-violet-500 to-purple-500" },
+  { icon: Trophy, title: "Interactive Quizzes", description: "Adaptive quizzes that learn your weak spots and help you improve", gradient: "from-amber-500/20 to-orange-500/20", iconBg: "from-amber-500 to-orange-500" },
+  { icon: Swords, title: "Battle Arena", description: "Challenge friends in real-time quiz battles and climb leaderboards", gradient: "from-rose-500/20 to-pink-500/20", iconBg: "from-rose-500 to-pink-500" },
+  { icon: Video, title: "Video Learning", description: "AI-curated video lessons matched perfectly to your current topic", gradient: "from-emerald-500/20 to-teal-500/20", iconBg: "from-emerald-500 to-teal-500" },
+  { icon: Users, title: "Study Groups", description: "Learn together, compete with friends, and grow as a community", gradient: "from-sky-500/20 to-indigo-500/20", iconBg: "from-sky-500 to-indigo-500" },
+];
+
+const FeatureCard = ({ feature, index }: { feature: typeof features[0]; index: number }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 40 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
+      whileHover={{ scale: 1.03, y: -6 }}
+      className="group relative rounded-2xl p-6 border border-border/50 bg-card/60 backdrop-blur-md overflow-hidden cursor-pointer transition-colors duration-300 hover:border-primary/30"
+    >
+      <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+      <div className="relative z-10">
+        <motion.div
+          className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.iconBg} flex items-center justify-center mb-5 shadow-lg`}
+          whileHover={{ rotate: [0, -8, 8, 0] }}
+          transition={{ duration: 0.5 }}
+        >
+          <feature.icon className="h-7 w-7 text-white" />
+        </motion.div>
+        <h3 className="text-lg font-bold mb-2 font-display">{feature.title}</h3>
+        <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+      </div>
+    </motion.div>
+  );
+};
+
+const FeaturesGrid = () => (
+  <section className="relative z-10 container mx-auto px-4 py-20">
+    <motion.div
+      className="text-center mb-14"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+    >
+      <h2 className="text-3xl md:text-4xl font-bold font-display mb-4">
+        Everything You Need to <span className="neon-text">Ace Your Studies</span>
+      </h2>
+      <p className="text-muted-foreground max-w-xl mx-auto">Six powerful tools working together to make learning faster, smarter, and more fun.</p>
+    </motion.div>
+    <div className="max-w-5xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {features.map((feature, index) => (
+        <FeatureCard key={index} feature={feature} index={index} />
+      ))}
+    </div>
+  </section>
+);
+
+export default FeaturesGrid;
