@@ -34,6 +34,7 @@ import Achievements from "./pages/Achievements";
 import OrgWorkspace from "./pages/OrgWorkspace";
 import OrgBattleArena from "./pages/OrgBattleArena";
 import TakeOrgQuiz from "./pages/TakeOrgQuiz";
+import { Analytics } from "@vercel/analytics/react";
 
 const queryClient = new QueryClient();
 
@@ -237,6 +238,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
+          <Analytics />
         </TooltipProvider>
       </FilterProvider>
     </AuthProvider>
