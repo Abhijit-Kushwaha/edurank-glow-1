@@ -518,6 +518,9 @@ const Auth = () => {
               />
             </div>
 
+            {/* Cloudflare Turnstile CAPTCHA - only works on production domain */}
+            <div ref={turnstileRef} className="flex justify-center" />
+
             <Button
               type="submit"
               variant="neon"
