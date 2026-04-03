@@ -241,6 +241,6 @@ Return ONLY valid JSON, no markdown.`;
     return withCors(req, { json: analysis });
   } catch (err) {
     console.error("analyze-student-marks error:", err);
-    return withCorsError(req, 500, (err as Error).message || "Unknown error");
+    return withCorsError(req, 500, "An unexpected error occurred");
   }
 });
