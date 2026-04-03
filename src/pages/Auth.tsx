@@ -155,11 +155,38 @@ const Auth = () => {
     return () => clearTimeout(timeoutId);
   }, [username, isLogin]);
 
+  const verifyTurnstile = async (token: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-turnstile", {
+        body: { token },
+      });
+      if (error) return false;
+      return data?.success === true;
+    } catch {
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      // Verify Turnstile token before proceeding
+      if (turnstileToken) {
+        const isValid = await verifyTurnstile(turnstileToken);
+        if (!isValid) {
+          toast.error("CAPTCHA verification failed. Please try again.");
+          // Reset turnstile
+          if (turnstileWidgetId.current && (window as any).turnstile) {
+            (window as any).turnstile.reset(turnstileWidgetId.current);
+          }
+          setTurnstileToken(null);
+          setIsLoading(false);
+          return;
+        }
+      }
+
       if (isLogin) {
         const { error } = await login(email, password);
         if (error) {
