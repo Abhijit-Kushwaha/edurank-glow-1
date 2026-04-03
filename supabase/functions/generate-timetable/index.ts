@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 import { preflightResponse, withCors, withCorsError } from "../_shared/cors.ts";
 import { callLovableAI } from "../_shared/lovableAI.ts";
 
@@ -7,6 +8,23 @@ serve(async (req) => {
   if (preflight) return preflight;
 
   try {
+    // Auth check
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return withCorsError(req, 401, "Unauthorized");
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return withCorsError(req, 401, "Unauthorized");
+    }
+
     const { teachers, constraints } = await req.json();
 
     if (!teachers || !Array.isArray(teachers) || teachers.length === 0) {
@@ -17,7 +35,7 @@ serve(async (req) => {
       `- ${t.name}: teaches ${t.subject} to ${t.section_name} (${t.schedule_info || 'flexible'})`
     ).join("\n");
 
-    const constraintsText = constraints ? `\nAdditional constraints: ${constraints}` : "";
+    const constraintsText = constraints ? `\nAdditional constraints: ${String(constraints).slice(0, 500)}` : "";
 
     const systemPrompt = `You are an expert school timetable scheduler. Generate an optimal weekly timetable based on teacher-subject-section assignments. Rules:
 1. No teacher can teach two classes simultaneously
@@ -69,10 +87,10 @@ No explanation, just the JSON array.`;
     console.error("generate-timetable error:", error);
     if (error instanceof Error) {
       if (error.message.includes("Rate limit")) {
-        return withCorsError(req, 429, error.message);
+        return withCorsError(req, 429, "Rate limit exceeded. Please try again later.");
       }
       if (error.message.includes("Payment required")) {
-        return withCorsError(req, 402, error.message);
+        return withCorsError(req, 402, "AI credits exhausted.");
       }
     }
     return withCorsError(req, 500, "Failed to generate timetable");
