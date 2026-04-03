@@ -38,17 +38,15 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   isLoading: boolean;
-  login: (email: string, password: string, turnstileToken?: string) => Promise<{ error?: string }>;
+  login: (email: string, password: string) => Promise<{ error?: string }>;
   signup: (
     email: string,
     password: string,
     name: string,
     username: string,
-    turnstileToken?: string,
   ) => Promise<{ error?: string }>;
   loginWithGoogle: () => Promise<{ error?: string }>;
   logout: () => Promise<void>;
-  verifyTurnstile: (token: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -91,7 +89,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -99,7 +96,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(session);
       setUser(session?.user ?? null);
 
-      // Defer profile fetch with setTimeout to avoid deadlock
       if (session?.user) {
         setTimeout(() => {
           fetchProfile(session.user.id).then(setProfile);
@@ -109,7 +105,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     });
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -123,38 +118,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const verifyTurnstile = async (token: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase.functions.invoke("verify-turnstile", {
-        body: { token },
-      });
-      
-      if (error) {
-        console.error("Turnstile verification error:", error);
-        return false;
-      }
-      
-      return data?.success === true;
-    } catch (error) {
-      console.error("Turnstile verification error:", error);
-      return false;
-    }
-  };
-
   const login = async (
     email: string,
     password: string,
-    turnstileToken?: string,
   ): Promise<{ error?: string }> => {
     try {
-      // Verify turnstile token if provided
-      if (turnstileToken) {
-        const isValid = await verifyTurnstile(turnstileToken);
-        if (!isValid) {
-          return { error: "Security verification failed. Please try again." };
-        }
-      }
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -177,16 +145,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     password: string,
     name: string,
     username: string,
-    turnstileToken?: string,
   ): Promise<{ error?: string }> => {
     try {
-      // Verify turnstile token if provided
-      if (turnstileToken) {
-        const isValid = await verifyTurnstile(turnstileToken);
-        if (!isValid) {
-          return { error: "Security verification failed. Please try again." };
-        }
-      }
       const redirectUrl = `${window.location.origin}/`;
 
       const { data, error } = await supabase.auth.signUp({
@@ -211,7 +171,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { error: error.message };
       }
 
-      // Update the profile with the username after signup
       if (data.user) {
         const { error: profileError } = await supabase
           .from("profiles")
@@ -220,7 +179,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         if (profileError) {
           console.error("Profile update error:", profileError);
-          // Don't fail signup if profile update fails, but log it
         }
       }
 
@@ -270,7 +228,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         signup,
         loginWithGoogle,
         logout,
-        verifyTurnstile,
       }}
     >
       {children}
