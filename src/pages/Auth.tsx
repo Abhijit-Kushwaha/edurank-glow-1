@@ -49,6 +49,50 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
+  // Turnstile CAPTCHA setup
+  useEffect(() => {
+    const renderTurnstile = () => {
+      if (
+        turnstileRef.current &&
+        (window as any).turnstile &&
+        !turnstileWidgetId.current
+      ) {
+        turnstileWidgetId.current = (window as any).turnstile.render(
+          turnstileRef.current,
+          {
+            sitekey: "0x4AAAAAABfMKgsLyvwceVpr",
+            callback: (token: string) => setTurnstileToken(token),
+            "expired-callback": () => setTurnstileToken(null),
+            "error-callback": () => setTurnstileToken(null),
+            theme: "dark",
+          },
+        );
+      }
+    };
+
+    // Try rendering immediately, or wait for script to load
+    if ((window as any).turnstile) {
+      renderTurnstile();
+    } else {
+      const interval = setInterval(() => {
+        if ((window as any).turnstile) {
+          renderTurnstile();
+          clearInterval(interval);
+        }
+      }, 500);
+      return () => clearInterval(interval);
+    }
+
+    return () => {
+      if (turnstileWidgetId.current && (window as any).turnstile) {
+        try {
+          (window as any).turnstile.remove(turnstileWidgetId.current);
+        } catch {}
+        turnstileWidgetId.current = null;
+      }
+    };
+  }, []);
+
   // Validate org code with debounce
   useEffect(() => {
     if (!orgCode.trim() || isLogin || orgRole !== "student") {
