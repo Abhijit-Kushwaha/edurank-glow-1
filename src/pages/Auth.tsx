@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Mail,
@@ -20,24 +20,6 @@ import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
-declare global {
-  interface Window {
-    turnstile: {
-      render: (container: string | HTMLElement, options: {
-        sitekey: string;
-        callback: (token: string) => void;
-        "expired-callback"?: () => void;
-        "error-callback"?: () => void;
-        theme?: "light" | "dark" | "auto";
-      }) => string;
-      reset: (widgetId: string) => void;
-      remove: (widgetId: string) => void;
-    };
-  }
-}
-
-const TURNSTILE_SITE_KEY = "0x4AAAAAACjPk-A2VPSIaOWx";
-
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -50,15 +32,10 @@ const Auth = () => {
   const [orgCodeOrgName, setOrgCodeOrgName] = useState("");
   const [isCheckingOrgCode, setIsCheckingOrgCode] = useState(false);
   const [orgRole, setOrgRole] = useState<"student" | "teacher" | "admin" | "independent">("independent");
-  const [isUsernameAvailable, setIsUsernameAvailable] = useState<
-    boolean | null
-  >(null);
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const turnstileRef = useRef<HTMLDivElement>(null);
-  const turnstileWidgetId = useRef<string | null>(null);
   const navigate = useNavigate();
   const { login, signup, loginWithGoogle, user } = useAuth();
 
@@ -69,47 +46,6 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
-  // Initialize Turnstile widget
-  useEffect(() => {
-    const initTurnstile = () => {
-      if (turnstileRef.current && window.turnstile && !turnstileWidgetId.current) {
-        turnstileWidgetId.current = window.turnstile.render(turnstileRef.current, {
-          sitekey: TURNSTILE_SITE_KEY,
-          callback: (token: string) => setTurnstileToken(token),
-          "expired-callback": () => setTurnstileToken(null),
-          "error-callback": () => setTurnstileToken(null),
-          theme: "dark",
-        });
-      }
-    };
-
-    // Wait for script to load
-    if (window.turnstile) {
-      initTurnstile();
-    } else {
-      const checkInterval = setInterval(() => {
-        if (window.turnstile) {
-          clearInterval(checkInterval);
-          initTurnstile();
-        }
-      }, 100);
-      return () => clearInterval(checkInterval);
-    }
-
-    return () => {
-      if (turnstileWidgetId.current && window.turnstile) {
-        window.turnstile.remove(turnstileWidgetId.current);
-        turnstileWidgetId.current = null;
-      }
-    };
-  }, []);
-
-  const resetTurnstile = useCallback(() => {
-    if (turnstileWidgetId.current && window.turnstile) {
-      window.turnstile.reset(turnstileWidgetId.current);
-      setTurnstileToken(null);
-    }
-  }, []);
   // Validate org code with debounce
   useEffect(() => {
     if (!orgCode.trim() || isLogin || orgRole !== "student") {
@@ -174,20 +110,13 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!turnstileToken) {
-      toast.error("Please complete the security verification");
-      return;
-    }
-    
     setIsLoading(true);
 
     try {
       if (isLogin) {
-        const { error } = await login(email, password, turnstileToken || undefined);
+        const { error } = await login(email, password);
         if (error) {
           toast.error(error);
-          resetTurnstile();
         } else {
           toast.success("Welcome back!");
           navigate("/dashboard");
@@ -223,7 +152,7 @@ const Auth = () => {
           setIsLoading(false);
           return;
         }
-        const { error } = await signup(email, password, name, username.trim(), turnstileToken || undefined);
+        const { error } = await signup(email, password, name, username.trim());
         if (error) {
           if (
             error.includes("profiles_name_unique") ||
@@ -235,7 +164,6 @@ const Auth = () => {
           } else {
             toast.error(error);
           }
-          resetTurnstile();
         } else {
           // Handle org joining/creation after signup
           if (orgRole === "student" && orgCode.trim() && orgCodeValid) {
@@ -256,7 +184,6 @@ const Auth = () => {
               console.error("Org join request error:", orgError);
             }
           } else if (orgRole === "admin" && orgName.trim()) {
-            // Admin creating a new org via secure RPC
             try {
               const { data: rawResult, error: rpcError } = await supabase.rpc("create_organisation", {
                 p_name: orgName.trim(),
@@ -275,7 +202,6 @@ const Auth = () => {
       }
     } catch (error) {
       toast.error("Something went wrong");
-      resetTurnstile();
     } finally {
       setIsLoading(false);
     }
@@ -296,12 +222,12 @@ const Auth = () => {
         </div>
 
         {/* Auth Card */}
-        <div className="glass-card rounded-2xl p-8 animate-slide-up">
+        <div className="glass-card rounded-2xl p-6 sm:p-8 animate-slide-up">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold mb-2">
               {isLogin ? "Welcome Back" : "Create Account"}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {isLogin
                 ? "Sign in to continue your learning journey"
                 : "Start your AI-powered study experience"}
@@ -457,7 +383,6 @@ const Auth = () => {
                       <p className="text-xs text-green-500 flex items-center gap-1">
                         <Check className="h-3 w-3" />
                         Joining: <strong>{orgCodeOrgName}</strong>
-                        {/* Role auto-detected from invite code */}
                       </p>
                     )}
                     {orgCode.trim() && orgCodeValid === false && (
@@ -519,17 +444,12 @@ const Auth = () => {
               />
             </div>
 
-            {/* Cloudflare Turnstile Widget */}
-            <div className="flex justify-center">
-              <div ref={turnstileRef} />
-            </div>
-
             <Button
               type="submit"
               variant="neon"
               size="lg"
               className="w-full"
-              disabled={isLoading || isGoogleLoading || !turnstileToken}
+              disabled={isLoading || isGoogleLoading}
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
@@ -559,7 +479,7 @@ const Auth = () => {
           )}
 
           <div className="mt-6 text-center">
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {isLogin ? "Don't have an account?" : "Already have an account?"}
               <button
                 type="button"

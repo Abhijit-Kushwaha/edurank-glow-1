@@ -80,7 +80,7 @@ const Index = () => {
       >
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <Logo size="sm" />
-          <p className="text-sm text-muted-foreground">© 2025 BrainBuddy. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">© 2026 BrainBuddy. All rights reserved.</p>
           <button onClick={() => navigate("/about")} className="text-sm text-primary hover:underline">
             About Us
           </button>
