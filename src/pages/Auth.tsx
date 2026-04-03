@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Mail,
@@ -36,6 +36,9 @@ const Auth = () => {
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetId = useRef<string | null>(null);
   const navigate = useNavigate();
   const { login, signup, loginWithGoogle, user } = useAuth();
 
@@ -45,6 +48,50 @@ const Auth = () => {
       navigate("/dashboard");
     }
   }, [user, navigate]);
+
+  // Turnstile CAPTCHA setup
+  useEffect(() => {
+    const renderTurnstile = () => {
+      if (
+        turnstileRef.current &&
+        (window as any).turnstile &&
+        !turnstileWidgetId.current
+      ) {
+        turnstileWidgetId.current = (window as any).turnstile.render(
+          turnstileRef.current,
+          {
+            sitekey: "0x4AAAAAABfMKgsLyvwceVpr",
+            callback: (token: string) => setTurnstileToken(token),
+            "expired-callback": () => setTurnstileToken(null),
+            "error-callback": () => setTurnstileToken(null),
+            theme: "dark",
+          },
+        );
+      }
+    };
+
+    // Try rendering immediately, or wait for script to load
+    if ((window as any).turnstile) {
+      renderTurnstile();
+    } else {
+      const interval = setInterval(() => {
+        if ((window as any).turnstile) {
+          renderTurnstile();
+          clearInterval(interval);
+        }
+      }, 500);
+      return () => clearInterval(interval);
+    }
+
+    return () => {
+      if (turnstileWidgetId.current && (window as any).turnstile) {
+        try {
+          (window as any).turnstile.remove(turnstileWidgetId.current);
+        } catch {}
+        turnstileWidgetId.current = null;
+      }
+    };
+  }, []);
 
   // Validate org code with debounce
   useEffect(() => {
@@ -108,11 +155,38 @@ const Auth = () => {
     return () => clearTimeout(timeoutId);
   }, [username, isLogin]);
 
+  const verifyTurnstile = async (token: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-turnstile", {
+        body: { token },
+      });
+      if (error) return false;
+      return data?.success === true;
+    } catch {
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      // Verify Turnstile token before proceeding
+      if (turnstileToken) {
+        const isValid = await verifyTurnstile(turnstileToken);
+        if (!isValid) {
+          toast.error("CAPTCHA verification failed. Please try again.");
+          // Reset turnstile
+          if (turnstileWidgetId.current && (window as any).turnstile) {
+            (window as any).turnstile.reset(turnstileWidgetId.current);
+          }
+          setTurnstileToken(null);
+          setIsLoading(false);
+          return;
+        }
+      }
+
       if (isLogin) {
         const { error } = await login(email, password);
         if (error) {
@@ -443,6 +517,9 @@ const Auth = () => {
                 required
               />
             </div>
+
+            {/* Cloudflare Turnstile CAPTCHA - only works on production domain */}
+            <div ref={turnstileRef} className="flex justify-center" />
 
             <Button
               type="submit"
