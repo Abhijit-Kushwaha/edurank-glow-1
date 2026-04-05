@@ -34,7 +34,7 @@ import Achievements from "./pages/Achievements";
 import OrgWorkspace from "./pages/OrgWorkspace";
 import OrgBattleArena from "./pages/OrgBattleArena";
 import TakeOrgQuiz from "./pages/TakeOrgQuiz";
-
+import OrgProfile from "./pages/OrgProfile";
 const queryClient = new QueryClient();
 
 const ProtectedWithLayout = ({ children }: { children: React.ReactNode }) => (
@@ -230,6 +230,14 @@ const App = () => (
                 element={
                   <ProtectedWithLayout>
                     <TakeOrgQuiz />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
+                path="/org/:orgId"
+                element={
+                  <ProtectedWithLayout>
+                    <OrgProfile />
                   </ProtectedWithLayout>
                 }
               />
