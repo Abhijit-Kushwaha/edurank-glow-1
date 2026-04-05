@@ -14,6 +14,12 @@ interface Organization {
   invite_code_student?: string;
   invite_code_teacher?: string;
   invite_code_admin?: string;
+  description?: string | null;
+  logo_url?: string | null;
+  website?: string | null;
+  contact_email?: string | null;
+  org_type?: string;
+  join_approval_required?: boolean;
 }
 
 interface Channel {
