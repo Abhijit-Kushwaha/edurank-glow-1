@@ -233,6 +233,14 @@ const App = () => (
                   </ProtectedWithLayout>
                 }
               />
+              <Route
+                path="/org/:orgId"
+                element={
+                  <ProtectedWithLayout>
+                    <OrgProfile />
+                  </ProtectedWithLayout>
+                }
+              />
               <Route path="/about" element={<About />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
