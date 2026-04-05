@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Hash, Megaphone, HelpCircle, BookOpen, Shield, FileText, BarChart3, Plus, Users, Swords, Copy, Check, GraduationCap, Calendar, Layers, ClipboardList, UserPlus, Settings, Trash2 } from "lucide-react";
+import { Building2, Hash, Megaphone, HelpCircle, BookOpen, Shield, FileText, BarChart3, Plus, Users, Swords, Copy, Check, GraduationCap, Calendar, Layers, ClipboardList, UserPlus, Settings, Trash2, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,6 +25,8 @@ import JoinRequestsManager from "@/components/org/JoinRequestsManager";
 import SuperAdminPanel from "@/components/org/SuperAdminPanel";
 import JoinOrgCard from "@/components/org/JoinOrgCard";
 import StudentAssignedQuizzes from "@/components/org/StudentAssignedQuizzes";
+import OrgDashboardHome from "@/components/org/OrgDashboardHome";
+import OrgOnboardingWizard from "@/components/org/OrgOnboardingWizard";
 
 const channelIcons: Record<string, typeof Hash> = {
   text: Hash,
@@ -39,7 +41,8 @@ export default function OrgWorkspace() {
   const { user, profile } = useAuth();
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
   const [showCreateChannel, setShowCreateChannel] = useState(false);
-  const [activeTab, setActiveTab] = useState("channels");
+  const [activeTab, setActiveTab] = useState("home");
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Create org dialog state
   const [showCreateOrg, setShowCreateOrg] = useState(false);
@@ -47,11 +50,16 @@ export default function OrgWorkspace() {
   const [orgDescription, setOrgDescription] = useState("");
   const [creatingOrg, setCreatingOrg] = useState(false);
 
+  // Check if org was just created (show onboarding)
+  const [justCreatedOrgId, setJustCreatedOrgId] = useState<string | null>(null);
+
+  const isAdmin = profile?.role === "super_admin" || profile?.role === "admin";
+  const isTeacher = profile?.role === "teacher";
+
   const handleCreateOrg = async () => {
     if (!orgName.trim() || !user) return;
     setCreatingOrg(true);
     try {
-      // Create org + promote creator atomically via secure RPC
       const { data: rawResult, error: rpcError } = await supabase.rpc("create_organisation", {
         p_name: orgName.trim(),
       });
@@ -84,10 +92,11 @@ export default function OrgWorkspace() {
         );
       }
 
-      toast.success(`"${orgName.trim()}" created! You are now the admin.`);
+      toast.success(`"${orgName.trim()}" created!`);
       setShowCreateOrg(false);
       setOrgName("");
       setOrgDescription("");
+      setJustCreatedOrgId(orgId);
       // Reload to pick up updated profile with org_id
       window.location.reload();
     } catch (err) {
@@ -97,6 +106,20 @@ export default function OrgWorkspace() {
       setCreatingOrg(false);
     }
   };
+
+  // Show onboarding for freshly created org
+  useEffect(() => {
+    if (org && isAdmin && !loading) {
+      // Check if org has no description and no batches (fresh org)
+      const checkFresh = async () => {
+        const { count } = await (supabase as any).from("batches").select("id", { count: "exact", head: true }).eq("org_id", org.id);
+        if (!org.description && (count === 0 || count === null)) {
+          setShowOnboarding(true);
+        }
+      };
+      checkFresh();
+    }
+  }, [org, isAdmin, loading]);
 
   if (loading) {
     return (
@@ -192,51 +215,85 @@ export default function OrgWorkspace() {
     );
   }
 
+  // Onboarding wizard for fresh orgs
+  if (showOnboarding && isAdmin) {
+    return (
+      <OrgOnboardingWizard
+        orgId={org?.id || ""}
+        orgName={org?.name || ""}
+        inviteCodes={{
+          student: (org as any)?.invite_code_student,
+          teacher: (org as any)?.invite_code_teacher,
+          admin: (org as any)?.invite_code_admin,
+        }}
+        onComplete={() => {
+          setShowOnboarding(false);
+          refetch();
+        }}
+      />
+    );
+  }
+
+  const navItems = [
+    { id: "home", label: "Home", icon: Home },
+    { id: "my-quizzes", label: "My Quizzes", icon: BookOpen },
+    { id: "batches", label: "Batches", icon: Layers },
+    { id: "marks", label: "Exams", icon: ClipboardList },
+    ...(isAdmin || isTeacher ? [{ id: "teaching", label: "Teaching", icon: GraduationCap }] : []),
+    { id: "timetable", label: "Timetable", icon: Calendar },
+    { id: "knowledge", label: "Knowledge", icon: FileText },
+    ...(isAdmin ? [{ id: "roles", label: "Roles", icon: Shield }] : []),
+    { id: "analytics", label: "Analytics", icon: BarChart3 },
+    { id: "members", label: "Members", icon: Users },
+    ...(isAdmin ? [{ id: "join-requests", label: "Requests", icon: UserPlus }] : []),
+    { id: "battles", label: "Battles", icon: Swords },
+    ...(isAdmin ? [{ id: "admin-settings", label: "Settings", icon: Settings }] : []),
+  ];
+
   return (
     <div className="flex h-[calc(100vh-4rem)]">
-      {/* Left sidebar - Channels */}
-      <div className="w-64 border-r border-border/50 bg-card/50 flex flex-col shrink-0">
-        <div className="p-4 border-b border-border/50">
+      {/* Left sidebar */}
+      <div className="w-56 lg:w-64 border-r border-border/50 bg-card/30 flex flex-col shrink-0 overflow-hidden">
+        <div className="p-3 border-b border-border/50">
           <div className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-primary" />
+            {org?.logo_url ? (
+              <img src={org.logo_url} alt="" className="h-7 w-7 rounded-lg object-cover" />
+            ) : (
+              <Building2 className="h-5 w-5 text-primary shrink-0" />
+            )}
             <h2 className="font-bold text-sm truncate">{org?.name || "Organization"}</h2>
           </div>
           <Badge variant="outline" className="mt-1 text-[10px]">{org?.plan || "free"}</Badge>
-          {(profile?.role === "super_admin" || profile?.role === "admin") && (
-            <div className="mt-2 space-y-1">
-              <p className="text-[10px] text-muted-foreground">Invite Codes</p>
-              {[
-                { key: "invite_code_student", label: "Student", color: "text-blue-400" },
-                { key: "invite_code_teacher", label: "Teacher", color: "text-amber-400" },
-                { key: "invite_code_admin", label: "Admin", color: "text-red-400" },
-              ].map(({ key, label, color }) => {
-                const code = (org as any)?.[key];
-                if (!code) return null;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      navigator.clipboard.writeText(code);
-                      toast.success(`${label} code copied!`);
-                    }}
-                    className="w-full flex items-center justify-between text-[10px] font-mono bg-muted/50 px-2 py-0.5 rounded hover:bg-muted transition-colors"
-                  >
-                    <span className={color}>{label[0]}</span>
-                    <span>{code}</span>
-                    <Copy className="h-2.5 w-2.5 text-muted-foreground" />
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
 
-        <div className="flex-1 overflow-auto p-2 space-y-1">
-          <div className="flex items-center justify-between px-2 py-1">
-            <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">Channels</span>
-            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => setShowCreateChannel(true)}>
-              <Plus className="h-3 w-3" />
-            </Button>
+        <div className="flex-1 overflow-auto p-2 space-y-0.5">
+          {/* Navigation */}
+          <div className="pb-1">
+            <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider px-2">Navigation</span>
+          </div>
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => { setActiveTab(item.id); setSelectedChannel(null); }}
+              className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
+                activeTab === item.id && !selectedChannel ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+              }`}
+            >
+              <item.icon className="h-4 w-4 shrink-0" />
+              <span className="truncate">{item.label}</span>
+            </button>
+          ))}
+
+          {/* Channels */}
+          <div className="pt-3 pb-1">
+            <div className="flex items-center justify-between px-2">
+              <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">Channels</span>
+              {(isAdmin || isTeacher) && (
+                <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => setShowCreateChannel(true)}>
+                  <Plus className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
           </div>
           {channels.map(ch => {
             const Icon = channelIcons[ch.channel_type] || Hash;
@@ -244,7 +301,7 @@ export default function OrgWorkspace() {
               <div key={ch.id} className="flex items-center group">
                 <button
                   onClick={() => { setSelectedChannel(ch.id); setActiveTab("channels"); }}
-                  className={`flex-1 flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors ${
+                  className={`flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
                     selectedChannel === ch.id ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                   }`}
                 >
@@ -255,7 +312,7 @@ export default function OrgWorkspace() {
                   <button
                     onClick={async (e) => {
                       e.stopPropagation();
-                      if (!confirm(`Delete channel "#${ch.name}"? All messages will be lost.`)) return;
+                      if (!confirm(`Delete channel "#${ch.name}"?`)) return;
                       try {
                         await (supabase as any).from("channel_messages").delete().eq("channel_id", ch.id);
                         await (supabase as any).from("channels").delete().eq("id", ch.id);
@@ -275,49 +332,42 @@ export default function OrgWorkspace() {
               </div>
             );
           })}
-
-          <div className="pt-4">
-            <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider px-2">Navigation</span>
-          </div>
-          {[
-            { id: "my-quizzes", label: "My Quizzes", icon: BookOpen },
-            { id: "batches", label: "Batches & Sections", icon: Layers },
-            { id: "marks", label: "Exams & Marks", icon: ClipboardList },
-            { id: "teaching", label: "Teaching", icon: GraduationCap },
-            { id: "timetable", label: "Timetable", icon: Calendar },
-            { id: "knowledge", label: "Knowledge Base", icon: FileText },
-            { id: "roles", label: "Roles & Permissions", icon: Shield },
-            { id: "analytics", label: "Analytics", icon: BarChart3 },
-            { id: "members", label: "Members", icon: Users },
-            { id: "join-requests", label: "Join Requests", icon: UserPlus },
-            { id: "battles", label: "Battle Arena", icon: Swords },
-            ...(profile?.role && ["super_admin", "admin"].includes(profile.role) ? [{ id: "admin-settings", label: "Admin Settings", icon: Settings }] : []),
-          ].map(item => (
-            <button
-              key={item.id}
-              onClick={() => { setActiveTab(item.id); setSelectedChannel(null); }}
-              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors ${
-                activeTab === item.id && !selectedChannel ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-              }`}
-            >
-              <item.icon className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">{item.label}</span>
-            </button>
-          ))}
         </div>
+
+        {/* Admin invite codes at bottom */}
+        {isAdmin && (
+          <div className="p-2 border-t border-border/50 space-y-0.5">
+            <p className="text-[10px] text-muted-foreground px-2 mb-1">Invite Codes</p>
+            {[
+              { key: "invite_code_student", label: "Student", color: "text-blue-400" },
+              { key: "invite_code_teacher", label: "Teacher", color: "text-amber-400" },
+            ].map(({ key, label, color }) => {
+              const code = (org as any)?.[key];
+              if (!code) return null;
+              return (
+                <button
+                  key={key}
+                  onClick={() => { navigator.clipboard.writeText(code); toast.success(`${label} code copied!`); }}
+                  className="w-full flex items-center justify-between text-[10px] font-mono bg-muted/50 px-2 py-0.5 rounded hover:bg-muted transition-colors"
+                >
+                  <span className={color}>{label}</span>
+                  <span>{code}</span>
+                  <Copy className="h-2.5 w-2.5 text-muted-foreground" />
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Main content */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 overflow-hidden">
         {selectedChannel ? (
-          <ChannelView
-            channelId={selectedChannel}
-            channel={channels.find(c => c.id === selectedChannel)}
-          />
+          <ChannelView channelId={selectedChannel} channel={channels.find(c => c.id === selectedChannel)} />
+        ) : activeTab === "home" ? (
+          <OrgDashboardHome org={org} onNavigate={(tab) => setActiveTab(tab)} />
         ) : activeTab === "my-quizzes" ? (
-          <div className="p-6">
-            <StudentAssignedQuizzes orgId={org?.id || ""} />
-          </div>
+          <div className="p-6 overflow-auto max-h-full"><StudentAssignedQuizzes orgId={org?.id || ""} /></div>
         ) : activeTab === "batches" ? (
           <BatchManager orgId={org?.id || ""} />
         ) : activeTab === "marks" ? (
@@ -346,18 +396,11 @@ export default function OrgWorkspace() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <Hash className="h-12 w-12 mb-4" />
-            <p>Select a channel or section to get started</p>
-          </div>
+          <OrgDashboardHome org={org} onNavigate={(tab) => setActiveTab(tab)} />
         )}
       </div>
 
-      <ChannelCreateDialog
-        open={showCreateChannel}
-        onOpenChange={setShowCreateChannel}
-        onCreateChannel={createChannel}
-      />
+      <ChannelCreateDialog open={showCreateChannel} onOpenChange={setShowCreateChannel} onCreateChannel={createChannel} />
     </div>
   );
 }
