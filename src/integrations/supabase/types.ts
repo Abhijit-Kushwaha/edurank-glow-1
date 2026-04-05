@@ -2237,9 +2237,11 @@ export type Database = {
         Row: {
           ai_enabled: boolean
           ai_kill_switch: boolean
+          contact_email: string | null
           content_approval_required: boolean
           created_at: string
           data_retention_days: number
+          description: string | null
           domain: string | null
           grading_lock_days: number
           id: string
@@ -2248,22 +2250,28 @@ export type Database = {
           invite_code_student: string | null
           invite_code_teacher: string | null
           invite_mode: string
+          join_approval_required: boolean
           late_penalty_percent_per_day: number
           late_submission_policy: string
+          logo_url: string | null
           max_ai_tokens_per_day_per_student: number
           max_quiz_retakes: number
           name: string
+          org_type: string
           plan: string
           score_counts_as: string
           status: string
           updated_at: string
+          website: string | null
         }
         Insert: {
           ai_enabled?: boolean
           ai_kill_switch?: boolean
+          contact_email?: string | null
           content_approval_required?: boolean
           created_at?: string
           data_retention_days?: number
+          description?: string | null
           domain?: string | null
           grading_lock_days?: number
           id?: string
@@ -2272,22 +2280,28 @@ export type Database = {
           invite_code_student?: string | null
           invite_code_teacher?: string | null
           invite_mode?: string
+          join_approval_required?: boolean
           late_penalty_percent_per_day?: number
           late_submission_policy?: string
+          logo_url?: string | null
           max_ai_tokens_per_day_per_student?: number
           max_quiz_retakes?: number
           name: string
+          org_type?: string
           plan?: string
           score_counts_as?: string
           status?: string
           updated_at?: string
+          website?: string | null
         }
         Update: {
           ai_enabled?: boolean
           ai_kill_switch?: boolean
+          contact_email?: string | null
           content_approval_required?: boolean
           created_at?: string
           data_retention_days?: number
+          description?: string | null
           domain?: string | null
           grading_lock_days?: number
           id?: string
@@ -2296,15 +2310,19 @@ export type Database = {
           invite_code_student?: string | null
           invite_code_teacher?: string | null
           invite_mode?: string
+          join_approval_required?: boolean
           late_penalty_percent_per_day?: number
           late_submission_policy?: string
+          logo_url?: string | null
           max_ai_tokens_per_day_per_student?: number
           max_quiz_retakes?: number
           name?: string
+          org_type?: string
           plan?: string
           score_counts_as?: string
           status?: string
           updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }
