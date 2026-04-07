@@ -17,6 +17,7 @@ import {
   MessageSquare,
   Layers,
   Timer,
+  CalendarDays,
   Building2,
 } from "lucide-react";
 import Logo from "@/components/Logo";
@@ -43,6 +44,7 @@ const mainNavItems = [
   { title: "AI Notes", url: "/ai-notes", icon: FileText },
   { title: "Flashcards", url: "/flashcards", icon: Layers },
   { title: "Pomodoro Timer", url: "/pomodoro", icon: Timer },
+  { title: "Study Planner", url: "/study-planner", icon: CalendarDays },
   { title: "Video Search", url: "/dashboard", icon: Play },
   { title: "Analysis", url: "/analysis", icon: TrendingUp },
 ];
