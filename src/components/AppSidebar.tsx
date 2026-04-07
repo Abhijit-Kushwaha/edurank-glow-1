@@ -17,6 +17,7 @@ import {
   MessageSquare,
   Layers,
   Timer,
+  CalendarDays,
   Building2,
 } from "lucide-react";
 import Logo from "@/components/Logo";
