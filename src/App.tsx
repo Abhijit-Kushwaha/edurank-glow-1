@@ -91,6 +91,14 @@ const App = () => (
                 }
               />
               <Route
+                path="/study-planner"
+                element={
+                  <ProtectedWithLayout>
+                    <StudyPlanner />
+                  </ProtectedWithLayout>
+                }
+              />
+              <Route
                 path="/video/:todoId"
                 element={
                   <ProtectedWithLayout>
