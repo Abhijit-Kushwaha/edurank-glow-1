@@ -35,6 +35,7 @@ import OrgWorkspace from "./pages/OrgWorkspace";
 import OrgBattleArena from "./pages/OrgBattleArena";
 import TakeOrgQuiz from "./pages/TakeOrgQuiz";
 import OrgProfile from "./pages/OrgProfile";
+import StudyPlanner from "./pages/StudyPlanner";
 const queryClient = new QueryClient();
 
 const ProtectedWithLayout = ({ children }: { children: React.ReactNode }) => (
