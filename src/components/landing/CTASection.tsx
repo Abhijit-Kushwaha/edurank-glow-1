@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
@@ -29,11 +29,20 @@ const CTASection = () => {
           </motion.div>
           
           <h2 className="text-3xl md:text-5xl font-bold font-display mb-6">
-            Ready to <span className="neon-text">Transform</span> Your Learning?
+            Ready to <span className="neon-text">Study Smarter?</span>
           </h2>
-          <p className="text-lg text-muted-foreground mb-10 max-w-lg mx-auto">
-            Join thousands of students already using BrainBuddy to study smarter, not harder.
+          <p className="text-lg text-muted-foreground mb-8 max-w-lg mx-auto">
+            Join thousands of students already using BrainBuddy to prepare for CBSE, ICSE, JEE, NEET, and more.
           </p>
+
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-8 text-sm text-muted-foreground">
+            {["AI-powered notes & quizzes", "Real-time battle arena", "School org management", "Works on any device"].map((item) => (
+              <span key={item} className="flex items-center gap-1.5">
+                <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                {item}
+              </span>
+            ))}
+          </div>
           
           <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }}>
             <Button variant="neon" size="lg" className="text-lg px-12 h-14 rounded-xl shadow-2xl shadow-primary/25" onClick={() => navigate("/auth")}>
