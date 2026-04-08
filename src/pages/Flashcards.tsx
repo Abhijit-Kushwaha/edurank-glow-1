@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -49,17 +50,19 @@ function calculateNextReview(quality: number, card: Flashcard) {
 
 export default function Flashcards() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const prefillSubject = searchParams.get("subject") || "";
   const [cards, setCards] = useState<Flashcard[]>([]);
   const [dueCards, setDueCards] = useState<Flashcard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [aiSubject, setAiSubject] = useState("");
+  const [aiSubject, setAiSubject] = useState(prefillSubject);
   const [newFront, setNewFront] = useState("");
   const [newBack, setNewBack] = useState("");
-  const [newSubject, setNewSubject] = useState("");
-  const [tab, setTab] = useState("review");
+  const [newSubject, setNewSubject] = useState(prefillSubject);
+  const [tab, setTab] = useState(prefillSubject ? "create" : "review");
   const [reviewedCount, setReviewedCount] = useState(0);
   const [totalDue, setTotalDue] = useState(0);
 
