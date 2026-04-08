@@ -11,6 +11,8 @@ import {
   AlertTriangle,
   Brain,
   Download,
+  Layers,
+  Trophy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -406,10 +408,21 @@ const Notes = () => {
             </Button>
             <Logo size="sm" />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="outline" size="sm" onClick={() => navigate(`/quiz/${todoId}`)}>
+              <Trophy className="h-4 w-4 mr-1" />
+              Quiz
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => {
+              const subject = todoTitle || "General";
+              navigate(`/flashcards?subject=${encodeURIComponent(subject)}`);
+            }}>
+              <Layers className="h-4 w-4 mr-1" />
+              Flashcards
+            </Button>
             <Button variant="outline" size="sm" onClick={handleDownload}>
               <Download className="h-4 w-4 mr-1" />
-              Download PDF
+              PDF
             </Button>
             <Button variant="outline" size="sm" onClick={handleShare}>
               <Share2 className="h-4 w-4 mr-1" />
